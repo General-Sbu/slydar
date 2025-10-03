@@ -191,26 +191,7 @@ export default function Presenter() {
     return <div className="h-screen flex items-center justify-center">Invalid presentation ID</div>;
   }
 
-  if (presentationLoading || slidesLoading || !session) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        <header className="border-b bg-background/95 backdrop-blur">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex h-14 items-center justify-between">
-              <Skeleton className="h-10 w-40" />
-              <Skeleton className="h-10 w-32" />
-            </div>
-          </div>
-        </header>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Skeleton className="h-8 w-64 mx-auto" />
-            <Skeleton className="h-4 w-32 mx-auto" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isLoading = presentationLoading || slidesLoading;
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -263,32 +244,50 @@ export default function Presenter() {
       <div className="flex-1 flex overflow-hidden">
         <main className="flex-1 overflow-auto p-8">
           <div className="max-w-5xl mx-auto">
-            <Card className="p-12">
-              {currentSlide?.type === 'heading' ? (
-                <div className="text-center">
-                  <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
-                </div>
-              ) : currentSlide?.type === 'multiple_choice' && currentSlide.options ? (
-                <LivePollChart
-                  question={currentSlide.question || "Question"}
-                  options={chartOptions}
-                  totalVotes={slideResponses.length}
-                />
-              ) : (
+            {isLoading || !currentSlide ? (
+              <Card className="p-12">
                 <div className="text-center space-y-4">
-                  <h2 className="text-3xl font-bold">{currentSlide?.question || "Question"}</h2>
-                  <div className="text-muted-foreground">
-                    {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
-                  </div>
+                  <Skeleton className="h-12 w-3/4 mx-auto" />
+                  <Skeleton className="h-8 w-1/2 mx-auto" />
                 </div>
-              )}
-            </Card>
+              </Card>
+            ) : (
+              <Card className="p-12">
+                {currentSlide.type === 'heading' ? (
+                  <div className="text-center">
+                    <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                  </div>
+                ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
+                  <LivePollChart
+                    question={currentSlide.question || "Question"}
+                    options={chartOptions}
+                    totalVotes={slideResponses.length}
+                  />
+                ) : (
+                  <div className="text-center space-y-4">
+                    <h2 className="text-3xl font-bold">{currentSlide.question || "Question"}</h2>
+                    <div className="text-muted-foreground">
+                      {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
         </main>
 
         <aside className="w-96 border-l bg-muted/30 overflow-auto">
           <div className="p-6 space-y-6">
-            <RoomCodeDisplay code={session.code} participantCount={participantCount} />
+            {session ? (
+              <RoomCodeDisplay code={session.code} participantCount={participantCount} />
+            ) : (
+              <Card className="p-6">
+                <div className="text-center space-y-3">
+                  <Skeleton className="h-8 w-32 mx-auto" />
+                  <Skeleton className="h-12 w-48 mx-auto" />
+                </div>
+              </Card>
+            )}
             
             <div>
               <h3 className="font-semibold mb-3">Recent Responses</h3>
