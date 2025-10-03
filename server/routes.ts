@@ -144,17 +144,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existing = await storage.getSessionByCode(code);
       }
       
-      console.log(`🎯 CREATING SESSION - Room Code: ${code}`);
-      
       const data = insertSessionSchema.parse({
         ...req.body,
         code,
         currentSlideIndex: 0,
         isActive: true
       });
-      console.log('📦 Parsed data:', JSON.stringify(data));
       const session = await storage.createSession(data);
-      console.log('✅ Created session:', JSON.stringify(session));
       res.json(session);
     } catch (error) {
       res.status(400).json({ error: "Invalid session data" });
