@@ -56,6 +56,9 @@ export const insertSlideSchema = createInsertSchema(slides).omit({
 export const insertSessionSchema = createInsertSchema(sessions).omit({
   id: true,
   startedAt: true,
+  code: true,
+  currentSlideIndex: true,
+  isActive: true,
 });
 
 export const insertResponseSchema = createInsertSchema(responses).omit({
