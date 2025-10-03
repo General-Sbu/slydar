@@ -16,6 +16,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const optionsRef = useRef(options);
+
+  // Keep options ref up to date
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
     console.log('[Socket.IO] Connecting to server...');
@@ -41,41 +47,48 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     });
 
     socket.on('session_joined', (data: { session: Session; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
+      console.log('[Socket.IO] Session joined:', data);
       if (data.participantId) {
         setParticipantId(data.participantId);
       }
-      options.onSessionJoined?.(data);
+      optionsRef.current.onSessionJoined?.(data);
     });
 
     socket.on('slide_changed', (data: { slideIndex: number; slide: Slide }) => {
-      options.onSlideChanged?.(data);
+      console.log('[Socket.IO] Slide changed:', data);
+      optionsRef.current.onSlideChanged?.(data);
     });
 
     socket.on('new_response', (data: { response: any; slideId: string; totalResponses: number }) => {
-      options.onNewResponse?.(data);
+      console.log('[Socket.IO] New response:', data);
+      optionsRef.current.onNewResponse?.(data);
     });
 
     socket.on('participant_count', (data: { count: number }) => {
-      options.onParticipantCount?.(data.count);
+      console.log('[Socket.IO] Participant count:', data.count);
+      optionsRef.current.onParticipantCount?.(data.count);
     });
 
     socket.on('session_update', (data: { session: Session }) => {
-      options.onSessionUpdate?.(data.session);
+      console.log('[Socket.IO] Session update:', data);
+      optionsRef.current.onSessionUpdate?.(data.session);
     });
 
     socket.on('session_ended', () => {
-      options.onSessionEnded?.();
+      console.log('[Socket.IO] Session ended');
+      optionsRef.current.onSessionEnded?.();
     });
 
     socket.on('error', (data: { message: string }) => {
       console.error('[Socket.IO] Error:', data.message);
-      options.onError?.(data.message);
+      optionsRef.current.onError?.(data.message);
     });
 
     return () => {
+      console.log('[Socket.IO] Disconnecting...');
       socket.disconnect();
     };
-  }, [options.onSessionJoined, options.onSlideChanged, options.onNewResponse, options.onParticipantCount, options.onSessionUpdate, options.onSessionEnded, options.onError]);
+  }, []);
 
   const joinSession = useCallback((code: string, role: 'presenter' | 'audience', participantId?: string) => {
     if (socketRef.current?.connected) {

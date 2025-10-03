@@ -248,10 +248,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           clientData.participantId = participantId || randomBytes(8).toString('hex');
         }
         
+        // Store client data on socket BEFORE counting (so this socket is included)
+        (socket as any).data = clientData;
+        
         // Join Socket.IO room for this session
         socket.join(session.id);
         
-        // Count participants in this session's room
+        // Count participants in this session's room (now includes this socket)
         const sockets = await io.in(session.id).fetchSockets();
         const participantCount = sockets.filter(s => {
           const data = (s as any).data as SocketClient;
@@ -269,9 +272,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slides,
           participantId: clientData.participantId
         });
-        
-        // Store client data on socket for later reference
-        (socket as any).data = clientData;
       } catch (error) {
         socket.emit('error', { message: 'Failed to join session' });
       }
