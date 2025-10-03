@@ -153,7 +153,7 @@ export default function Editor() {
   };
 
   const handlePresent = () => {
-    setLocation(`/present/${presentationId}`);
+    setLocation(`/presenter/${presentationId}`);
   };
 
   if (!presentationId) {

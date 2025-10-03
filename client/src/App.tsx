@@ -17,7 +17,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/editor/:id?" component={Editor} />
-      <Route path="/present/:id?" component={Presenter} />
+      <Route path="/presenter/:id?" component={Presenter} />
       <Route path="/join" component={JoinPresentation} />
       <Route path="/audience/:code" component={Audience} />
       <Route component={NotFound} />

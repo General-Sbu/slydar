@@ -4,7 +4,7 @@
 
 Slidr is a web-based interactive presentation platform that enables real-time audience engagement through live polls, quizzes, word clouds, and Q&A sessions. The application allows presenters to create presentations with various interactive slide types and share them with audiences via simple room codes, requiring no downloads or participant authentication.
 
-The platform is built as a full-stack TypeScript application with a React frontend and Express backend, using WebSockets for real-time bidirectional communication between presenters and audience members.
+The platform is built as a full-stack TypeScript application with a React frontend and Express backend, using Socket.IO for real-time bidirectional communication between presenters and audience members.
 
 ## User Preferences
 
@@ -42,17 +42,17 @@ Preferred communication style: Simple, everyday language.
 
 **Server Framework:**
 - Express.js with TypeScript for HTTP API endpoints
-- WebSocket Server (ws library) for real-time communication
+- Socket.IO server for real-time communication (replaced raw WebSockets for better proxy compatibility)
 - Session-based architecture without authentication (anonymous participation)
 - Development mode integrates Vite middleware for HMR
 
 **API Design:**
 - RESTful HTTP endpoints for CRUD operations on presentations, slides, and sessions
-- WebSocket protocol for real-time events (slide changes, response submissions, participant tracking)
-- Separation of presenter and audience WebSocket roles
-- Broadcasting pattern for session-wide updates
+- Socket.IO events for real-time communication (slide changes, response submissions, participant tracking)
+- Separation of presenter and audience Socket.IO roles
+- Room-based broadcasting pattern for session-wide updates
 
-**WebSocket Message Types:**
+**Socket.IO Event Types:**
 - `session_joined` - Initial connection with session data
 - `slide_changed` - Presenter navigates to new slide
 - `new_response` - Audience member submits answer
@@ -105,7 +105,7 @@ Preferred communication style: Simple, everyday language.
 - No user authentication system implemented
 - Session codes serve as the only access control
 - Participant IDs generated client-side (UUID)
-- Presenter role determined by WebSocket connection type
+- Presenter role determined by Socket.IO connection type
 
 **Rationale:**
 - Reduces friction for audience participation
@@ -115,27 +115,34 @@ Preferred communication style: Simple, everyday language.
 
 ### Real-time Communication
 
-**WebSocket Architecture:**
-- Single WebSocket server instance handling all connections
-- Client metadata stored in Map<WebSocket, WSClient>
-- Room-based broadcasting using session IDs
+**Socket.IO Architecture:**
+- Socket.IO server instance handling all connections with automatic fallback transports
+- Client metadata stored on socket.data for each connection
+- Room-based broadcasting using session IDs (Socket.IO rooms)
 - Automatic reconnection logic with exponential backoff
 - Connection state tracking per client
+- Polling + WebSocket transports for better proxy compatibility
 
 **Message Flow:**
 1. Presenter creates session → HTTP POST returns session code
-2. Presenter connects via WebSocket → joins as presenter role
+2. Presenter connects via Socket.IO → joins session room as presenter role
 3. Audience navigates to /audience/:code → HTTP validates session
-4. Audience connects via WebSocket → receives full session state
-5. Presenter changes slide → broadcasts to all audience members
+4. Audience connects via Socket.IO → receives full session state
+5. Presenter changes slide → broadcasts to all session room members
 6. Audience submits response → stored in DB, broadcast to presenter
 7. Presenter ends session → broadcasts closure, cleans up connections
 
 **Error Handling:**
-- WebSocket reconnection with timeout management
+- Socket.IO automatic reconnection with configurable attempts and delays
 - Toast notifications for connection state changes
-- Graceful degradation when WebSocket unavailable
+- Graceful fallback to long-polling when WebSocket unavailable
 - Session validation before joining
+
+**Migration Notes:**
+- Replaced raw WebSockets (ws library) with Socket.IO in October 2025
+- Reason: Better compatibility with reverse proxies (Replit infrastructure)
+- Socket.IO provides automatic transport fallback and reconnection handling
+- Client hook uses ref pattern to prevent reconnection loops
 
 ## External Dependencies
 

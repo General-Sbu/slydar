@@ -149,7 +149,7 @@ export default function Dashboard() {
                   lastEdited={formatDate(presentation.updatedAt)}
                   onEdit={() => setLocation(`/editor/${presentation.id}`)}
                   onDelete={() => deleteMutation.mutate(presentation.id)}
-                  onPresent={() => setLocation(`/present/${presentation.id}`)}
+                  onPresent={() => setLocation(`/presenter/${presentation.id}`)}
                 />
               ))}
             </div>

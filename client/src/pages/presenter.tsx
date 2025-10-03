@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Presenter() {
-  const [, params] = useRoute("/present/:id");
+  const [, params] = useRoute("/presenter/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const presentationId = params?.id;
