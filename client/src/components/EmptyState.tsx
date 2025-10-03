@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import emptyStateImage from "@assets/generated_images/Empty_state_character_illustration_1e40ba58.png";
 
-export default function EmptyState() {
+interface EmptyStateProps {
+  onCreate?: () => void;
+}
+
+export default function EmptyState({ onCreate }: EmptyStateProps = {}) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
       <img 
@@ -18,6 +22,7 @@ export default function EmptyState() {
         size="lg" 
         className="gap-2"
         data-testid="button-create-first"
+        onClick={onCreate}
       >
         <PlusCircle className="h-5 w-5" />
         Create Your First Presentation

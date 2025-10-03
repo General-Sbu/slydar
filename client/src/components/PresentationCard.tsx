@@ -10,6 +10,9 @@ interface PresentationCardProps {
   participantCount?: number;
   lastEdited: string;
   isLive?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onPresent?: () => void;
 }
 
 export default function PresentationCard({
@@ -17,7 +20,10 @@ export default function PresentationCard({
   slideCount,
   participantCount = 0,
   lastEdited,
-  isLive = false
+  isLive = false,
+  onEdit,
+  onDelete,
+  onPresent
 }: PresentationCardProps) {
   return (
     <Card className="hover-elevate transition-all duration-200 group">
@@ -56,6 +62,7 @@ export default function PresentationCard({
           size="sm"
           className="gap-2"
           data-testid="button-present"
+          onClick={onPresent}
         >
           <Play className="h-4 w-4" />
           Present
@@ -64,6 +71,7 @@ export default function PresentationCard({
           variant="outline" 
           size="sm"
           data-testid="button-edit"
+          onClick={onEdit}
         >
           Edit
         </Button>
