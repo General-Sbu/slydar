@@ -23,7 +23,11 @@ export default function RoomCodeDisplay({ code, participantCount = 0 }: RoomCode
         <div>
           <div className="text-sm text-muted-foreground mb-2">Join at slidr.app</div>
           <div className="flex items-center justify-center gap-2">
-            <div className="font-mono text-5xl font-bold tracking-wider" data-testid="text-room-code">
+            <div 
+              className="font-mono text-5xl font-bold tracking-wider" 
+              data-testid="text-room-code"
+              data-code={code}
+            >
               {code}
             </div>
             <Button

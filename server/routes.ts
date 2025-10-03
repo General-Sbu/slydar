@@ -144,6 +144,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existing = await storage.getSessionByCode(code);
       }
       
+      console.log(`🎯 CREATING SESSION - Room Code: ${code}`);
+      
       const data = insertSessionSchema.parse({
         ...req.body,
         code,

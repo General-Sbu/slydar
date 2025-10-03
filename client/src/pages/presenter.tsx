@@ -56,6 +56,8 @@ export default function Presenter() {
       if (slides.length > 0) {
         setCurrentSlide(slides[0]);
       }
+      console.log(`🎯 ROOM CODE: ${data.code}`);
+      console.log(`Join at: /audience/${data.code}`);
     },
     onError: () => {
       toast({
