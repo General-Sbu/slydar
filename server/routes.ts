@@ -9,6 +9,8 @@ import {
   insertResponseSchema 
 } from "@shared/schema";
 import { randomBytes } from "crypto";
+import multer from "multer";
+import officeParser from "officeparser";
 
 interface SocketClient {
   sessionId?: string;
@@ -122,6 +124,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete slide" });
+    }
+  });
+
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/pdf'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only PPT, PPTX, and PDF files are allowed.'));
+      }
+    }
+  });
+
+  app.post("/api/presentations/:id/import", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const presentationId = req.params.id;
+      const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
+      
+      const fs = await import('fs');
+      await fs.promises.writeFile(tempFilePath, req.file.buffer);
+
+      const config = {
+        newlineDelimiter: "\n",
+        ignoreNotes: true
+      };
+
+      const text = await officeParser.parseOfficeAsync(tempFilePath, config);
+      
+      await fs.promises.unlink(tempFilePath);
+
+      const lines = text.split('\n').filter(line => line.trim().length > 0);
+      
+      const slides = await storage.getSlidesByPresentation(presentationId);
+      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+      
+      const createdSlides = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.length > 0) {
+          const slideData = insertSlideSchema.parse({
+            presentationId,
+            type: 'heading',
+            order: maxOrder + i + 1,
+            question: line,
+            options: [],
+            config: {}
+          });
+          const slide = await storage.createSlide(slideData);
+          createdSlides.push(slide);
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        slidesCreated: createdSlides.length,
+        slides: createdSlides
+      });
+    } catch (error: any) {
+      console.error('File import error:', error);
+      res.status(500).json({ error: error.message || "Failed to import file" });
     }
   });
 

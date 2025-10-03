@@ -10,7 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import { 
   BarChart3, Cloud, MessageSquare, Type, 
-  ChevronLeft, Save, Play, Trash2, Plus 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload 
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
@@ -94,6 +94,36 @@ export default function Editor() {
     }
   });
 
+  const importMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`/api/presentations/${presentationId}/import`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to import');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      toast({ 
+        title: "Success", 
+        description: `Imported ${data.slidesCreated} slides from file` 
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   useEffect(() => {
     if (slides.length > 0 && slides[selectedSlideIndex]) {
       setEditingSlide({ ...slides[selectedSlideIndex] });
@@ -154,6 +184,14 @@ export default function Editor() {
 
   const handlePresent = () => {
     setLocation(`/presenter/${presentationId}`);
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importMutation.mutate(file);
+      event.target.value = '';
+    }
   };
 
   if (!presentationId) {
@@ -287,6 +325,36 @@ export default function Editor() {
                     />
                   </div>
                 </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-3">Import Slides</h3>
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="hidden"
+                  accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+                  onChange={handleFileImport}
+                  data-testid="input-file-upload"
+                />
+                <label htmlFor="file-upload">
+                  <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-import-slides">
+                    <div className="flex items-center gap-3">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <div className="text-sm font-medium">Import File</div>
+                        <div className="text-xs text-muted-foreground">PPT, PPTX, or PDF</div>
+                      </div>
+                    </div>
+                  </Card>
+                </label>
+                {importMutation.isPending && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Importing slides...
+                  </div>
+                )}
               </div>
             </div>
           </ScrollArea>
