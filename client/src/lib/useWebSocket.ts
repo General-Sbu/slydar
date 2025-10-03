@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
 import type { Session, Slide } from '@shared/schema';
 
-interface WebSocketMessage {
-  type: string;
-  [key: string]: any;
-}
-
 interface UseWebSocketOptions {
-  onMessage?: (message: WebSocketMessage) => void;
   onSessionJoined?: (data: { session: Session; currentSlide: Slide; slides: Slide[]; participantId?: string }) => void;
   onSlideChanged?: (data: { slideIndex: number; slide: Slide }) => void;
   onNewResponse?: (data: { response: any; slideId: string; totalResponses: number }) => void;
@@ -20,108 +15,91 @@ interface UseWebSocketOptions {
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-
-  const connect = useCallback(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    console.log('[WebSocket] Connecting to:', wsUrl);
-    
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setIsConnected(true);
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        
-        options.onMessage?.(message);
-
-        switch (message.type) {
-          case 'session_joined':
-            if (message.participantId) {
-              setParticipantId(message.participantId);
-            }
-            options.onSessionJoined?.(message as any);
-            break;
-          case 'slide_changed':
-            options.onSlideChanged?.(message as any);
-            break;
-          case 'new_response':
-            options.onNewResponse?.(message as any);
-            break;
-          case 'participant_count':
-            options.onParticipantCount?.(message.count);
-            break;
-          case 'session_update':
-            options.onSessionUpdate?.(message.session);
-            break;
-          case 'session_ended':
-            options.onSessionEnded?.();
-            break;
-          case 'error':
-            options.onError?.(message.message);
-            break;
-        }
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connect();
-      }, 3000);
-    };
-  }, [options]);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    connect();
+    console.log('[Socket.IO] Connecting to server...');
+    
+    const socket = io({
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('[Socket.IO] Connected:', socket.id);
+      setIsConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[Socket.IO] Disconnected');
+      setIsConnected(false);
+    });
+
+    socket.on('session_joined', (data: { session: Session; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
+      if (data.participantId) {
+        setParticipantId(data.participantId);
+      }
+      options.onSessionJoined?.(data);
+    });
+
+    socket.on('slide_changed', (data: { slideIndex: number; slide: Slide }) => {
+      options.onSlideChanged?.(data);
+    });
+
+    socket.on('new_response', (data: { response: any; slideId: string; totalResponses: number }) => {
+      options.onNewResponse?.(data);
+    });
+
+    socket.on('participant_count', (data: { count: number }) => {
+      options.onParticipantCount?.(data.count);
+    });
+
+    socket.on('session_update', (data: { session: Session }) => {
+      options.onSessionUpdate?.(data.session);
+    });
+
+    socket.on('session_ended', () => {
+      options.onSessionEnded?.();
+    });
+
+    socket.on('error', (data: { message: string }) => {
+      console.error('[Socket.IO] Error:', data.message);
+      options.onError?.(data.message);
+    });
 
     return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      socket.disconnect();
     };
-  }, [connect]);
+  }, [options.onSessionJoined, options.onSlideChanged, options.onNewResponse, options.onParticipantCount, options.onSessionUpdate, options.onSessionEnded, options.onError]);
 
-  const send = useCallback((message: WebSocketMessage) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
+  const joinSession = useCallback((code: string, role: 'presenter' | 'audience', participantId?: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('join_session', { code, role, participantId });
     }
   }, []);
 
-  const joinSession = useCallback((code: string, role: 'presenter' | 'audience', participantId?: string) => {
-    send({ type: 'join_session', code, role, participantId });
-  }, [send]);
-
   const submitResponse = useCallback((slideId: string, answer: string) => {
-    send({ type: 'submit_response', slideId, answer });
-  }, [send]);
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('submit_response', { slideId, answer });
+    }
+  }, []);
 
   const navigateSlide = useCallback((slideIndex: number) => {
-    send({ type: 'navigate_slide', slideIndex });
-  }, [send]);
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('navigate_slide', { slideIndex });
+    }
+  }, []);
 
   return {
     isConnected,
     participantId,
     joinSession,
     submitResponse,
-    navigateSlide,
-    send
+    navigateSlide
   };
 }
