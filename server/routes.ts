@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 import { 
   insertPresentationSchema, 
@@ -10,14 +10,11 @@ import {
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 
-interface WSClient {
-  ws: WebSocket;
+interface SocketClient {
   sessionId?: string;
   role?: 'presenter' | 'audience';
   participantId?: string;
 }
-
-const clients = new Map<WebSocket, WSClient>();
 
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -28,13 +25,6 @@ function generateRoomCode(): string {
   return code;
 }
 
-function broadcastToSession(sessionId: string, message: any, excludeWs?: WebSocket) {
-  clients.forEach((client, ws) => {
-    if (client.sessionId === sessionId && ws !== excludeWs && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
-    }
-  });
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/presentations", async (req, res) => {
@@ -188,11 +178,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
       
-      broadcastToSession(req.params.id, {
-        type: 'session_update',
-        session: updated
-      });
-      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update session" });
@@ -205,10 +190,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!ended) {
         return res.status(404).json({ error: "Session not found" });
       }
-      
-      broadcastToSession(req.params.id, {
-        type: 'session_ended'
-      });
       
       res.json({ success: true });
     } catch (error) {
@@ -236,126 +217,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Configure WebSocket server without path restriction - we'll validate in connection handler
-  const wss = new WebSocketServer({ 
-    server: httpServer,
-    path: '/ws'
+  // Initialize Socket.IO server with CORS and transports configuration
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    },
+    transports: ['polling', 'websocket'],
+    allowEIO3: true
   });
 
-  console.log('🔌 WebSocket server initialized on path: /ws');
+  console.log('🔌 Socket.IO server initialized');
 
-  wss.on('connection', (ws: WebSocket, request) => {
-    console.log('✅ New WebSocket connection established from:', request.url);
-    const clientData: WSClient = { ws };
-    clients.set(ws, clientData);
+  io.on('connection', (socket) => {
+    console.log('✅ New Socket.IO connection:', socket.id);
+    const clientData: SocketClient = {};
 
-    ws.on('message', async (data: Buffer) => {
+    socket.on('join_session', async ({ code, role, participantId }) => {
       try {
-        const message = JSON.parse(data.toString());
-        
-        switch (message.type) {
-          case 'join_session':
-            const session = await storage.getSessionByCode(message.code);
-            if (!session) {
-              ws.send(JSON.stringify({ type: 'error', message: 'Session not found' }));
-              return;
-            }
-            
-            clientData.sessionId = session.id;
-            clientData.role = message.role;
-            
-            if (message.role === 'audience') {
-              clientData.participantId = message.participantId || randomBytes(8).toString('hex');
-            }
-            
-            const participantCount = Array.from(clients.values())
-              .filter(c => c.sessionId === session.id && c.role === 'audience').length;
-            
-            broadcastToSession(session.id, {
-              type: 'participant_count',
-              count: participantCount
-            });
-            
-            const slides = await storage.getSlidesByPresentation(session.presentationId);
-            const currentSlide = slides[session.currentSlideIndex];
-            
-            ws.send(JSON.stringify({
-              type: 'session_joined',
-              session,
-              currentSlide,
-              slides,
-              participantId: clientData.participantId
-            }));
-            break;
-
-          case 'submit_response':
-            if (!clientData.sessionId || !clientData.participantId) {
-              ws.send(JSON.stringify({ type: 'error', message: 'Not in a session' }));
-              return;
-            }
-            
-            const responseData = insertResponseSchema.parse({
-              sessionId: clientData.sessionId,
-              slideId: message.slideId,
-              participantId: clientData.participantId,
-              answer: message.answer
-            });
-            
-            const response = await storage.createResponse(responseData);
-            
-            const allResponses = await storage.getResponsesBySlide(message.slideId, clientData.sessionId);
-            
-            broadcastToSession(clientData.sessionId, {
-              type: 'new_response',
-              response,
-              slideId: message.slideId,
-              totalResponses: allResponses.length
-            });
-            
-            ws.send(JSON.stringify({
-              type: 'response_submitted',
-              response
-            }));
-            break;
-
-          case 'navigate_slide':
-            if (!clientData.sessionId || clientData.role !== 'presenter') {
-              ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }));
-              return;
-            }
-            
-            const updatedSession = await storage.updateSession(clientData.sessionId, {
-              currentSlideIndex: message.slideIndex
-            });
-            
-            if (updatedSession) {
-              const sessionSlides = await storage.getSlidesByPresentation(updatedSession.presentationId);
-              const newSlide = sessionSlides[message.slideIndex];
-              
-              broadcastToSession(clientData.sessionId, {
-                type: 'slide_changed',
-                slideIndex: message.slideIndex,
-                slide: newSlide
-              });
-            }
-            break;
+        const session = await storage.getSessionByCode(code);
+        if (!session) {
+          socket.emit('error', { message: 'Session not found' });
+          return;
         }
+        
+        clientData.sessionId = session.id;
+        clientData.role = role;
+        
+        if (role === 'audience') {
+          clientData.participantId = participantId || randomBytes(8).toString('hex');
+        }
+        
+        // Join Socket.IO room for this session
+        socket.join(session.id);
+        
+        // Count participants in this session's room
+        const sockets = await io.in(session.id).fetchSockets();
+        const participantCount = sockets.filter(s => {
+          const data = (s as any).data as SocketClient;
+          return data.role === 'audience';
+        }).length;
+        
+        io.to(session.id).emit('participant_count', { count: participantCount });
+        
+        const slides = await storage.getSlidesByPresentation(session.presentationId);
+        const currentSlide = slides[session.currentSlideIndex];
+        
+        socket.emit('session_joined', {
+          session,
+          currentSlide,
+          slides,
+          participantId: clientData.participantId
+        });
+        
+        // Store client data on socket for later reference
+        (socket as any).data = clientData;
       } catch (error) {
-        ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+        socket.emit('error', { message: 'Failed to join session' });
       }
     });
 
-    ws.on('close', () => {
-      if (clientData.sessionId) {
-        const participantCount = Array.from(clients.values())
-          .filter(c => c.sessionId === clientData.sessionId && c.role === 'audience' && c.ws !== ws).length;
+    socket.on('submit_response', async ({ slideId, answer }) => {
+      try {
+        if (!clientData.sessionId || !clientData.participantId) {
+          socket.emit('error', { message: 'Not in a session' });
+          return;
+        }
         
-        broadcastToSession(clientData.sessionId, {
-          type: 'participant_count',
-          count: participantCount
+        const responseData = insertResponseSchema.parse({
+          sessionId: clientData.sessionId,
+          slideId,
+          participantId: clientData.participantId,
+          answer
         });
+        
+        const response = await storage.createResponse(responseData);
+        const allResponses = await storage.getResponsesBySlide(slideId, clientData.sessionId);
+        
+        io.to(clientData.sessionId).emit('new_response', {
+          response,
+          slideId,
+          totalResponses: allResponses.length
+        });
+        
+        socket.emit('response_submitted', { response });
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to submit response' });
       }
-      clients.delete(ws);
+    });
+
+    socket.on('navigate_slide', async ({ slideIndex }) => {
+      try {
+        if (!clientData.sessionId || clientData.role !== 'presenter') {
+          socket.emit('error', { message: 'Unauthorized' });
+          return;
+        }
+        
+        const updatedSession = await storage.updateSession(clientData.sessionId, {
+          currentSlideIndex: slideIndex
+        });
+        
+        if (updatedSession) {
+          const sessionSlides = await storage.getSlidesByPresentation(updatedSession.presentationId);
+          const newSlide = sessionSlides[slideIndex];
+          
+          io.to(clientData.sessionId).emit('slide_changed', {
+            slideIndex,
+            slide: newSlide
+          });
+        }
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to navigate slide' });
+      }
+    });
+
+    socket.on('disconnect', async () => {
+      if (clientData.sessionId) {
+        const sockets = await io.in(clientData.sessionId).fetchSockets();
+        const participantCount = sockets.filter(s => {
+          const data = (s as any).data as SocketClient;
+          return data.role === 'audience' && s.id !== socket.id;
+        }).length;
+        
+        io.to(clientData.sessionId).emit('participant_count', { count: participantCount });
+      }
     });
   });
 
