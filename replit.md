@@ -144,6 +144,34 @@ Preferred communication style: Simple, everyday language.
 - Socket.IO provides automatic transport fallback and reconnection handling
 - Client hook uses ref pattern to prevent reconnection loops
 
+### File Import Feature
+
+**PPT/PDF Import (Added October 2025):**
+- Converts PowerPoint (.ppt, .pptx) and PDF files into presentation slides
+- Backend endpoint: `POST /api/presentations/:id/import`
+- Uses `officeparser` library for text extraction from documents
+- Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
+
+**Implementation Details:**
+- File upload via `multipart/form-data` with MIME type validation
+- Temp file written to `/tmp` during processing (timestamp-prefixed)
+- Text extraction using callback-based API wrapped in Promise
+- Automatic cleanup of temp files via `finally` block
+- Each non-empty line becomes a "heading" type slide
+- Slides appended to existing presentation with proper ordering
+
+**Error Handling:**
+- 400 error for missing file or invalid MIME type
+- 500 error for parsing failures (invalid file structure)
+- Guaranteed temp file deletion even on errors
+- Frontend shows toast notifications for success/failure
+
+**Security Measures:**
+- File type restriction (.ppt, .pptx, .pdf only)
+- 50MB file size limit
+- Server-side MIME validation
+- Isolated temp file processing
+
 ## External Dependencies
 
 ### Third-party Services
