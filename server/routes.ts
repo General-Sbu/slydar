@@ -156,14 +156,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fs = await import('fs');
       await fs.promises.writeFile(tempFilePath, req.file.buffer);
 
-      const config = {
-        newlineDelimiter: "\n",
-        ignoreNotes: true
-      };
-
-      const text = await officeParser.parseOfficeAsync(tempFilePath, config);
-      
-      await fs.promises.unlink(tempFilePath);
+      let text: string;
+      try {
+        text = await new Promise<string>((resolve, reject) => {
+          officeParser.parseOffice(tempFilePath, (err: Error | null, data: string) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(data);
+            }
+          });
+        });
+      } finally {
+        await fs.promises.unlink(tempFilePath);
+      }
 
       const lines = text.split('\n').filter(line => line.trim().length > 0);
       
