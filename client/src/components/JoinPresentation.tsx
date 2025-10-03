@@ -3,14 +3,48 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import Logo from "./Logo";
+import { useToast } from "@/hooks/use-toast";
 
 export default function JoinPresentation() {
   const [code, setCode] = useState("");
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleJoin = () => {
-    if (code.trim()) {
-      console.log("Joining presentation with code:", code);
+  const handleJoin = async () => {
+    if (code.trim().length < 3) return;
+    
+    setIsChecking(true);
+    try {
+      const res = await fetch(`/api/sessions/code/${code.toUpperCase()}`);
+      if (res.ok) {
+        const session = await res.json();
+        if (session.isActive) {
+          setLocation(`/audience/${code.toUpperCase()}`);
+        } else {
+          toast({
+            title: "Session not active",
+            description: "This presentation session has ended",
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Invalid code",
+          description: "No active presentation found with this code",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join presentation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -40,10 +74,10 @@ export default function JoinPresentation() {
             size="lg" 
             className="w-full gap-2"
             onClick={handleJoin}
-            disabled={code.length < 3}
+            disabled={code.length < 3 || isChecking}
             data-testid="button-join"
           >
-            Join Now
+            {isChecking ? "Checking..." : "Join Now"}
             <ArrowRight className="h-5 w-5" />
           </Button>
         </CardContent>

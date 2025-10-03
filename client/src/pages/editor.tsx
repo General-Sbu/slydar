@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import Logo from "@/components/Logo";
@@ -10,13 +10,178 @@ import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import { 
   BarChart3, Cloud, MessageSquare, Type, 
-  ChevronLeft, Save, Eye, Play 
+  ChevronLeft, Save, Play, Trash2, Plus 
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRoute, useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import type { Presentation, Slide, SlideType } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Editor() {
-  const [question, setQuestion] = useState("What's your favorite feature?");
-  const [options, setOptions] = useState(["Polls", "Quizzes", "Word Clouds", "Q&A"]);
+  const [, params] = useRoute("/editor/:id");
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const presentationId = params?.id;
+
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
+  const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
+
+  const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
+    queryKey: ['/api/presentations', presentationId],
+    enabled: !!presentationId,
+  });
+
+  const { data: slides = [], isLoading: slidesLoading } = useQuery<Slide[]>({
+    queryKey: ['/api/presentations', presentationId, 'slides'],
+    enabled: !!presentationId,
+  });
+
+  const createSlideMutation = useMutation({
+    mutationFn: async (slideData: { type: SlideType; question: string; options?: string[] }) => {
+      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+      const res = await fetch('/api/slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presentationId,
+          type: slideData.type,
+          order: maxOrder + 1,
+          question: slideData.question,
+          options: slideData.options || [],
+          config: {}
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      toast({ title: "Slide added", description: "New slide created" });
+    }
+  });
+
+  const updateSlideMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Slide> }) => {
+      const res = await fetch(`/api/slides/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to update');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      toast({ title: "Saved", description: "Slide updated" });
+    }
+  });
+
+  const deleteSlideMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/slides/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      toast({ title: "Deleted", description: "Slide removed" });
+      setSelectedSlideIndex(Math.max(0, selectedSlideIndex - 1));
+    }
+  });
+
+  useEffect(() => {
+    if (slides.length > 0 && slides[selectedSlideIndex]) {
+      setEditingSlide({ ...slides[selectedSlideIndex] });
+    }
+  }, [selectedSlideIndex, slides]);
+
+  const handleAddSlide = (type: SlideType) => {
+    const defaultData: Record<SlideType, { type: SlideType; question: string; options?: string[] }> = {
+      multiple_choice: { type: 'multiple_choice', question: "New multiple choice question?", options: ["Option 1", "Option 2", "Option 3", "Option 4"] },
+      word_cloud: { type: 'word_cloud', question: "What words come to mind?", options: [] },
+      open_ended: { type: 'open_ended', question: "Share your thoughts...", options: [] },
+      heading: { type: 'heading', question: "New Section", options: [] }
+    };
+    
+    createSlideMutation.mutate(defaultData[type]);
+  };
+
+  const handleSaveSlide = () => {
+    if (editingSlide && editingSlide.id) {
+      updateSlideMutation.mutate({
+        id: editingSlide.id,
+        data: {
+          question: editingSlide.question,
+          options: editingSlide.options,
+          type: editingSlide.type
+        }
+      });
+    }
+  };
+
+  const handleDeleteSlide = () => {
+    if (editingSlide && editingSlide.id) {
+      deleteSlideMutation.mutate(editingSlide.id);
+    }
+  };
+
+  const handleUpdateOption = (index: number, value: string) => {
+    if (editingSlide && editingSlide.options) {
+      const newOptions = [...editingSlide.options];
+      newOptions[index] = value;
+      setEditingSlide({ ...editingSlide, options: newOptions });
+    }
+  };
+
+  const handleAddOption = () => {
+    if (editingSlide) {
+      const newOptions = [...(editingSlide.options || []), `Option ${(editingSlide.options?.length || 0) + 1}`];
+      setEditingSlide({ ...editingSlide, options: newOptions });
+    }
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (editingSlide && editingSlide.options) {
+      const newOptions = editingSlide.options.filter((_, i) => i !== index);
+      setEditingSlide({ ...editingSlide, options: newOptions });
+    }
+  };
+
+  const handlePresent = () => {
+    setLocation(`/present/${presentationId}`);
+  };
+
+  if (!presentationId) {
+    return <div className="h-screen flex items-center justify-center">Invalid presentation ID</div>;
+  }
+
+  if (presentationLoading || slidesLoading) {
+    return (
+      <div className="h-screen flex flex-col">
+        <header className="border-b bg-background/95 backdrop-blur">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex h-14 items-center justify-between gap-4">
+              <Skeleton className="h-10 w-40" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Skeleton className="h-8 w-64 mx-auto" />
+            <Skeleton className="h-4 w-32 mx-auto" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentSlide = slides[selectedSlideIndex];
 
   return (
     <div className="h-screen flex flex-col">
@@ -24,26 +189,40 @@ export default function Editor() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" data-testid="button-back">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                data-testid="button-back"
+                onClick={() => setLocation('/dashboard')}
+              >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <Logo showText={false} />
               <div className="hidden sm:block">
-                <div className="font-semibold">Product Launch Q4</div>
-                <div className="text-xs text-muted-foreground">12 slides</div>
+                <div className="font-semibold">{presentation?.title || 'Untitled'}</div>
+                <div className="text-xs text-muted-foreground">{slides.length} slides</div>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2" data-testid="button-preview">
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Preview</span>
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" data-testid="button-save">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2" 
+                data-testid="button-save"
+                onClick={handleSaveSlide}
+                disabled={updateSlideMutation.isPending}
+              >
                 <Save className="h-4 w-4" />
                 <span className="hidden sm:inline">Save</span>
               </Button>
-              <Button size="sm" className="gap-2" data-testid="button-present-editor">
+              <Button 
+                size="sm" 
+                className="gap-2" 
+                data-testid="button-present-editor"
+                onClick={handlePresent}
+                disabled={slides.length === 0}
+              >
                 <Play className="h-4 w-4" />
                 Present
               </Button>
@@ -58,28 +237,55 @@ export default function Editor() {
           <ScrollArea className="h-full">
             <div className="p-4 space-y-4">
               <div>
+                <h3 className="font-semibold mb-3">Slides</h3>
+                <div className="space-y-2">
+                  {slides.map((slide, index) => (
+                    <Card 
+                      key={slide.id}
+                      className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
+                      onClick={() => setSelectedSlideIndex(index)}
+                      data-testid={`card-slide-${index}`}
+                    >
+                      <div className="text-sm font-medium">Slide {index + 1}</div>
+                      <div className="text-xs text-muted-foreground truncate">{slide.question || slide.type}</div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
                 <h3 className="font-semibold mb-3">Add Slide</h3>
                 <div className="space-y-2">
-                  <SlideTypeCard
-                    icon={BarChart3}
-                    title="Multiple Choice"
-                    description="Poll with options"
-                  />
-                  <SlideTypeCard
-                    icon={Cloud}
-                    title="Word Cloud"
-                    description="Collect ideas"
-                  />
-                  <SlideTypeCard
-                    icon={MessageSquare}
-                    title="Open Ended"
-                    description="Free text responses"
-                  />
-                  <SlideTypeCard
-                    icon={Type}
-                    title="Heading"
-                    description="Title slide"
-                  />
+                  <div onClick={() => handleAddSlide('multiple_choice')}>
+                    <SlideTypeCard
+                      icon={BarChart3}
+                      title="Multiple Choice"
+                      description="Poll with options"
+                    />
+                  </div>
+                  <div onClick={() => handleAddSlide('word_cloud')}>
+                    <SlideTypeCard
+                      icon={Cloud}
+                      title="Word Cloud"
+                      description="Collect ideas"
+                    />
+                  </div>
+                  <div onClick={() => handleAddSlide('open_ended')}>
+                    <SlideTypeCard
+                      icon={MessageSquare}
+                      title="Open Ended"
+                      description="Free text responses"
+                    />
+                  </div>
+                  <div onClick={() => handleAddSlide('heading')}>
+                    <SlideTypeCard
+                      icon={Type}
+                      title="Heading"
+                      description="Title slide"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -89,18 +295,40 @@ export default function Editor() {
         <main className="flex-1 overflow-auto bg-muted/20">
           <div className="p-8">
             <div className="max-w-4xl mx-auto">
-              <Card className="aspect-video flex items-center justify-center p-12">
-                <div className="w-full text-center space-y-6">
-                  <h2 className="text-4xl font-bold">{question || "Your question here"}</h2>
-                  <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-                    {options.map((option, index) => (
-                      <Card key={index} className="p-6 hover-elevate cursor-pointer">
-                        <div className="font-medium text-lg">{option}</div>
-                      </Card>
-                    ))}
+              {slides.length === 0 ? (
+                <Card className="aspect-video flex items-center justify-center p-12">
+                  <div className="text-center text-muted-foreground">
+                    <p>No slides yet. Add a slide to get started.</p>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              ) : (
+                <Card className="aspect-video flex items-center justify-center p-12">
+                  <div className="w-full text-center space-y-6">
+                    {currentSlide?.type === 'heading' ? (
+                      <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                    ) : (
+                      <>
+                        <h2 className="text-4xl font-bold">{currentSlide?.question || "Your question here"}</h2>
+                        {currentSlide?.type === 'multiple_choice' && currentSlide.options && (
+                          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            {currentSlide.options.map((option, index) => (
+                              <Card key={index} className="p-6 hover-elevate cursor-pointer">
+                                <div className="font-medium text-lg">{option}</div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                        {currentSlide?.type === 'word_cloud' && (
+                          <div className="text-muted-foreground">Word cloud visualization will appear here</div>
+                        )}
+                        {currentSlide?.type === 'open_ended' && (
+                          <div className="text-muted-foreground">Open text input will appear here</div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
         </main>
@@ -108,51 +336,83 @@ export default function Editor() {
         <aside className="w-80 border-l overflow-auto">
           <ScrollArea className="h-full">
             <div className="p-6 space-y-6">
-              <div>
-                <h3 className="font-semibold mb-4">Slide Properties</h3>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="question">Question</Label>
-                    <Textarea
-                      id="question"
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="Enter your question"
-                      data-testid="input-question"
-                      className="min-h-20"
-                    />
+              {editingSlide ? (
+                <>
+                  <div>
+                    <h3 className="font-semibold mb-4">Slide Properties</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="question">
+                          {editingSlide.type === 'heading' ? 'Heading' : 'Question'}
+                        </Label>
+                        <Textarea
+                          id="question"
+                          value={editingSlide.question || ''}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, question: e.target.value })}
+                          className="resize-none min-h-20"
+                          data-testid="input-question"
+                        />
+                      </div>
+
+                      {editingSlide.type === 'multiple_choice' && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Options</Label>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={handleAddOption}
+                              data-testid="button-add-option"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            {editingSlide.options?.map((option, index) => (
+                              <div key={index} className="flex gap-2">
+                                <Input
+                                  value={option}
+                                  onChange={(e) => handleUpdateOption(index, e.target.value)}
+                                  data-testid={`input-option-${index}`}
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => handleRemoveOption(index)}
+                                  data-testid={`button-remove-option-${index}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <Separator />
 
-                  <div className="space-y-3">
-                    <Label>Options</Label>
-                    {options.map((option, index) => (
-                      <Input
-                        key={index}
-                        value={option}
-                        onChange={(e) => {
-                          const newOptions = [...options];
-                          newOptions[index] = e.target.value;
-                          setOptions(newOptions);
-                        }}
-                        placeholder={`Option ${index + 1}`}
-                        data-testid={`input-option-${index}`}
-                      />
-                    ))}
+                  <div className="space-y-2">
                     <Button 
-                      variant="outline" 
-                      size="sm" 
+                      variant="destructive" 
                       className="w-full"
-                      data-testid="button-add-option"
-                      onClick={() => setOptions([...options, `Option ${options.length + 1}`])}
+                      onClick={handleDeleteSlide}
+                      disabled={deleteSlideMutation.isPending || slides.length <= 1}
+                      data-testid="button-delete-slide"
                     >
-                      Add Option
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Slide
                     </Button>
                   </div>
+                </>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  Select a slide to edit
                 </div>
-              </div>
+              )}
             </div>
           </ScrollArea>
         </aside>
