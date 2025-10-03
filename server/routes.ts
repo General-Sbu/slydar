@@ -144,7 +144,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/presentations/:id/import", upload.single('file'), async (req, res) => {
+  app.post("/api/presentations/:id/import", (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File size exceeds 50MB limit' });
+          }
+          return res.status(400).json({ error: err.message });
+        }
+        return res.status(400).json({ error: err.message || 'Invalid file type. Only PPT, PPTX, and PDF files are allowed.' });
+      }
+      next();
+    });
+  }, async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -159,11 +172,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let text: string;
       try {
         text = await new Promise<string>((resolve, reject) => {
-          officeParser.parseOffice(tempFilePath, (err: Error | null, data: string) => {
+          officeParser.parseOffice(tempFilePath, (data: string, err: Error | null) => {
             if (err) {
               reject(err);
-            } else {
+            } else if (data) {
               resolve(data);
+            } else {
+              reject(new Error('No data returned from parser'));
             }
           });
         });
