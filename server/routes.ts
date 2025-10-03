@@ -235,9 +235,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Configure WebSocket server without path restriction - we'll validate in connection handler
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'
+  });
 
-  wss.on('connection', (ws: WebSocket) => {
+  console.log('🔌 WebSocket server initialized on path: /ws');
+
+  wss.on('connection', (ws: WebSocket, request) => {
+    console.log('✅ New WebSocket connection established from:', request.url);
     const clientData: WSClient = { ws };
     clients.set(ws, clientData);
 
