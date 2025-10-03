@@ -56,9 +56,10 @@ export const insertSlideSchema = createInsertSchema(slides).omit({
 export const insertSessionSchema = createInsertSchema(sessions).omit({
   id: true,
   startedAt: true,
-  code: true,
-  currentSlideIndex: true,
-  isActive: true,
+}).extend({
+  code: z.string().min(6).max(6),
+  currentSlideIndex: z.number().default(0),
+  isActive: z.boolean().default(true),
 });
 
 export const insertResponseSchema = createInsertSchema(responses).omit({
