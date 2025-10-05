@@ -4,18 +4,23 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import PresentationCard from "@/components/PresentationCard";
 import EmptyState from "@/components/EmptyState";
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Presentation } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { logout } from "@/lib/authUtils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: presentations = [], isLoading } = useQuery<Presentation[]>({
     queryKey: ['/api/presentations'],
@@ -103,6 +108,39 @@ export default function Dashboard() {
                 <span className="hidden sm:inline">New Presentation</span>
               </Button>
               <ThemeToggle />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild data-testid="button-user-menu">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={user?.profileImageUrl ?? undefined} alt={user?.firstName ?? "User"} />
+                      <AvatarFallback>
+                        {user?.firstName?.[0] ?? user?.email?.[0] ?? "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none" data-testid="text-user-name">
+                        {user?.firstName && user?.lastName 
+                          ? `${user.firstName} ${user.lastName}` 
+                          : user?.firstName ?? "User"}
+                      </p>
+                      {user?.email && (
+                        <p className="text-xs leading-none text-muted-foreground" data-testid="text-user-email">
+                          {user.email}
+                        </p>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} data-testid="button-logout">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
