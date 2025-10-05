@@ -11,11 +11,13 @@ import type { Presentation, Slide, Session, Response } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Presenter() {
   const [, params] = useRoute("/presenter/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const presentationId = params?.id;
 
   const [session, setSession] = useState<Session | null>(null);

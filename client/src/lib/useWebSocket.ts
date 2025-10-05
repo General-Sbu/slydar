@@ -31,7 +31,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      withCredentials: true
     });
 
     socketRef.current = socket;

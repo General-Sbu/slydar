@@ -11,7 +11,9 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import officeParser from "officeparser";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, getSession, getSessionStore } from "./replitAuth";
+import type session from "express-session";
+import passport from "passport";
 
 interface SocketClient {
   sessionId?: string;
@@ -134,9 +136,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/slides", isAuthenticated, async (req, res) => {
+  app.post("/api/slides", isAuthenticated, async (req: any, res) => {
     try {
       const data = insertSlideSchema.parse(req.body);
+      const presentation = await storage.getPresentation(data.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       const slide = await storage.createSlide(data);
       res.json(slide);
     } catch (error) {
@@ -144,24 +154,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/slides/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/slides/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const updated = await storage.updateSlide(req.params.id, req.body);
-      if (!updated) {
+      const slide = await storage.getSlide(req.params.id);
+      if (!slide) {
         return res.status(404).json({ error: "Slide not found" });
       }
+      const presentation = await storage.getPresentation(slide.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const updated = await storage.updateSlide(req.params.id, req.body);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update slide" });
     }
   });
 
-  app.delete("/api/slides/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/slides/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const deleted = await storage.deleteSlide(req.params.id);
-      if (!deleted) {
+      const slide = await storage.getSlide(req.params.id);
+      if (!slide) {
         return res.status(404).json({ error: "Slide not found" });
       }
+      const presentation = await storage.getPresentation(slide.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const deleted = await storage.deleteSlide(req.params.id);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete slide" });
@@ -320,8 +348,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sessions", isAuthenticated, async (req, res) => {
+  app.post("/api/sessions", isAuthenticated, async (req: any, res) => {
     try {
+      const data = insertPresentationSessionSchema.parse({
+        ...req.body,
+        code: '',
+        currentSlideIndex: 0,
+        isActive: true
+      });
+      
+      const presentation = await storage.getPresentation(data.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
       let code = generateRoomCode();
       let existing = await storage.getSessionByCode(code);
       while (existing) {
@@ -329,13 +373,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existing = await storage.getSessionByCode(code);
       }
       
-      const data = insertPresentationSessionSchema.parse({
-        ...req.body,
-        code,
-        currentSlideIndex: 0,
-        isActive: true
+      const session = await storage.createSession({
+        ...data,
+        code
       });
-      const session = await storage.createSession(data);
       res.json(session);
     } catch (error) {
       res.status(400).json({ error: "Invalid session data" });
@@ -366,26 +407,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/sessions/:id", async (req, res) => {
+  app.patch("/api/sessions/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const updated = await storage.updateSession(req.params.id, req.body);
-      if (!updated) {
+      const session = await storage.getSession(req.params.id);
+      if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       
+      const updated = await storage.updateSession(req.params.id, req.body);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update session" });
     }
   });
 
-  app.post("/api/sessions/:id/end", async (req, res) => {
+  app.post("/api/sessions/:id/end", isAuthenticated, async (req: any, res) => {
     try {
-      const ended = await storage.endSession(req.params.id);
-      if (!ended) {
+      const session = await storage.getSession(req.params.id);
+      if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       
+      const ended = await storage.endSession(req.params.id);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to end session" });
@@ -416,17 +475,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: "*",
-      methods: ["GET", "POST"]
+      methods: ["GET", "POST"],
+      credentials: true
     },
     transports: ['polling', 'websocket'],
     allowEIO3: true
   });
 
-  console.log('🔌 Socket.IO server initialized');
+  // Set up session middleware for Socket.IO
+  const wrap = (middleware: any) => (socket: any, next: any) => 
+    middleware(socket.request, {} as any, next);
+  
+  const sessionMiddleware = getSession();
+  io.use(wrap(sessionMiddleware));
+  io.use(wrap(passport.initialize()));
+  io.use(wrap(passport.session()));
+
+  console.log('🔌 Socket.IO server initialized with session support');
 
   io.on('connection', (socket) => {
     console.log('✅ New Socket.IO connection:', socket.id);
     const clientData: SocketClient = {};
+    const req = (socket.request as any);
 
     socket.on('join_session', async ({ code, role, participantId }) => {
       try {
@@ -434,6 +504,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!session) {
           socket.emit('error', { message: 'Session not found' });
           return;
+        }
+        
+        if (role === 'presenter') {
+          if (!req.isAuthenticated || !req.isAuthenticated()) {
+            socket.emit('error', { message: 'Authentication required for presenters' });
+            return;
+          }
+          
+          const userId = req.user?.claims?.sub;
+          if (!userId) {
+            socket.emit('error', { message: 'User ID not found in session' });
+            return;
+          }
+          
+          const presentation = await storage.getPresentation(session.presentationId);
+          if (!presentation) {
+            socket.emit('error', { message: 'Presentation not found' });
+            return;
+          }
+          
+          if (presentation.userId !== userId) {
+            socket.emit('error', { message: 'Unauthorized: Not presentation owner' });
+            return;
+          }
         }
         
         clientData.sessionId = session.id;
