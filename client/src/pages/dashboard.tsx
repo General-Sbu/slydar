@@ -112,9 +112,8 @@ export default function Dashboard() {
                 <DropdownMenuTrigger asChild data-testid="button-user-menu">
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={user?.profileImageUrl ?? undefined} alt={user?.firstName ?? "User"} />
                       <AvatarFallback>
-                        {user?.firstName?.[0] ?? user?.email?.[0] ?? "U"}
+                        {user?.firstName?.[0] ?? user?.username?.[0]?.toUpperCase() ?? "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -125,7 +124,7 @@ export default function Dashboard() {
                       <p className="text-sm font-medium leading-none" data-testid="text-user-name">
                         {user?.firstName && user?.lastName 
                           ? `${user.firstName} ${user.lastName}` 
-                          : user?.firstName ?? "User"}
+                          : user?.firstName ?? user?.username ?? "User"}
                       </p>
                       {user?.email && (
                         <p className="text-xs leading-none text-muted-foreground" data-testid="text-user-email">
