@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { Session, Slide } from '@shared/schema';
+import type { PresentationSession, Slide } from '@shared/schema';
 
 interface UseWebSocketOptions {
-  onSessionJoined?: (data: { session: Session; currentSlide: Slide; slides: Slide[]; participantId?: string }) => void;
+  onSessionJoined?: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => void;
   onSlideChanged?: (data: { slideIndex: number; slide: Slide }) => void;
   onNewResponse?: (data: { response: any; slideId: string; totalResponses: number }) => void;
   onParticipantCount?: (count: number) => void;
-  onSessionUpdate?: (session: Session) => void;
+  onSessionUpdate?: (session: PresentationSession) => void;
   onSessionEnded?: () => void;
   onError?: (error: string) => void;
 }
@@ -47,7 +47,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       setIsConnected(false);
     });
 
-    socket.on('session_joined', (data: { session: Session; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
+    socket.on('session_joined', (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
       console.log('[Socket.IO] Session joined:', data);
       if (data.participantId) {
         setParticipantId(data.participantId);
@@ -70,7 +70,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       optionsRef.current.onParticipantCount?.(data.count);
     });
 
-    socket.on('session_update', (data: { session: Session }) => {
+    socket.on('session_update', (data: { session: PresentationSession }) => {
       console.log('[Socket.IO] Session update:', data);
       optionsRef.current.onSessionUpdate?.(data.session);
     });
