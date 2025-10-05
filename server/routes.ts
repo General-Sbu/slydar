@@ -11,9 +11,10 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import officeParser from "officeparser";
-import { setupAuth, isAuthenticated, getSession, getSessionStore } from "./replitAuth";
-import type session from "express-session";
+import { setupAuth, isAuthenticated } from "./auth";
 import passport from "passport";
+import bcrypt from "bcrypt";
+import { registerSchema, loginSchema } from "@shared/schema";
 
 interface SocketClient {
   sessionId?: string;
@@ -34,11 +35,68 @@ function generateRoomCode(): string {
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const data = registerSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const user = await storage.createUser({
+        ...data,
+        password: hashedPassword,
+      });
+
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        res.json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ message: "Invalid registration data" });
+    }
+  });
+
+  app.post('/api/auth/login', (req, res, next) => {
+    try {
+      loginSchema.parse(req.body);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid login data" });
+    }
+
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Authentication error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json(user);
+      });
+    })(req, res, next);
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      res.json(req.user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -47,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const presentations = await storage.getPresentationsByUser(userId);
       res.json(presentations);
     } catch (error) {
@@ -57,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const data = insertPresentationSchema.parse({
         ...req.body,
         userId
@@ -75,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -91,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -108,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -125,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -143,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -164,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -185,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -361,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -417,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -439,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
