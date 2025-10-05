@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import HowItWorks from "@/components/HowItWorks";
+import AuthForm from "@/components/AuthForm";
 import { Link } from "wouter";
-import { login } from "@/lib/authUtils";
+import { useState } from "react";
 
 export default function Landing() {
+  const [showAuth, setShowAuth] = useState(false);
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,10 +21,10 @@ export default function Landing() {
                   Join Presentation
                 </Button>
               </Link>
-              <Button variant="outline" onClick={login} data-testid="button-login">
+              <Button variant="outline" onClick={() => setShowAuth(true)} data-testid="button-login">
                 Sign In
               </Button>
-              <Button onClick={login} data-testid="button-get-started-nav">
+              <Button onClick={() => setShowAuth(true)} data-testid="button-get-started-nav">
                 Get Started
               </Button>
               <ThemeToggle />
@@ -34,24 +34,54 @@ export default function Landing() {
       </header>
 
       <main>
-        <Hero />
-        <Features />
-        <HowItWorks />
-        
-        <section className="py-20 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 space-y-8">
-            <h2 className="text-4xl lg:text-5xl font-bold">
-              Ready to Engage
-              <span className="gradient-text block">Your Audience?</span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Join thousands of presenters creating interactive experiences
-            </p>
-            <Button onClick={login} size="lg" className="gap-2" data-testid="button-start-free">
-              Start Creating for Free
-            </Button>
-          </div>
-        </section>
+        {showAuth ? (
+          <section className="py-20 lg:py-32">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-8">
+              <div className="text-center space-y-4">
+                <h2 className="text-4xl lg:text-5xl font-bold">
+                  Welcome to <span className="gradient-text">Slidr</span>
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Sign in or create an account to get started
+                </p>
+              </div>
+              <AuthForm />
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowAuth(false)}
+                data-testid="button-back"
+              >
+                Back to Home
+              </Button>
+            </div>
+          </section>
+        ) : (
+          <>
+            <section className="py-20 lg:py-32">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center space-y-8">
+                  <h1 className="text-5xl lg:text-7xl font-bold">
+                    Interactive Presentations
+                    <span className="gradient-text block">Made Simple</span>
+                  </h1>
+                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                    Engage your audience with real-time polls, word clouds, and interactive Q&A
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <Button onClick={() => setShowAuth(true)} size="lg" data-testid="button-get-started">
+                      Get Started
+                    </Button>
+                    <Link href="/join">
+                      <Button variant="outline" size="lg" data-testid="button-join">
+                        Join Presentation
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
       </main>
 
       <footer className="border-t py-12 mt-20">

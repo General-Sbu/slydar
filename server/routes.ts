@@ -11,7 +11,7 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import officeParser from "officeparser";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, getSession } from "./auth";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -570,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return;
           }
           
-          const userId = req.user?.claims?.sub;
+          const userId = req.user?.id;
           if (!userId) {
             socket.emit('error', { message: 'User ID not found in session' });
             return;

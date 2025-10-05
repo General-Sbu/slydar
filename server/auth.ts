@@ -20,18 +20,20 @@ export function getSessionStore() {
   return sessionStore;
 }
 
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: sessionTtl,
+  },
+});
+
 export function getSession() {
-  return session({
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: sessionTtl,
-    },
-  });
+  return sessionMiddleware;
 }
 
 export async function setupAuth(app: Express) {
