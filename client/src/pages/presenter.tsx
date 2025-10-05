@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, Session, Response } from "@shared/schema";
+import type { Presentation, Slide, PresentationSession, Response } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ export default function Presenter() {
   const { user } = useAuth();
   const presentationId = params?.id;
 
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<PresentationSession | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
@@ -52,7 +52,7 @@ export default function Presenter() {
       if (!res.ok) throw new Error('Failed to create session');
       return res.json();
     },
-    onSuccess: (data: Session) => {
+    onSuccess: (data: PresentationSession) => {
       setSession(data);
       setCurrentSlideIndex(0);
       if (slides.length > 0) {

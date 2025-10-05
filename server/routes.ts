@@ -408,14 +408,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sessions", isAuthenticated, async (req: any, res) => {
     try {
-      const data = insertPresentationSessionSchema.parse({
-        ...req.body,
-        code: '',
-        currentSlideIndex: 0,
-        isActive: true
-      });
-      
-      const presentation = await storage.getPresentation(data.presentationId);
+      if (!req.body.presentationId) {
+        return res.status(400).json({ error: "Presentation ID is required" });
+      }
+
+      const presentation = await storage.getPresentation(req.body.presentationId);
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
@@ -431,12 +428,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existing = await storage.getSessionByCode(code);
       }
       
-      const session = await storage.createSession({
-        ...data,
-        code
+      const data = insertPresentationSessionSchema.parse({
+        presentationId: req.body.presentationId,
+        code,
+        currentSlideIndex: 0,
+        isActive: true
       });
+      
+      const session = await storage.createSession(data);
       res.json(session);
     } catch (error) {
+      console.error("Session creation error:", error);
       res.status(400).json({ error: "Invalid session data" });
     }
   });
