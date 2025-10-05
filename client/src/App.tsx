@@ -34,18 +34,18 @@ function ProtectedRoute({ component: Component, path }: { component: any; path?:
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <Switch>
       <Route path="/">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <Landing />}
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-muted-foreground">Loading...</div>
+          </div>
+        ) : isAuthenticated ? (
+          <Redirect to="/dashboard" />
+        ) : (
+          <Landing />
+        )}
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
