@@ -172,23 +172,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
         await fs.promises.writeFile(tempFilePath, req.file.buffer);
+        console.log('📄 PDF written to:', tempFilePath);
 
         const uploadsDir = '/tmp/uploads';
         await fs.promises.mkdir(uploadsDir, { recursive: true });
+        console.log('📁 Created uploads dir:', uploadsDir);
 
         const timestamp = Date.now();
         const outputFolder = path.join(uploadsDir, `presentation-${presentationId}-${timestamp}`);
         await fs.promises.mkdir(outputFolder, { recursive: true });
+        console.log('📁 Created output folder:', outputFolder);
 
         let pngPages;
         try {
+          console.log('🔄 Starting PDF to PNG conversion...');
           pngPages = await pdfToPng(tempFilePath, {
             outputFolder,
             outputFileMaskFunc: (pageNumber) => `slide_${pageNumber}.png`,
             viewportScale: 2.0,
           });
+          console.log('✅ PDF conversion complete. Pages:', pngPages.length);
+          console.log('📄 First page info:', pngPages[0]);
+          
+          const files = await fs.promises.readdir(outputFolder);
+          console.log('📂 Files in output folder:', files);
         } finally {
           await fs.promises.unlink(tempFilePath);
+          console.log('🗑️ Deleted temp PDF file');
         }
 
         const slides = await storage.getSlidesByPresentation(presentationId);
