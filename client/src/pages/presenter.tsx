@@ -259,6 +259,15 @@ export default function Presenter() {
                   <div className="text-center">
                     <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                   </div>
+                ) : currentSlide.type === 'image' ? (
+                  <div className="flex items-center justify-center">
+                    <img 
+                      src={currentSlide.question || ''} 
+                      alt={`Slide ${currentSlideIndex + 1}`} 
+                      className="max-w-full max-h-[70vh] object-contain"
+                      data-testid="img-slide"
+                    />
+                  </div>
                 ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
                   <LivePollChart
                     question={currentSlide.question || "Question"}

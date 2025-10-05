@@ -164,55 +164,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const presentationId = req.params.id;
-      const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
-      
       const fs = await import('fs');
-      await fs.promises.writeFile(tempFilePath, req.file.buffer);
+      const path = await import('path');
+      
+      if (req.file.mimetype === 'application/pdf') {
+        const { pdfToPng } = await import('pdf-to-png-converter');
+        
+        const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
+        await fs.promises.writeFile(tempFilePath, req.file.buffer);
 
-      let text: string;
-      try {
-        text = await new Promise<string>((resolve, reject) => {
-          officeParser.parseOffice(tempFilePath, (data: string, err: Error | null) => {
-            if (err) {
-              reject(err);
-            } else if (data) {
-              resolve(data);
-            } else {
-              reject(new Error('No data returned from parser'));
-            }
+        const uploadsDir = path.resolve(import.meta.dirname, '..', 'public', 'uploads');
+        await fs.promises.mkdir(uploadsDir, { recursive: true });
+
+        const timestamp = Date.now();
+        const outputFolder = path.join(uploadsDir, `presentation-${presentationId}-${timestamp}`);
+        await fs.promises.mkdir(outputFolder, { recursive: true });
+
+        let pngPages;
+        try {
+          pngPages = await pdfToPng(tempFilePath, {
+            outputFolder,
+            outputFileMaskFunc: (pageNumber) => `slide_${pageNumber}.png`,
+            viewportScale: 2.0,
           });
-        });
-      } finally {
-        await fs.promises.unlink(tempFilePath);
-      }
+        } finally {
+          await fs.promises.unlink(tempFilePath);
+        }
 
-      const lines = text.split('\n').filter(line => line.trim().length > 0);
-      
-      const slides = await storage.getSlidesByPresentation(presentationId);
-      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
-      
-      const createdSlides = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line.length > 0) {
+        const slides = await storage.getSlidesByPresentation(presentationId);
+        const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+
+        const createdSlides = [];
+        for (let i = 0; i < pngPages.length; i++) {
+          const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
           const slideData = insertSlideSchema.parse({
             presentationId,
-            type: 'heading',
+            type: 'image',
             order: maxOrder + i + 1,
-            question: line,
+            question: imagePath,
             options: [],
             config: {}
           });
           const slide = await storage.createSlide(slideData);
           createdSlides.push(slide);
         }
-      }
 
-      res.json({ 
-        success: true, 
-        slidesCreated: createdSlides.length,
-        slides: createdSlides
-      });
+        res.json({ 
+          success: true, 
+          slidesCreated: createdSlides.length,
+          slides: createdSlides
+        });
+      } else {
+        const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
+        await fs.promises.writeFile(tempFilePath, req.file.buffer);
+
+        let text: string;
+        try {
+          text = await new Promise<string>((resolve, reject) => {
+            officeParser.parseOffice(tempFilePath, (data: string, err: Error | null) => {
+              if (err) {
+                reject(err);
+              } else if (data) {
+                resolve(data);
+              } else {
+                reject(new Error('No data returned from parser'));
+              }
+            });
+          });
+        } finally {
+          await fs.promises.unlink(tempFilePath);
+        }
+
+        const lines = text.split('\n').filter(line => line.trim().length > 0);
+        
+        const slides = await storage.getSlidesByPresentation(presentationId);
+        const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+        
+        const createdSlides = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.length > 0) {
+            const slideData = insertSlideSchema.parse({
+              presentationId,
+              type: 'heading',
+              order: maxOrder + i + 1,
+              question: line,
+              options: [],
+              config: {}
+            });
+            const slide = await storage.createSlide(slideData);
+            createdSlides.push(slide);
+          }
+        }
+
+        res.json({ 
+          success: true, 
+          slidesCreated: createdSlides.length,
+          slides: createdSlides
+        });
+      }
     } catch (error: any) {
       console.error('File import error:', error);
       res.status(500).json({ error: error.message || "Failed to import file" });

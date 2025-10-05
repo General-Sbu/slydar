@@ -135,7 +135,8 @@ export default function Editor() {
       multiple_choice: { type: 'multiple_choice', question: "New multiple choice question?", options: ["Option 1", "Option 2", "Option 3", "Option 4"] },
       word_cloud: { type: 'word_cloud', question: "What words come to mind?", options: [] },
       open_ended: { type: 'open_ended', question: "Share your thoughts...", options: [] },
-      heading: { type: 'heading', question: "New Section", options: [] }
+      heading: { type: 'heading', question: "New Section", options: [] },
+      image: { type: 'image', question: "", options: [] }
     };
     
     createSlideMutation.mutate(defaultData[type]);
@@ -374,6 +375,13 @@ export default function Editor() {
                   <div className="w-full text-center space-y-6">
                     {currentSlide?.type === 'heading' ? (
                       <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                    ) : currentSlide?.type === 'image' ? (
+                      <img 
+                        src={currentSlide.question || ''} 
+                        alt={`Slide ${selectedSlideIndex + 1}`} 
+                        className="w-full h-full object-contain"
+                        data-testid="img-slide"
+                      />
                     ) : (
                       <>
                         <h2 className="text-4xl font-bold">{currentSlide?.question || "Your question here"}</h2>
@@ -410,18 +418,27 @@ export default function Editor() {
                     <h3 className="font-semibold mb-4">Slide Properties</h3>
                     
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="question">
-                          {editingSlide.type === 'heading' ? 'Heading' : 'Question'}
-                        </Label>
-                        <Textarea
-                          id="question"
-                          value={editingSlide.question || ''}
-                          onChange={(e) => setEditingSlide({ ...editingSlide, question: e.target.value })}
-                          className="resize-none min-h-20"
-                          data-testid="input-question"
-                        />
-                      </div>
+                      {editingSlide.type === 'image' ? (
+                        <div className="space-y-2">
+                          <Label>Image Slide</Label>
+                          <p className="text-sm text-muted-foreground">
+                            This is an imported image slide. Image path: {editingSlide.question}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="question">
+                            {editingSlide.type === 'heading' ? 'Heading' : 'Question'}
+                          </Label>
+                          <Textarea
+                            id="question"
+                            value={editingSlide.question || ''}
+                            onChange={(e) => setEditingSlide({ ...editingSlide, question: e.target.value })}
+                            className="resize-none min-h-20"
+                            data-testid="input-question"
+                          />
+                        </div>
+                      )}
 
                       {editingSlide.type === 'multiple_choice' && (
                         <div className="space-y-2">

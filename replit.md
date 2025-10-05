@@ -76,11 +76,12 @@ Preferred communication style: Simple, everyday language.
 - Auto-managed created/updated timestamps
 
 **Slides Table:**
-- Polymorphic slide types (multiple_choice, word_cloud, open_ended, heading)
+- Polymorphic slide types (multiple_choice, word_cloud, open_ended, heading, image)
 - Foreign key to presentation with cascade delete
 - Order field for slide sequencing
 - JSONB config field for type-specific settings
 - Text array for multiple choice options
+- For image slides: question field stores the image path
 
 **Sessions Table:**
 - Live presentation instances with unique 6-character codes
@@ -146,23 +147,36 @@ Preferred communication style: Simple, everyday language.
 
 ### File Import Feature
 
-**PPT/PDF Import (Added October 2025):**
+**PPT/PDF Import (Updated October 2025):**
 - Converts PowerPoint (.ppt, .pptx) and PDF files into presentation slides
 - Backend endpoint: `POST /api/presentations/:id/import`
-- Uses `officeparser` library for text extraction from documents
+- **PDF files:** Converted to images using `pdf-to-png-converter` library
+- **PowerPoint files:** Text extracted using `officeparser` library
 - Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
+
+**PDF to Image Conversion (New):**
+- Each PDF page is converted to a PNG image at 2x scale for quality
+- Images saved to `/public/uploads/presentation-{id}-{timestamp}/` directory
+- Each image becomes an "image" type slide with path stored in question field
+- No system dependencies required (pure JavaScript conversion)
+- Images served statically from the public directory
+
+**PowerPoint Text Extraction:**
+- Text extraction using callback-based API wrapped in Promise
+- Each non-empty line becomes a "heading" type slide
+- Temp file processing with automatic cleanup
 
 **Implementation Details:**
 - File upload via `multipart/form-data` with MIME type validation
 - Temp file written to `/tmp` during processing (timestamp-prefixed)
-- Text extraction using callback-based API wrapped in Promise
+- PDF processing uses `pdf-to-png-converter` with configurable viewport scale
 - Automatic cleanup of temp files via `finally` block
-- Each non-empty line becomes a "heading" type slide
 - Slides appended to existing presentation with proper ordering
+- Image files organized by presentation ID and timestamp
 
 **Error Handling:**
 - 400 error for missing file or invalid MIME type
-- 500 error for parsing failures (invalid file structure)
+- 500 error for parsing/conversion failures
 - Guaranteed temp file deletion even on errors
 - Frontend shows toast notifications for success/failure
 
@@ -171,6 +185,7 @@ Preferred communication style: Simple, everyday language.
 - 50MB file size limit
 - Server-side MIME validation
 - Isolated temp file processing
+- Images stored in organized directory structure
 
 ## External Dependencies
 

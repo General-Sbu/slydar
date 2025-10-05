@@ -138,6 +138,15 @@ export default function Audience() {
           <Card className="p-12 text-center">
             <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
           </Card>
+        ) : currentSlide.type === 'image' ? (
+          <Card className="p-0 overflow-hidden">
+            <img 
+              src={currentSlide.question || ''} 
+              alt="Presentation slide" 
+              className="w-full h-auto"
+              data-testid="img-slide"
+            />
+          </Card>
         ) : submitted ? (
           <Card className="p-12 text-center">
             <div className="flex flex-col items-center gap-4">
