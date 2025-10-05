@@ -64,6 +64,16 @@ export const responses = pgTable("responses", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
+export const notes = pgTable("notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  slideId: varchar("slide_id").notNull().references(() => slides.id, { onDelete: "cascade" }),
+  presentationId: varchar("presentation_id").notNull().references(() => presentations.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
   createdAt: true,
@@ -88,6 +98,12 @@ export const insertPresentationSessionSchema = createInsertSchema(presentationSe
 export const insertResponseSchema = createInsertSchema(responses).omit({
   id: true,
   submittedAt: true,
+});
+
+export const insertNoteSchema = createInsertSchema(notes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -123,3 +139,6 @@ export type PresentationSession = typeof presentationSessions.$inferSelect;
 
 export type InsertResponse = z.infer<typeof insertResponseSchema>;
 export type Response = typeof responses.$inferSelect;
+
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+export type Note = typeof notes.$inferSelect;

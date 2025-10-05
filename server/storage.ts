@@ -3,9 +3,15 @@ import {
   type Slide, type InsertSlide,
   type PresentationSession, type InsertPresentationSession,
   type Response, type InsertResponse,
-  type User, type UpsertUser
+  type User, type UpsertUser,
+  type Note, type InsertNote
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { 
+  users, presentations, slides, presentationSessions, responses, notes 
+} from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 type UserWithPassword = User & { password: string };
 
@@ -37,6 +43,12 @@ export interface IStorage {
   createResponse(response: InsertResponse): Promise<Response>;
   getResponsesBySession(sessionId: string): Promise<Response[]>;
   getResponsesBySlide(slideId: string, sessionId: string): Promise<Response[]>;
+
+  createNote(note: InsertNote): Promise<Note>;
+  getNotesByUser(userId: string): Promise<Note[]>;
+  getNotesBySlide(userId: string, slideId: string): Promise<Note | undefined>;
+  updateNote(id: string, content: string): Promise<Note | undefined>;
+  deleteNote(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -258,6 +270,215 @@ export class MemStorage implements IStorage {
     return Array.from(this.responses.values())
       .filter(r => r.slideId === slideId && r.sessionId === sessionId);
   }
+
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const id = randomUUID();
+    const now = new Date();
+    const note: Note = { 
+      ...insertNote, 
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    return note;
+  }
+
+  async getNotesByUser(userId: string): Promise<Note[]> {
+    return [];
+  }
+
+  async getNotesBySlide(userId: string, slideId: string): Promise<Note | undefined> {
+    return undefined;
+  }
+
+  async updateNote(id: string, content: string): Promise<Note | undefined> {
+    return undefined;
+  }
+
+  async deleteNote(id: string): Promise<boolean> {
+    return false;
+  }
 }
 
-export const storage = new MemStorage();
+export class DbStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    if (!result[0]) return undefined;
+    const { password: _, ...userWithoutPassword } = result[0];
+    return userWithoutPassword as User;
+  }
+
+  async getUserByUsername(username: string): Promise<UserWithPassword | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0] as UserWithPassword | undefined;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db.insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: { 
+          ...userData,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
+  }
+
+  async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {
+    const [presentation] = await db.insert(presentations).values(insertPresentation).returning();
+    return presentation;
+  }
+
+  async getPresentation(id: string): Promise<Presentation | undefined> {
+    const result = await db.select().from(presentations).where(eq(presentations.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllPresentations(): Promise<Presentation[]> {
+    return db.select().from(presentations).orderBy(desc(presentations.updatedAt));
+  }
+
+  async getPresentationsByUser(userId: string): Promise<Presentation[]> {
+    return db.select()
+      .from(presentations)
+      .where(eq(presentations.userId, userId))
+      .orderBy(desc(presentations.updatedAt));
+  }
+
+  async updatePresentation(id: string, update: Partial<InsertPresentation>): Promise<Presentation | undefined> {
+    const [updated] = await db.update(presentations)
+      .set({ ...update, updatedAt: new Date() })
+      .where(eq(presentations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePresentation(id: string): Promise<boolean> {
+    const result = await db.delete(presentations).where(eq(presentations.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async createSlide(insertSlide: InsertSlide): Promise<Slide> {
+    const [slide] = await db.insert(slides).values(insertSlide).returning();
+    return slide;
+  }
+
+  async getSlide(id: string): Promise<Slide | undefined> {
+    const result = await db.select().from(slides).where(eq(slides.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getSlidesByPresentation(presentationId: string): Promise<Slide[]> {
+    return db.select()
+      .from(slides)
+      .where(eq(slides.presentationId, presentationId))
+      .orderBy(slides.order);
+  }
+
+  async updateSlide(id: string, update: Partial<InsertSlide>): Promise<Slide | undefined> {
+    const [updated] = await db.update(slides)
+      .set(update)
+      .where(eq(slides.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSlide(id: string): Promise<boolean> {
+    const result = await db.delete(slides).where(eq(slides.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async createSession(insertSession: InsertPresentationSession): Promise<PresentationSession> {
+    const [session] = await db.insert(presentationSessions).values(insertSession).returning();
+    return session;
+  }
+
+  async getSession(id: string): Promise<PresentationSession | undefined> {
+    const result = await db.select().from(presentationSessions).where(eq(presentationSessions.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getSessionByCode(code: string): Promise<PresentationSession | undefined> {
+    const result = await db.select().from(presentationSessions).where(eq(presentationSessions.code, code)).limit(1);
+    return result[0];
+  }
+
+  async updateSession(id: string, update: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined> {
+    const [updated] = await db.update(presentationSessions)
+      .set(update)
+      .where(eq(presentationSessions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async endSession(id: string): Promise<boolean> {
+    const result = await db.update(presentationSessions)
+      .set({ isActive: false })
+      .where(eq(presentationSessions.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async createResponse(insertResponse: InsertResponse): Promise<Response> {
+    const [response] = await db.insert(responses).values(insertResponse).returning();
+    return response;
+  }
+
+  async getResponsesBySession(sessionId: string): Promise<Response[]> {
+    return db.select()
+      .from(responses)
+      .where(eq(responses.sessionId, sessionId))
+      .orderBy(desc(responses.submittedAt));
+  }
+
+  async getResponsesBySlide(slideId: string, sessionId: string): Promise<Response[]> {
+    return db.select()
+      .from(responses)
+      .where(and(eq(responses.slideId, slideId), eq(responses.sessionId, sessionId)));
+  }
+
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const [note] = await db.insert(notes).values(insertNote).returning();
+    return note;
+  }
+
+  async getNotesByUser(userId: string): Promise<Note[]> {
+    return db.select()
+      .from(notes)
+      .where(eq(notes.userId, userId))
+      .orderBy(desc(notes.updatedAt));
+  }
+
+  async getNotesBySlide(userId: string, slideId: string): Promise<Note | undefined> {
+    const result = await db.select()
+      .from(notes)
+      .where(and(eq(notes.userId, userId), eq(notes.slideId, slideId)))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateNote(id: string, content: string): Promise<Note | undefined> {
+    const [updated] = await db.update(notes)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(notes.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteNote(id: string): Promise<boolean> {
+    const result = await db.delete(notes).where(eq(notes.id, id)).returning();
+    return result.length > 0;
+  }
+}
+
+export const storage = new DbStorage();
