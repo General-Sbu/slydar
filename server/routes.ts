@@ -173,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
         await fs.promises.writeFile(tempFilePath, req.file.buffer);
 
-        const uploadsDir = path.resolve(import.meta.dirname, '..', 'public', 'uploads');
+        const uploadsDir = '/tmp/uploads';
         await fs.promises.mkdir(uploadsDir, { recursive: true });
 
         const timestamp = Date.now();
