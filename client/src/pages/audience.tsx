@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Logo from "@/components/Logo";
 import AudienceAnswerButton from "@/components/AudienceAnswerButton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
@@ -66,8 +66,8 @@ export default function Audience() {
     },
   });
 
-  const { isConnected, joinSession, submitResponse } = useWebSocket({
-    onSessionJoined: (data) => {
+  const websocketOptions = useMemo(() => ({
+    onSessionJoined: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
       setSession(data.session);
       setCurrentSlide(data.currentSlide);
       setParticipantId(data.participantId || null);
@@ -75,7 +75,7 @@ export default function Audience() {
       setSelectedAnswer(null);
       setTextAnswer("");
     },
-    onSlideChanged: (data) => {
+    onSlideChanged: (data: { slideIndex: number; slide: Slide }) => {
       setCurrentSlide(data.slide);
       setSubmitted(false);
       setSelectedAnswer(null);
@@ -87,21 +87,23 @@ export default function Audience() {
         description: "The presentation has been closed by the presenter"
       });
     },
-    onError: (error) => {
+    onError: (error: string) => {
       toast({
         title: "Error",
         description: error,
         variant: "destructive"
       });
     }
-  });
+  }), [toast]);
+
+  const { isConnected, joinSession, submitResponse } = useWebSocket(websocketOptions);
 
   useEffect(() => {
     if (roomCode && isConnected && !session) {
       const storedParticipantId = localStorage.getItem(`participant_${roomCode}`);
       joinSession(roomCode, 'audience', storedParticipantId || undefined);
     }
-  }, [roomCode, isConnected, session]);
+  }, [roomCode, isConnected, session, joinSession]);
 
   useEffect(() => {
     if (participantId && roomCode) {
