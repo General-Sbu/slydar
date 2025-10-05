@@ -31,7 +31,7 @@ export default function Audience() {
   const { user, isAuthenticated } = useAuth();
 
   const { data: existingNote } = useQuery<Note | null>({
-    queryKey: ['/api/notes/slide', currentSlide?.id],
+    queryKey: currentSlide?.id ? [`/api/notes/slide/${currentSlide.id}`] : [],
     enabled: isAuthenticated && !!currentSlide?.id,
   });
 
@@ -46,7 +46,9 @@ export default function Audience() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes/slide', currentSlide?.id] });
+      if (currentSlide?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/notes/slide/${currentSlide.id}`] });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
       setIsSavingNote(false);
       toast({
