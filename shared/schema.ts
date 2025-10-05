@@ -10,7 +10,7 @@ export const presentations = pgTable("presentations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading"]);
+export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image"]);
 export type SlideType = z.infer<typeof slideTypeEnum>;
 
 export const slides = pgTable("slides", {
