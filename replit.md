@@ -61,10 +61,10 @@ Preferred communication style: Simple, everyday language.
 - `session_ended` - Presenter closes session
 
 **Data Layer:**
-- In-memory storage implementation (`MemStorage`) for development
+- PostgreSQL database with Drizzle ORM for persistent storage
 - Interface-based storage abstraction (`IStorage`) allows database swapping
-- Drizzle ORM configured for PostgreSQL (production-ready)
 - UUID-based primary keys for all entities
+- Authenticated user system with Passport.js local strategy
 
 ### Data Storage
 
@@ -95,6 +95,17 @@ Preferred communication style: Simple, everyday language.
 - Participant ID (generated on join, no authentication)
 - Submission timestamp for ordering
 
+**Users Table:**
+- Stores authenticated user accounts
+- Fields: id (UUID), username (unique), email (unique), password (hashed with bcrypt)
+- Auto-managed created/updated timestamps
+
+**Notes Table:**
+- Stores slide notes for authenticated users
+- Links to users, slides, and presentations with cascade delete
+- Each user can have one note per slide (upsert on save)
+- Auto-managed created/updated timestamps
+
 **Schema Validation:**
 - Zod schemas generated from Drizzle tables using `drizzle-zod`
 - Type-safe insert/update operations
@@ -102,17 +113,28 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Authorization
 
-**Current Approach: Intentionally Anonymous**
-- No user authentication system implemented
+**Dual Access Model:**
+
+**Authenticated Users (Presenters):**
+- Username/password authentication using Passport.js local strategy
+- Password hashing with bcrypt (10 rounds)
+- Session-based authentication with express-session
+- Required for creating and managing presentations
+- Can take notes on slides during presentations (logged-in audience members)
+- Access to personal notes page showing all saved notes
+
+**Anonymous Participants (Audience):**
+- No authentication required for audience participation
 - Session codes serve as the only access control
 - Participant IDs generated client-side (UUID)
-- Presenter role determined by Socket.IO connection type
+- Can view and interact with presentations
+- Cannot save notes (requires login)
 
-**Rationale:**
-- Reduces friction for audience participation
-- Aligns with "no downloads required" value proposition
-- Suitable for one-off presentations and events
-- Can be extended later with optional authentication
+**Note-Taking Feature:**
+- Authenticated users can take notes on any slide during audience participation
+- Notes are saved with slide references and auto-saved on change
+- Notes page displays all notes organized by presentation
+- Each user can have one note per slide (updates existing note on save)
 
 ### Real-time Communication
 
