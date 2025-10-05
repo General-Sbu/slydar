@@ -1,26 +1,68 @@
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import Logo from "@/components/Logo";
 import AudienceAnswerButton from "@/components/AudienceAnswerButton";
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
-import type { Slide, Session } from "@shared/schema";
+import type { Slide, PresentationSession, Note } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Audience() {
   const [, params] = useRoute("/audience/:code");
   const { toast } = useToast();
   const roomCode = params?.code?.toUpperCase();
 
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<PresentationSession | null>(null);
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [textAnswer, setTextAnswer] = useState("");
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState("");
+  const [isSavingNote, setIsSavingNote] = useState(false);
+
+  const { user, isAuthenticated } = useAuth();
+
+  const { data: existingNote } = useQuery<Note | null>({
+    queryKey: ['/api/notes/slide', currentSlide?.id],
+    enabled: isAuthenticated && !!currentSlide?.id,
+  });
+
+  const saveNoteMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!currentSlide || !session) throw new Error("No slide or session");
+      const res = await apiRequest('POST', '/api/notes', {
+        slideId: currentSlide.id,
+        presentationId: session.presentationId,
+        content,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notes/slide', currentSlide?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
+      setIsSavingNote(false);
+      toast({
+        title: "Note saved",
+        description: "Your note has been saved successfully",
+      });
+    },
+    onError: () => {
+      setIsSavingNote(false);
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { isConnected, joinSession, submitResponse } = useWebSocket({
     onSessionJoined: (data) => {
@@ -64,6 +106,21 @@ export default function Audience() {
       localStorage.setItem(`participant_${roomCode}`, participantId);
     }
   }, [participantId, roomCode]);
+
+  useEffect(() => {
+    if (existingNote) {
+      setNoteContent(existingNote.content);
+    } else if (currentSlide) {
+      setNoteContent("");
+    }
+  }, [existingNote, currentSlide]);
+
+  const handleSaveNote = () => {
+    if (noteContent.trim() && currentSlide) {
+      setIsSavingNote(true);
+      saveNoteMutation.mutate(noteContent.trim());
+    }
+  };
 
   const handleMultipleChoiceAnswer = (answer: string) => {
     if (!submitted && currentSlide) {
@@ -211,6 +268,42 @@ export default function Audience() {
               </div>
             )}
           </div>
+        )}
+
+        {isAuthenticated && currentSlide && (
+          <Card className="mt-6 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <StickyNote className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">My Notes</h3>
+            </div>
+            <div className="space-y-3">
+              <Textarea
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                placeholder="Take notes on this slide..."
+                className="min-h-[120px] resize-none"
+                data-testid="textarea-note"
+              />
+              <Button
+                onClick={handleSaveNote}
+                disabled={!noteContent.trim() || isSavingNote}
+                className="w-full"
+                data-testid="button-save-note"
+              >
+                {isSavingNote ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Note
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
         )}
       </main>
     </div>
