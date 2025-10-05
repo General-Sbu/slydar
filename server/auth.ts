@@ -2,18 +2,15 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import type { Express } from "express";
-import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
+import MemoryStore from "memorystore";
 
 const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-const pgStore = connectPg(session);
-const sessionStore = new pgStore({
-  conString: process.env.DATABASE_URL,
-  createTableIfMissing: false,
-  ttl: sessionTtl,
-  tableName: "sessions",
+const MemoryStoreSession = MemoryStore(session);
+const sessionStore = new MemoryStoreSession({
+  checkPeriod: sessionTtl,
 });
 
 export function getSessionStore() {
