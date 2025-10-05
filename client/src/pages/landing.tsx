@@ -5,6 +5,7 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import { Link } from "wouter";
+import { login } from "@/lib/authUtils";
 
 export default function Landing() {
   return (
@@ -20,16 +21,12 @@ export default function Landing() {
                   Join Presentation
                 </Button>
               </Link>
-              <Link href="/dashboard">
-                <Button variant="outline" data-testid="button-login">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button data-testid="button-get-started-nav">
-                  Get Started
-                </Button>
-              </Link>
+              <Button variant="outline" onClick={login} data-testid="button-login">
+                Sign In
+              </Button>
+              <Button onClick={login} data-testid="button-get-started-nav">
+                Get Started
+              </Button>
               <ThemeToggle />
             </div>
           </div>
@@ -50,11 +47,9 @@ export default function Landing() {
             <p className="text-lg text-muted-foreground">
               Join thousands of presenters creating interactive experiences
             </p>
-            <Link href="/dashboard">
-              <Button size="lg" className="gap-2" data-testid="button-start-free">
-                Start Creating for Free
-              </Button>
-            </Link>
+            <Button onClick={login} size="lg" className="gap-2" data-testid="button-start-free">
+              Start Creating for Free
+            </Button>
           </div>
         </section>
       </main>
