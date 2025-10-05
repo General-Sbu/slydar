@@ -185,20 +185,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         let pngPages;
         try {
-          console.log('🔄 Starting PDF to PNG conversion...');
           pngPages = await pdfToPng(tempFilePath, {
-            outputFolder,
-            outputFileMaskFunc: (pageNumber) => `slide_${pageNumber}.png`,
             viewportScale: 2.0,
           });
-          console.log('✅ PDF conversion complete. Pages:', pngPages.length);
-          console.log('📄 First page info:', pngPages[0]);
+          
+          for (let i = 0; i < pngPages.length; i++) {
+            const pngFilename = `slide_${i + 1}.png`;
+            const pngPath = path.join(outputFolder, pngFilename);
+            await fs.promises.writeFile(pngPath, pngPages[i].content);
+          }
           
           const files = await fs.promises.readdir(outputFolder);
-          console.log('📂 Files in output folder:', files);
+          console.log('✅ PDF converted. Files written:', files);
         } finally {
           await fs.promises.unlink(tempFilePath);
-          console.log('🗑️ Deleted temp PDF file');
         }
 
         const slides = await storage.getSlidesByPresentation(presentationId);
