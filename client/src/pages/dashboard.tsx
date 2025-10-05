@@ -4,7 +4,7 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import PresentationCard from "@/components/PresentationCard";
 import EmptyState from "@/components/EmptyState";
-import { PlusCircle, Search, LogOut } from "lucide-react";
+import { PlusCircle, Search, LogOut, StickyNote } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -134,6 +134,10 @@ export default function Dashboard() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocation('/notes')} data-testid="button-my-notes">
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    <span>My Notes</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout} data-testid="button-logout">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
