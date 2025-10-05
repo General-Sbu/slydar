@@ -11,6 +11,7 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import officeParser from "officeparser";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 interface SocketClient {
   sessionId?: string;
@@ -29,18 +30,36 @@ function generateRoomCode(): string {
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.get("/api/presentations", async (req, res) => {
+  await setupAuth(app);
+
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const presentations = await storage.getAllPresentations();
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.get("/api/presentations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presentations = await storage.getPresentationsByUser(userId);
       res.json(presentations);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch presentations" });
     }
   });
 
-  app.post("/api/presentations", async (req, res) => {
+  app.post("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
-      const data = insertPresentationSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const data = insertPresentationSchema.parse({
+        ...req.body,
+        userId
+      });
       const presentation = await storage.createPresentation(data);
       res.json(presentation);
     } catch (error) {
@@ -48,11 +67,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/presentations/:id", async (req, res) => {
+  app.get("/api/presentations/:id", isAuthenticated, async (req: any, res) => {
     try {
       const presentation = await storage.getPresentation(req.params.id);
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
       }
       res.json(presentation);
     } catch (error) {
@@ -60,32 +83,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/presentations/:id", async (req, res) => {
+  app.patch("/api/presentations/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const updated = await storage.updatePresentation(req.params.id, req.body);
-      if (!updated) {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const updated = await storage.updatePresentation(req.params.id, req.body);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update presentation" });
     }
   });
 
-  app.delete("/api/presentations/:id", async (req, res) => {
+  app.delete("/api/presentations/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const deleted = await storage.deletePresentation(req.params.id);
-      if (!deleted) {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const deleted = await storage.deletePresentation(req.params.id);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete presentation" });
     }
   });
 
-  app.get("/api/presentations/:id/slides", async (req, res) => {
+  app.get("/api/presentations/:id/slides", isAuthenticated, async (req: any, res) => {
     try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.claims.sub;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       const slides = await storage.getSlidesByPresentation(req.params.id);
       res.json(slides);
     } catch (error) {
@@ -93,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/slides", async (req, res) => {
+  app.post("/api/slides", isAuthenticated, async (req, res) => {
     try {
       const data = insertSlideSchema.parse(req.body);
       const slide = await storage.createSlide(data);
@@ -103,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/slides/:id", async (req, res) => {
+  app.patch("/api/slides/:id", isAuthenticated, async (req, res) => {
     try {
       const updated = await storage.updateSlide(req.params.id, req.body);
       if (!updated) {
@@ -115,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/slides/:id", async (req, res) => {
+  app.delete("/api/slides/:id", isAuthenticated, async (req, res) => {
     try {
       const deleted = await storage.deleteSlide(req.params.id);
       if (!deleted) {
@@ -144,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/presentations/:id/import", (req, res, next) => {
+  app.post("/api/presentations/:id/import", isAuthenticated, (req, res, next) => {
     upload.single('file')(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
@@ -157,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       next();
     });
-  }, async (req, res) => {
+  }, async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -279,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sessions", async (req, res) => {
+  app.post("/api/sessions", isAuthenticated, async (req, res) => {
     try {
       let code = generateRoomCode();
       let existing = await storage.getSessionByCode(code);
