@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { 
   insertPresentationSchema, 
   insertSlideSchema, 
-  insertSessionSchema,
+  insertPresentationSessionSchema,
   insertResponseSchema 
 } from "@shared/schema";
 import { randomBytes } from "crypto";
@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existing = await storage.getSessionByCode(code);
       }
       
-      const data = insertSessionSchema.parse({
+      const data = insertPresentationSessionSchema.parse({
         ...req.body,
         code,
         currentSlideIndex: 0,

@@ -1,10 +1,33 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, jsonb, timestamp, boolean, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Auth sessions table (required for Replit Auth)
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table (required for Replit Auth)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const presentations = pgTable("presentations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -23,7 +46,7 @@ export const slides = pgTable("slides", {
   config: jsonb("config").$type<Record<string, any>>(),
 });
 
-export const sessions = pgTable("sessions", {
+export const presentationSessions = pgTable("presentation_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   presentationId: varchar("presentation_id").notNull().references(() => presentations.id, { onDelete: "cascade" }),
   code: varchar("code", { length: 6 }).notNull().unique(),
@@ -34,7 +57,7 @@ export const sessions = pgTable("sessions", {
 
 export const responses = pgTable("responses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: varchar("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id").notNull().references(() => presentationSessions.id, { onDelete: "cascade" }),
   slideId: varchar("slide_id").notNull().references(() => slides.id, { onDelete: "cascade" }),
   participantId: varchar("participant_id").notNull(),
   answer: text("answer").notNull(),
@@ -53,7 +76,7 @@ export const insertSlideSchema = createInsertSchema(slides).omit({
   type: slideTypeEnum,
 });
 
-export const insertSessionSchema = createInsertSchema(sessions).omit({
+export const insertPresentationSessionSchema = createInsertSchema(presentationSessions).omit({
   id: true,
   startedAt: true,
 }).extend({
@@ -67,14 +90,22 @@ export const insertResponseSchema = createInsertSchema(responses).omit({
   submittedAt: true,
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
 export type InsertPresentation = z.infer<typeof insertPresentationSchema>;
 export type Presentation = typeof presentations.$inferSelect;
 
 export type InsertSlide = z.infer<typeof insertSlideSchema>;
 export type Slide = typeof slides.$inferSelect;
 
-export type InsertSession = z.infer<typeof insertSessionSchema>;
-export type Session = typeof sessions.$inferSelect;
+export type InsertPresentationSession = z.infer<typeof insertPresentationSessionSchema>;
+export type PresentationSession = typeof presentationSessions.$inferSelect;
 
 export type InsertResponse = z.infer<typeof insertResponseSchema>;
 export type Response = typeof responses.$inferSelect;

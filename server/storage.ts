@@ -1,15 +1,20 @@
 import { 
   type Presentation, type InsertPresentation,
   type Slide, type InsertSlide,
-  type Session, type InsertSession,
-  type Response, type InsertResponse
+  type PresentationSession, type InsertPresentationSession,
+  type Response, type InsertResponse,
+  type User, type UpsertUser
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
   getPresentation(id: string): Promise<Presentation | undefined>;
   getAllPresentations(): Promise<Presentation[]>;
+  getPresentationsByUser(userId: string): Promise<Presentation[]>;
   updatePresentation(id: string, presentation: Partial<InsertPresentation>): Promise<Presentation | undefined>;
   deletePresentation(id: string): Promise<boolean>;
 
@@ -19,10 +24,10 @@ export interface IStorage {
   updateSlide(id: string, slide: Partial<InsertSlide>): Promise<Slide | undefined>;
   deleteSlide(id: string): Promise<boolean>;
   
-  createSession(session: InsertSession): Promise<Session>;
-  getSession(id: string): Promise<Session | undefined>;
-  getSessionByCode(code: string): Promise<Session | undefined>;
-  updateSession(id: string, session: Partial<Omit<InsertSession, 'presentationId' | 'code'>>): Promise<Session | undefined>;
+  createSession(session: InsertPresentationSession): Promise<PresentationSession>;
+  getSession(id: string): Promise<PresentationSession | undefined>;
+  getSessionByCode(code: string): Promise<PresentationSession | undefined>;
+  updateSession(id: string, session: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined>;
   endSession(id: string): Promise<boolean>;
   
   createResponse(response: InsertResponse): Promise<Response>;
@@ -31,16 +36,39 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User>;
   private presentations: Map<string, Presentation>;
   private slides: Map<string, Slide>;
-  private sessions: Map<string, Session>;
+  private sessions: Map<string, PresentationSession>;
   private responses: Map<string, Response>;
 
   constructor() {
+    this.users = new Map();
     this.presentations = new Map();
     this.slides = new Map();
     this.sessions = new Map();
     this.responses = new Map();
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id!);
+    const now = new Date();
+    const user: User = {
+      ...userData,
+      id: userData.id!,
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      createdAt: existingUser?.createdAt ?? now,
+      updatedAt: now
+    };
+    this.users.set(user.id, user);
+    return user;
   }
 
   async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {
@@ -64,6 +92,12 @@ export class MemStorage implements IStorage {
     return Array.from(this.presentations.values()).sort((a, b) => 
       b.updatedAt.getTime() - a.updatedAt.getTime()
     );
+  }
+
+  async getPresentationsByUser(userId: string): Promise<Presentation[]> {
+    return Array.from(this.presentations.values())
+      .filter(p => p.userId === userId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
   async updatePresentation(id: string, update: Partial<InsertPresentation>): Promise<Presentation | undefined> {
@@ -131,9 +165,9 @@ export class MemStorage implements IStorage {
     return this.slides.delete(id);
   }
 
-  async createSession(insertSession: InsertSession): Promise<Session> {
+  async createSession(insertSession: InsertPresentationSession): Promise<PresentationSession> {
     const id = randomUUID();
-    const session: Session = { 
+    const session: PresentationSession = { 
       presentationId: insertSession.presentationId,
       code: insertSession.code,
       id,
@@ -145,19 +179,19 @@ export class MemStorage implements IStorage {
     return session;
   }
 
-  async getSession(id: string): Promise<Session | undefined> {
+  async getSession(id: string): Promise<PresentationSession | undefined> {
     return this.sessions.get(id);
   }
 
-  async getSessionByCode(code: string): Promise<Session | undefined> {
+  async getSessionByCode(code: string): Promise<PresentationSession | undefined> {
     return Array.from(this.sessions.values()).find(s => s.code === code);
   }
 
-  async updateSession(id: string, update: Partial<Omit<InsertSession, 'presentationId' | 'code'>>): Promise<Session | undefined> {
+  async updateSession(id: string, update: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined> {
     const session = this.sessions.get(id);
     if (!session) return undefined;
     
-    const updated: Session = { ...session, ...update };
+    const updated: PresentationSession = { ...session, ...update };
     this.sessions.set(id, updated);
     return updated;
   }
