@@ -6,7 +6,8 @@ import {
   insertPresentationSchema, 
   insertSlideSchema, 
   insertPresentationSessionSchema,
-  insertResponseSchema 
+  insertResponseSchema,
+  insertNoteSchema
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -526,6 +527,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(responses);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch responses" });
+    }
+  });
+
+  app.post("/api/notes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const data = insertNoteSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const existingNote = await storage.getNotesBySlide(userId, data.slideId);
+      if (existingNote) {
+        const updated = await storage.updateNote(existingNote.id, data.content);
+        return res.json(updated);
+      }
+      
+      const note = await storage.createNote(data);
+      res.json(note);
+    } catch (error) {
+      console.error("Note creation error:", error);
+      res.status(400).json({ error: "Invalid note data" });
+    }
+  });
+
+  app.get("/api/notes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const notes = await storage.getNotesByUser(userId);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
+  app.get("/api/notes/slide/:slideId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const note = await storage.getNotesBySlide(userId, req.params.slideId);
+      res.json(note || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch note" });
+    }
+  });
+
+  app.patch("/api/notes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { content } = req.body;
+      
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ error: "Content is required" });
+      }
+      
+      const updated = await storage.updateNote(req.params.id, content);
+      if (!updated) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update note" });
+    }
+  });
+
+  app.delete("/api/notes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const deleted = await storage.deleteNote(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete note" });
     }
   });
 
