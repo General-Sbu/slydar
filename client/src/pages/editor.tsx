@@ -310,7 +310,7 @@ export default function Editor() {
           type="file"
           id="file-upload"
           className="hidden"
-          accept=".pptx,.pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+          accept=".pdf,application/pdf"
           onChange={handleFileImport}
           data-testid="input-file-upload"
         />
@@ -320,7 +320,7 @@ export default function Editor() {
               <Upload className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium">Import File</div>
-                <div className="text-xs text-muted-foreground">PPTX or PDF</div>
+                <div className="text-xs text-muted-foreground">PDF only</div>
               </div>
             </div>
           </Card>

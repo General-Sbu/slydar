@@ -12,30 +12,7 @@ import {
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
-import libre from "libreoffice-convert";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
-import { execSync } from "child_process";
-
-let SOFFICE_PATH: string;
-try {
-  SOFFICE_PATH = execSync('which soffice || which libreoffice', { encoding: 'utf-8' }).trim();
-  console.log('📍 Found LibreOffice at:', SOFFICE_PATH);
-} catch (error) {
-  console.error('⚠️ LibreOffice not found in PATH. PPTX conversion will fail.');
-  SOFFICE_PATH = '';
-}
-
-const libreConvert = (buffer: Buffer, format: string, options: any): Promise<Buffer> => {
-  return new Promise((resolve, reject) => {
-    (libre.convert as any)(buffer, format, undefined, options, (err: Error | null, result: Buffer) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-};
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -293,14 +270,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     storage: multer.memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      const allowedTypes = [
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'application/pdf'
-      ];
-      if (allowedTypes.includes(file.mimetype)) {
+      if (file.mimetype === 'application/pdf') {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only PPTX and PDF files are allowed.'));
+        cb(new Error('Invalid file type. Only PDF files are allowed.'));
       }
     }
   });
@@ -314,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return res.status(400).json({ error: err.message });
         }
-        return res.status(400).json({ error: err.message || 'Invalid file type. Only PPTX and PDF files are allowed.' });
+        return res.status(400).json({ error: err.message || 'Invalid file type. Only PDF files are allowed.' });
       }
       next();
     });
@@ -356,75 +329,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await fs.promises.writeFile(pngPath, pngPages[i].content);
           }
           
-          const files = await fs.promises.readdir(outputFolder);
-          console.log('✅ PDF converted. Files written:', files);
-        } finally {
-          await fs.promises.unlink(tempFilePath);
-        }
-
-        const slides = await storage.getSlidesByPresentation(presentationId);
-        const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
-
-        const createdSlides = [];
-        for (let i = 0; i < pngPages.length; i++) {
-          const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
-          const slideData = insertSlideSchema.parse({
-            presentationId,
-            type: 'image',
-            order: maxOrder + i + 1,
-            question: imagePath,
-            options: [],
-            config: {}
-          });
-          const slide = await storage.createSlide(slideData);
-          createdSlides.push(slide);
-        }
-
-        res.json({ 
-          success: true, 
-          slidesCreated: createdSlides.length,
-          slides: createdSlides
-        });
-      } else {
-        if (!SOFFICE_PATH) {
-          return res.status(500).json({ 
-            error: "LibreOffice is not installed or not found. PPTX conversion is not available." 
-          });
-        }
-
-        const { pdfToPng } = await import('pdf-to-png-converter');
-        
-        console.log('📄 Converting PPTX to PDF...');
-        console.log('📍 Using LibreOffice at:', SOFFICE_PATH);
-        const pdfBuffer = await libreConvert(req.file.buffer, '.pdf', { 
-          sofficeBinaryPaths: [SOFFICE_PATH] 
-        });
-        
-        const tempPdfPath = `/tmp/${Date.now()}-converted.pdf`;
-        await fs.promises.writeFile(tempPdfPath, pdfBuffer);
-        console.log('📄 PDF written to:', tempPdfPath);
-
-        const uploadsDir = '/tmp/uploads';
-        await fs.promises.mkdir(uploadsDir, { recursive: true });
-        console.log('📁 Created uploads dir:', uploadsDir);
-
-        const timestamp = Date.now();
-        const outputFolder = path.join(uploadsDir, `presentation-${presentationId}-${timestamp}`);
-        await fs.promises.mkdir(outputFolder, { recursive: true });
-        console.log('📁 Created output folder:', outputFolder);
-
-        let pngPages;
-        try {
-          pngPages = await pdfToPng(tempPdfPath, {
-            viewportScale: 2.0,
-          });
-          
-          for (let i = 0; i < pngPages.length; i++) {
-            const pngFilename = `slide_${i + 1}.png`;
-            const pngPath = path.join(outputFolder, pngFilename);
-            await fs.promises.writeFile(pngPath, pngPages[i].content);
-          }
-          
           const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
           await fs.promises.mkdir(publicOutputFolder, { recursive: true });
           
@@ -436,9 +340,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           const files = await fs.promises.readdir(outputFolder);
-          console.log('✅ PPTX converted to images. Files written:', files);
+          console.log('✅ PDF converted. Files written:', files);
         } finally {
-          await fs.promises.unlink(tempPdfPath);
+          await fs.promises.unlink(tempFilePath);
         }
 
         const slides = await storage.getSlidesByPresentation(presentationId);

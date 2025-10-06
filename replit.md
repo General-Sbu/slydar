@@ -169,31 +169,19 @@ Preferred communication style: Simple, everyday language.
 
 ### File Import Feature
 
-**PPTX/PDF Import (Updated October 2025):**
-- Converts PowerPoint (.pptx) and PDF files into presentation slides as images
+**PDF Import (Updated October 2025):**
+- Converts PDF files into presentation slides as images
 - Backend endpoint: `POST /api/presentations/:id/import`
-- **PDF files:** Converted to images using `pdf-to-png-converter` library
-- **PowerPoint files:** Converted to PDF using LibreOffice, then to images (PPTX format only)
+- **PDF files:** Converted to PNG images using `pdf-to-png-converter` library
 - Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
+- **Note:** PPTX support removed due to LibreOffice dependency issues. Users can export PowerPoint to PDF first.
 
-**File to Image Conversion:**
+**PDF to Image Conversion:**
 - PDF pages are converted to PNG images at 2x scale for quality
-- PPTX slides are first converted to PDF using `libreoffice-convert`, then to PNG
 - Images saved to `/public/uploads/presentation-{id}-{timestamp}/` directory
 - Each image becomes an "image" type slide with path stored in question field
 - Images served statically from the public directory
-
-**PowerPoint Conversion Process:**
-- PPTX → PDF conversion using LibreOffice (via libreoffice-convert npm package)
-- PDF → PNG conversion using pdf-to-png-converter
-- Preserves slide layout and formatting as images
-- Temp file processing with automatic cleanup
-
-**LibreOffice Configuration (NixOS):**
-- LibreOffice 7.6.7.2 installed via Nix at custom path
-- Binary location: `/nix/store/.../bin/soffice`
-- Configured using `sofficeBinaryPaths` option in libreoffice-convert
-- Resolves "Could not find soffice binary" error on Replit environment
+- No system dependencies required (pure JavaScript conversion)
 
 **Implementation Details:**
 - File upload via `multipart/form-data` with MIME type validation
