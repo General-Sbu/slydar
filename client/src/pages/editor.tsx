@@ -5,12 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import { 
   BarChart3, Cloud, MessageSquare, Type, 
-  ChevronLeft, Save, Play, Trash2, Plus, Upload 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings 
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
@@ -28,6 +29,8 @@ export default function Editor() {
 
   const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
   const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
+  const [slidesSheetOpen, setSlidesSheetOpen] = useState(false);
+  const [propertiesSheetOpen, setPropertiesSheetOpen] = useState(false);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -222,12 +225,212 @@ export default function Editor() {
 
   const currentSlide = slides[selectedSlideIndex];
 
+  const getSlidePreview = (slide: Slide) => {
+    if (slide.type === 'image' && slide.question) {
+      return (
+        <div className="w-full h-16 rounded overflow-hidden bg-muted flex items-center justify-center">
+          <img 
+            src={slide.question} 
+            alt="Slide preview" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="text-xs text-muted-foreground truncate">
+        {slide.question || slide.type}
+      </div>
+    );
+  };
+
+  const SlidesPanel = () => (
+    <div className="p-4 space-y-4 h-full overflow-auto">
+      <div>
+        <h3 className="font-semibold mb-3">Slides</h3>
+        <div className="space-y-2">
+          {slides.map((slide, index) => (
+            <Card 
+              key={slide.id}
+              className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
+              onClick={() => {
+                setSelectedSlideIndex(index);
+                setSlidesSheetOpen(false);
+              }}
+              data-testid={`card-slide-${index}`}
+            >
+              <div className="text-sm font-medium mb-2">Slide {index + 1}</div>
+              {getSlidePreview(slide)}
+            </Card>
+          ))}
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div>
+        <h3 className="font-semibold mb-3">Add Slide</h3>
+        <div className="space-y-2">
+          <div onClick={() => { handleAddSlide('multiple_choice'); setSlidesSheetOpen(false); }}>
+            <SlideTypeCard
+              icon={BarChart3}
+              title="Multiple Choice"
+              description="Poll with options"
+            />
+          </div>
+          <div onClick={() => { handleAddSlide('word_cloud'); setSlidesSheetOpen(false); }}>
+            <SlideTypeCard
+              icon={Cloud}
+              title="Word Cloud"
+              description="Collect ideas"
+            />
+          </div>
+          <div onClick={() => { handleAddSlide('open_ended'); setSlidesSheetOpen(false); }}>
+            <SlideTypeCard
+              icon={MessageSquare}
+              title="Open Ended"
+              description="Free text responses"
+            />
+          </div>
+          <div onClick={() => { handleAddSlide('heading'); setSlidesSheetOpen(false); }}>
+            <SlideTypeCard
+              icon={Type}
+              title="Heading"
+              description="Title slide"
+            />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-semibold mb-3">Import Slides</h3>
+        <input
+          type="file"
+          id="file-upload"
+          className="hidden"
+          accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+          onChange={handleFileImport}
+          data-testid="input-file-upload"
+        />
+        <label htmlFor="file-upload">
+          <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-import-slides">
+            <div className="flex items-center gap-3">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-medium">Import File</div>
+                <div className="text-xs text-muted-foreground">PPT, PPTX, or PDF</div>
+              </div>
+            </div>
+          </Card>
+        </label>
+        {importMutation.isPending && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Importing slides...
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const PropertiesPanel = () => (
+    <div className="p-6 space-y-6 h-full overflow-auto">
+      {editingSlide ? (
+        <>
+          <div>
+            <h3 className="font-semibold mb-4">Slide Properties</h3>
+            
+            <div className="space-y-4">
+              {editingSlide.type === 'image' ? (
+                <div className="space-y-2">
+                  <Label>Image Slide</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This is an imported image slide. Image path: {editingSlide.question}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="question">
+                    {editingSlide.type === 'heading' ? 'Heading' : 'Question'}
+                  </Label>
+                  <Textarea
+                    id="question"
+                    value={editingSlide.question || ''}
+                    onChange={(e) => setEditingSlide({ ...editingSlide, question: e.target.value })}
+                    className="resize-none min-h-20"
+                    data-testid="input-question"
+                  />
+                </div>
+              )}
+
+              {editingSlide.type === 'multiple_choice' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Options</Label>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={handleAddOption}
+                      data-testid="button-add-option"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {editingSlide.options?.map((option, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={option}
+                          onChange={(e) => handleUpdateOption(index, e.target.value)}
+                          data-testid={`input-option-${index}`}
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveOption(index)}
+                          data-testid={`button-remove-option-${index}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={handleDeleteSlide}
+              disabled={deleteSlideMutation.isPending || slides.length <= 1}
+              data-testid="button-delete-slide"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Slide
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className="text-center text-muted-foreground">
+          Select a slide to edit
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="h-screen flex flex-col">
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -236,9 +439,26 @@ export default function Editor() {
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <Logo showText={false} />
+              
+              <Sheet open={slidesSheetOpen} onOpenChange={setSlidesSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden"
+                    data-testid="button-open-slides"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
+                  <SlidesPanel />
+                </SheetContent>
+              </Sheet>
+
+              <Logo showText={false} className="hidden sm:block" />
               <div className="hidden sm:block">
-                <div className="font-semibold">{presentation?.title || 'Untitled'}</div>
+                <div className="font-semibold text-sm">{presentation?.title || 'Untitled'}</div>
                 <div className="text-xs text-muted-foreground">{slides.length} slides</div>
               </div>
             </div>
@@ -263,102 +483,36 @@ export default function Editor() {
                 disabled={slides.length === 0}
               >
                 <Play className="h-4 w-4" />
-                Present
+                <span className="hidden sm:inline">Present</span>
               </Button>
-              <ThemeToggle />
+
+              <Sheet open={propertiesSheetOpen} onOpenChange={setPropertiesSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden"
+                    data-testid="button-open-properties"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+                  <PropertiesPanel />
+                </SheetContent>
+              </Sheet>
+
+              <div className="hidden sm:flex">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 border-r bg-muted/30 overflow-auto">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-4">
-              <div>
-                <h3 className="font-semibold mb-3">Slides</h3>
-                <div className="space-y-2">
-                  {slides.map((slide, index) => (
-                    <Card 
-                      key={slide.id}
-                      className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
-                      onClick={() => setSelectedSlideIndex(index)}
-                      data-testid={`card-slide-${index}`}
-                    >
-                      <div className="text-sm font-medium">Slide {index + 1}</div>
-                      <div className="text-xs text-muted-foreground truncate">{slide.question || slide.type}</div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h3 className="font-semibold mb-3">Add Slide</h3>
-                <div className="space-y-2">
-                  <div onClick={() => handleAddSlide('multiple_choice')}>
-                    <SlideTypeCard
-                      icon={BarChart3}
-                      title="Multiple Choice"
-                      description="Poll with options"
-                    />
-                  </div>
-                  <div onClick={() => handleAddSlide('word_cloud')}>
-                    <SlideTypeCard
-                      icon={Cloud}
-                      title="Word Cloud"
-                      description="Collect ideas"
-                    />
-                  </div>
-                  <div onClick={() => handleAddSlide('open_ended')}>
-                    <SlideTypeCard
-                      icon={MessageSquare}
-                      title="Open Ended"
-                      description="Free text responses"
-                    />
-                  </div>
-                  <div onClick={() => handleAddSlide('heading')}>
-                    <SlideTypeCard
-                      icon={Type}
-                      title="Heading"
-                      description="Title slide"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-semibold mb-3">Import Slides</h3>
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
-                  onChange={handleFileImport}
-                  data-testid="input-file-upload"
-                />
-                <label htmlFor="file-upload">
-                  <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-import-slides">
-                    <div className="flex items-center gap-3">
-                      <Upload className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <div className="text-sm font-medium">Import File</div>
-                        <div className="text-xs text-muted-foreground">PPT, PPTX, or PDF</div>
-                      </div>
-                    </div>
-                  </Card>
-                </label>
-                {importMutation.isPending && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Importing slides...
-                  </div>
-                )}
-              </div>
-            </div>
-          </ScrollArea>
+        <aside className="hidden lg:block w-64 border-r bg-muted/30 overflow-auto">
+          <SlidesPanel />
         </aside>
 
         <main className="flex-1 overflow-auto bg-muted/20">
@@ -409,97 +563,8 @@ export default function Editor() {
           </div>
         </main>
 
-        <aside className="w-80 border-l overflow-auto">
-          <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              {editingSlide ? (
-                <>
-                  <div>
-                    <h3 className="font-semibold mb-4">Slide Properties</h3>
-                    
-                    <div className="space-y-4">
-                      {editingSlide.type === 'image' ? (
-                        <div className="space-y-2">
-                          <Label>Image Slide</Label>
-                          <p className="text-sm text-muted-foreground">
-                            This is an imported image slide. Image path: {editingSlide.question}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="question">
-                            {editingSlide.type === 'heading' ? 'Heading' : 'Question'}
-                          </Label>
-                          <Textarea
-                            id="question"
-                            value={editingSlide.question || ''}
-                            onChange={(e) => setEditingSlide({ ...editingSlide, question: e.target.value })}
-                            className="resize-none min-h-20"
-                            data-testid="input-question"
-                          />
-                        </div>
-                      )}
-
-                      {editingSlide.type === 'multiple_choice' && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Options</Label>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={handleAddOption}
-                              data-testid="button-add-option"
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Add
-                            </Button>
-                          </div>
-                          <div className="space-y-2">
-                            {editingSlide.options?.map((option, index) => (
-                              <div key={index} className="flex gap-2">
-                                <Input
-                                  value={option}
-                                  onChange={(e) => handleUpdateOption(index, e.target.value)}
-                                  data-testid={`input-option-${index}`}
-                                />
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleRemoveOption(index)}
-                                  data-testid={`button-remove-option-${index}`}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Button 
-                      variant="destructive" 
-                      className="w-full"
-                      onClick={handleDeleteSlide}
-                      disabled={deleteSlideMutation.isPending || slides.length <= 1}
-                      data-testid="button-delete-slide"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Slide
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  Select a slide to edit
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+        <aside className="hidden lg:block w-80 border-l overflow-auto">
+          <PropertiesPanel />
         </aside>
       </div>
     </div>
