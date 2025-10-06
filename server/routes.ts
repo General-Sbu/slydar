@@ -13,11 +13,8 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import libre from "libreoffice-convert";
-import { promisify } from "util";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
 import { execSync } from "child_process";
-
-const libreConvert = promisify(libre.convert);
 
 let SOFFICE_PATH: string;
 try {
@@ -27,6 +24,18 @@ try {
   console.error('⚠️ LibreOffice not found in PATH. PPTX conversion will fail.');
   SOFFICE_PATH = '';
 }
+
+const libreConvert = (buffer: Buffer, format: string, options: any): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    (libre.convert as any)(buffer, format, undefined, options, (err: Error | null, result: Buffer) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -387,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('📄 Converting PPTX to PDF...');
         console.log('📍 Using LibreOffice at:', SOFFICE_PATH);
-        const pdfBuffer = await (libreConvert as any)(req.file.buffer, '.pdf', undefined, { 
+        const pdfBuffer = await libreConvert(req.file.buffer, '.pdf', { 
           sofficeBinaryPaths: [SOFFICE_PATH] 
         });
         
