@@ -10,6 +10,7 @@ import Editor from "@/pages/editor";
 import Presenter from "@/pages/presenter";
 import Audience from "@/pages/audience";
 import Notes from "@/pages/notes";
+import FeedbackView from "@/pages/feedback";
 import JoinPresentation from "@/components/JoinPresentation";
 import NotFound from "@/pages/not-found";
 
@@ -58,6 +59,9 @@ function Router() {
       </Route>
       <Route path="/notes">
         <ProtectedRoute component={Notes} />
+      </Route>
+      <Route path="/feedback/:sessionId">
+        <ProtectedRoute component={FeedbackView} />
       </Route>
       <Route path="/join" component={JoinPresentation} />
       <Route path="/audience/:code" component={Audience} />

@@ -636,6 +636,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/sessions/:sessionId/feedback-with-slides", isAuthenticated, async (req: any, res) => {
+    try {
+      const session = await storage.getSession(req.params.sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const feedbacks = await storage.getFeedbackBySession(req.params.sessionId);
+      const slides = await storage.getSlidesByPresentation(session.presentationId);
+      
+      const feedbackWithSlides = feedbacks.map(fb => {
+        const slide = slides.find((s: any) => s.id === fb.slideId);
+        return {
+          ...fb,
+          slide: slide ? {
+            id: slide.id,
+            type: slide.type,
+            question: slide.question,
+            order: slide.order
+          } : null
+        };
+      });
+      
+      res.json(feedbackWithSlides);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feedback with slides" });
+    }
+  });
+
   app.get("/api/slides/:slideId/feedback/:sessionId", async (req, res) => {
     try {
       const feedbacks = await storage.getFeedbackBySlide(req.params.slideId, req.params.sessionId);

@@ -2,9 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
-import { ChevronLeft, ChevronRight, X, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, PresentationSession, Response, Feedback } from "@shared/schema";
@@ -320,6 +320,18 @@ export default function Presenter() {
                     {slideFeedback.length} feedback
                   </span>
                 </div>
+              )}
+              {session && allFeedback.length > 0 && (
+                <Link href={`/feedback/${session.id}`}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    data-testid="button-view-feedback"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    View All Feedback
+                  </Button>
+                </Link>
               )}
             </div>
 
