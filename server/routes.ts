@@ -272,14 +272,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       const allowedTypes = [
-        'application/vnd.ms-powerpoint',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         'application/pdf'
       ];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only PPT, PPTX, and PDF files are allowed.'));
+        cb(new Error('Invalid file type. Only PPTX and PDF files are allowed.'));
       }
     }
   });
@@ -293,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return res.status(400).json({ error: err.message });
         }
-        return res.status(400).json({ error: err.message || 'Invalid file type. Only PPT, PPTX, and PDF files are allowed.' });
+        return res.status(400).json({ error: err.message || 'Invalid file type. Only PPTX and PDF files are allowed.' });
       }
       next();
     });

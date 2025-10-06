@@ -169,11 +169,11 @@ Preferred communication style: Simple, everyday language.
 
 ### File Import Feature
 
-**PPT/PDF Import (Updated October 2025):**
-- Converts PowerPoint (.ppt, .pptx) and PDF files into presentation slides
+**PPTX/PDF Import (Updated October 2025):**
+- Converts PowerPoint (.pptx) and PDF files into presentation slides
 - Backend endpoint: `POST /api/presentations/:id/import`
 - **PDF files:** Converted to images using `pdf-to-png-converter` library
-- **PowerPoint files:** Text extracted using `officeparser` library
+- **PowerPoint files:** Text extracted using `officeparser` library (PPTX format only)
 - Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
 
 **PDF to Image Conversion (New):**
@@ -203,7 +203,7 @@ Preferred communication style: Simple, everyday language.
 - Frontend shows toast notifications for success/failure
 
 **Security Measures:**
-- File type restriction (.ppt, .pptx, .pdf only)
+- File type restriction (.pptx, .pdf only)
 - 50MB file size limit
 - Server-side MIME validation
 - Isolated temp file processing
