@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
 import { ChevronLeft, ChevronRight, X, Users } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -25,6 +25,10 @@ export default function Presenter() {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [allResponses, setAllResponses] = useState<Response[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const touchStartRef = useRef<number | null>(null);
+  const touchEndRef = useRef<number | null>(null);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -149,6 +153,88 @@ export default function Presenter() {
     endSessionMutation.mutate();
   };
 
+  const minSwipeDistance = 50;
+
+  const handleSwipeEnd = () => {
+    if (touchStartRef.current === null || touchEndRef.current === null) return;
+    
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      handleNextSlide();
+    }
+    if (isRightSwipe) {
+      handlePreviousSlide();
+    }
+
+    touchStartRef.current = null;
+    touchEndRef.current = null;
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    handleSwipeEnd();
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    touchEndRef.current = null;
+    touchStartRef.current = e.clientX;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    touchEndRef.current = e.clientX;
+  };
+
+  const onMouseUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    handleSwipeEnd();
+  };
+
+  const onMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      handleSwipeEnd();
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        if (touchStartRef.current !== null && touchEndRef.current !== null) {
+          const distance = touchStartRef.current - touchEndRef.current;
+          const isLeftSwipe = distance > minSwipeDistance;
+          const isRightSwipe = distance < -minSwipeDistance;
+          
+          if (isLeftSwipe) {
+            handleNextSlide();
+          }
+          if (isRightSwipe) {
+            handlePreviousSlide();
+          }
+        }
+        touchStartRef.current = null;
+        touchEndRef.current = null;
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragging, currentSlideIndex, slides.length]);
+
   const slideResponses = useMemo(() => {
     if (!currentSlide) return [];
     return allResponses.filter(r => r.slideId === currentSlide.id);
@@ -256,7 +342,17 @@ export default function Presenter() {
                 </div>
               </Card>
             ) : (
-              <Card className="p-6 md:p-12">
+              <Card 
+                className="p-6 md:p-12 cursor-grab active:cursor-grabbing"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={onMouseUp}
+                onMouseLeave={onMouseLeave}
+                data-testid="card-slide"
+              >
                 {currentSlide.type === 'heading' ? (
                   <div className="text-center">
                     <h1 className="text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
