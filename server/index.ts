@@ -46,8 +46,8 @@ app.use((req, res, next) => {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS feedback (
         id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        session_id VARCHAR NOT NULL,
-        slide_id VARCHAR NOT NULL,
+        session_id VARCHAR NOT NULL REFERENCES presentation_sessions(id) ON DELETE CASCADE,
+        slide_id VARCHAR NOT NULL REFERENCES slides(id) ON DELETE CASCADE,
         participant_id VARCHAR NOT NULL,
         content TEXT NOT NULL,
         submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
