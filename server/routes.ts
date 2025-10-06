@@ -12,8 +12,11 @@ import {
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
-import officeParser from "officeparser";
+import libre from "libreoffice-convert";
+import { promisify } from "util";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
+
+const libreConvert = promisify(libre.convert);
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -364,46 +367,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slides: createdSlides
         });
       } else {
-        const tempFilePath = `/tmp/${Date.now()}-${req.file.originalname}`;
-        await fs.promises.writeFile(tempFilePath, req.file.buffer);
+        const { pdfToPng } = await import('pdf-to-png-converter');
+        
+        console.log('📄 Converting PPTX to PDF...');
+        const pdfBuffer = await libreConvert(req.file.buffer, '.pdf', undefined);
+        
+        const tempPdfPath = `/tmp/${Date.now()}-converted.pdf`;
+        await fs.promises.writeFile(tempPdfPath, pdfBuffer);
+        console.log('📄 PDF written to:', tempPdfPath);
 
-        let text: string;
+        const uploadsDir = '/tmp/uploads';
+        await fs.promises.mkdir(uploadsDir, { recursive: true });
+        console.log('📁 Created uploads dir:', uploadsDir);
+
+        const timestamp = Date.now();
+        const outputFolder = path.join(uploadsDir, `presentation-${presentationId}-${timestamp}`);
+        await fs.promises.mkdir(outputFolder, { recursive: true });
+        console.log('📁 Created output folder:', outputFolder);
+
+        let pngPages;
         try {
-          text = await new Promise<string>((resolve, reject) => {
-            officeParser.parseOffice(tempFilePath, (data: string, err: Error | null) => {
-              if (err) {
-                reject(err);
-              } else if (data) {
-                resolve(data);
-              } else {
-                reject(new Error('No data returned from parser'));
-              }
-            });
+          pngPages = await pdfToPng(tempPdfPath, {
+            viewportScale: 2.0,
           });
+          
+          for (let i = 0; i < pngPages.length; i++) {
+            const pngFilename = `slide_${i + 1}.png`;
+            const pngPath = path.join(outputFolder, pngFilename);
+            await fs.promises.writeFile(pngPath, pngPages[i].content);
+          }
+          
+          const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
+          await fs.promises.mkdir(publicOutputFolder, { recursive: true });
+          
+          for (let i = 0; i < pngPages.length; i++) {
+            const pngFilename = `slide_${i + 1}.png`;
+            const sourcePath = path.join(outputFolder, pngFilename);
+            const destPath = path.join(publicOutputFolder, pngFilename);
+            await fs.promises.copyFile(sourcePath, destPath);
+          }
+          
+          const files = await fs.promises.readdir(outputFolder);
+          console.log('✅ PPTX converted to images. Files written:', files);
         } finally {
-          await fs.promises.unlink(tempFilePath);
+          await fs.promises.unlink(tempPdfPath);
         }
 
-        const lines = text.split('\n').filter(line => line.trim().length > 0);
-        
         const slides = await storage.getSlidesByPresentation(presentationId);
         const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
-        
+
         const createdSlides = [];
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (line.length > 0) {
-            const slideData = insertSlideSchema.parse({
-              presentationId,
-              type: 'heading',
-              order: maxOrder + i + 1,
-              question: line,
-              options: [],
-              config: {}
-            });
-            const slide = await storage.createSlide(slideData);
-            createdSlides.push(slide);
-          }
+        for (let i = 0; i < pngPages.length; i++) {
+          const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
+          const slideData = insertSlideSchema.parse({
+            presentationId,
+            type: 'image',
+            order: maxOrder + i + 1,
+            question: imagePath,
+            options: [],
+            config: {}
+          });
+          const slide = await storage.createSlide(slideData);
+          createdSlides.push(slide);
         }
 
         res.json({ 

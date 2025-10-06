@@ -170,22 +170,23 @@ Preferred communication style: Simple, everyday language.
 ### File Import Feature
 
 **PPTX/PDF Import (Updated October 2025):**
-- Converts PowerPoint (.pptx) and PDF files into presentation slides
+- Converts PowerPoint (.pptx) and PDF files into presentation slides as images
 - Backend endpoint: `POST /api/presentations/:id/import`
 - **PDF files:** Converted to images using `pdf-to-png-converter` library
-- **PowerPoint files:** Text extracted using `officeparser` library (PPTX format only)
+- **PowerPoint files:** Converted to PDF using LibreOffice, then to images (PPTX format only)
 - Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
 
-**PDF to Image Conversion (New):**
-- Each PDF page is converted to a PNG image at 2x scale for quality
+**File to Image Conversion:**
+- PDF pages are converted to PNG images at 2x scale for quality
+- PPTX slides are first converted to PDF using `libreoffice-convert`, then to PNG
 - Images saved to `/public/uploads/presentation-{id}-{timestamp}/` directory
 - Each image becomes an "image" type slide with path stored in question field
-- No system dependencies required (pure JavaScript conversion)
 - Images served statically from the public directory
 
-**PowerPoint Text Extraction:**
-- Text extraction using callback-based API wrapped in Promise
-- Each non-empty line becomes a "heading" type slide
+**PowerPoint Conversion Process:**
+- PPTX → PDF conversion using LibreOffice (via libreoffice-convert npm package)
+- PDF → PNG conversion using pdf-to-png-converter
+- Preserves slide layout and formatting as images
 - Temp file processing with automatic cleanup
 
 **Implementation Details:**
