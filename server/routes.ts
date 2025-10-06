@@ -108,7 +108,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const presentations = await storage.getPresentationsByUser(userId);
-      res.json(presentations);
+      
+      const presentationsWithCounts = await Promise.all(
+        presentations.map(async (presentation) => {
+          const slides = await storage.getSlidesByPresentation(presentation.id);
+          return {
+            ...presentation,
+            slideCount: slides.length
+          };
+        })
+      );
+      
+      res.json(presentationsWithCounts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch presentations" });
     }

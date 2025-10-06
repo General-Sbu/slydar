@@ -22,7 +22,9 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const { data: presentations = [], isLoading } = useQuery<Presentation[]>({
+  type PresentationWithCount = Presentation & { slideCount: number };
+  
+  const { data: presentations = [], isLoading } = useQuery<PresentationWithCount[]>({
     queryKey: ['/api/presentations'],
   });
 
@@ -186,7 +188,7 @@ export default function Dashboard() {
                   key={presentation.id} 
                   id={presentation.id}
                   title={presentation.title}
-                  slideCount={0}
+                  slideCount={presentation.slideCount}
                   lastEdited={formatDate(presentation.updatedAt)}
                   onEdit={() => setLocation(`/editor/${presentation.id}`)}
                   onDelete={() => deleteMutation.mutate(presentation.id)}
