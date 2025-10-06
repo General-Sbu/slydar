@@ -15,10 +15,18 @@ import multer from "multer";
 import libre from "libreoffice-convert";
 import { promisify } from "util";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
+import { execSync } from "child_process";
 
 const libreConvert = promisify(libre.convert);
 
-const SOFFICE_PATH = '/nix/store/j261ykwr6mxvai0v22sa9y6w421p30ay-libreoffice-7.6.7.2-wrapped/bin/soffice';
+let SOFFICE_PATH: string;
+try {
+  SOFFICE_PATH = execSync('which soffice || which libreoffice', { encoding: 'utf-8' }).trim();
+  console.log('📍 Found LibreOffice at:', SOFFICE_PATH);
+} catch (error) {
+  console.error('⚠️ LibreOffice not found in PATH. PPTX conversion will fail.');
+  SOFFICE_PATH = '';
+}
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -369,9 +377,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slides: createdSlides
         });
       } else {
+        if (!SOFFICE_PATH) {
+          return res.status(500).json({ 
+            error: "LibreOffice is not installed or not found. PPTX conversion is not available." 
+          });
+        }
+
         const { pdfToPng } = await import('pdf-to-png-converter');
         
         console.log('📄 Converting PPTX to PDF...');
+        console.log('📍 Using LibreOffice at:', SOFFICE_PATH);
         const pdfBuffer = await (libreConvert as any)(req.file.buffer, '.pdf', undefined, { 
           sofficeBinaryPaths: [SOFFICE_PATH] 
         });
