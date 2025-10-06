@@ -7,7 +7,8 @@ import {
   insertSlideSchema, 
   insertPresentationSessionSchema,
   insertResponseSchema,
-  insertNoteSchema
+  insertNoteSchema,
+  insertFeedbackSchema
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -612,6 +613,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete note" });
+    }
+  });
+
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const data = insertFeedbackSchema.parse(req.body);
+      const feedbackItem = await storage.createFeedback(data);
+      res.json(feedbackItem);
+    } catch (error) {
+      console.error("Feedback creation error:", error);
+      res.status(400).json({ error: "Invalid feedback data" });
+    }
+  });
+
+  app.get("/api/sessions/:sessionId/feedback", async (req, res) => {
+    try {
+      const feedbacks = await storage.getFeedbackBySession(req.params.sessionId);
+      res.json(feedbacks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.get("/api/slides/:slideId/feedback/:sessionId", async (req, res) => {
+    try {
+      const feedbacks = await storage.getFeedbackBySlide(req.params.slideId, req.params.sessionId);
+      res.json(feedbacks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
     }
   });
 
