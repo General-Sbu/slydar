@@ -270,10 +270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     storage: multer.memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype === 'application/pdf') {
+      if (file.mimetype === 'application/pdf' || 
+          file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only PDF files are allowed.'));
+        cb(new Error('Invalid file type. Only PDF and PPTX files are allowed.'));
       }
     }
   });
@@ -287,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return res.status(400).json({ error: err.message });
         }
-        return res.status(400).json({ error: err.message || 'Invalid file type. Only PDF files are allowed.' });
+        return res.status(400).json({ error: err.message || 'Invalid file type. Only PDF and PPTX files are allowed.' });
       }
       next();
     });
@@ -363,6 +364,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdSlides.push(slide);
         }
 
+        res.json({ 
+          success: true, 
+          slidesCreated: createdSlides.length,
+          slides: createdSlides
+        });
+      } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        const convertapi = require('convertapi')(process.env.CONVERTAPI_SECRET || '');
+        
+        console.log('📊 Converting PPTX to PNG using ConvertAPI...');
+        
+        const timestamp = Date.now();
+        const result = await convertapi.convert('png', { 
+          File: req.file.buffer 
+        }, 'pptx');
+        
+        console.log('✅ PPTX converted. Files received:', result.files.length);
+        
+        const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
+        await fs.promises.mkdir(publicOutputFolder, { recursive: true });
+        
+        for (let i = 0; i < result.files.length; i++) {
+          const pngFilename = `slide_${i + 1}.png`;
+          const destPath = path.join(publicOutputFolder, pngFilename);
+          await result.files[i].save(destPath);
+        }
+        
+        const slides = await storage.getSlidesByPresentation(presentationId);
+        const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+        
+        const createdSlides = [];
+        for (let i = 0; i < result.files.length; i++) {
+          const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
+          const slideData = insertSlideSchema.parse({
+            presentationId,
+            type: 'image',
+            order: maxOrder + i + 1,
+            question: imagePath,
+            options: [],
+            config: {}
+          });
+          const slide = await storage.createSlide(slideData);
+          createdSlides.push(slide);
+        }
+        
         res.json({ 
           success: true, 
           slidesCreated: createdSlides.length,
