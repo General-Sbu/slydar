@@ -245,28 +245,28 @@ export default function Presenter() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        <main className="flex-1 overflow-auto p-8">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <main className="flex-1 overflow-auto p-4 md:p-8">
           <div className="max-w-5xl mx-auto">
             {isLoading || !currentSlide ? (
-              <Card className="p-12">
+              <Card className="p-6 md:p-12">
                 <div className="text-center space-y-4">
                   <Skeleton className="h-12 w-3/4 mx-auto" />
                   <Skeleton className="h-8 w-1/2 mx-auto" />
                 </div>
               </Card>
             ) : (
-              <Card className="p-12">
+              <Card className="p-6 md:p-12">
                 {currentSlide.type === 'heading' ? (
                   <div className="text-center">
-                    <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                    <h1 className="text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                   </div>
                 ) : currentSlide.type === 'image' ? (
                   <div className="flex items-center justify-center">
                     <img 
                       src={currentSlide.question || ''} 
                       alt={`Slide ${currentSlideIndex + 1}`} 
-                      className="max-w-full max-h-[70vh] object-contain"
+                      className="max-w-full max-h-[50vh] md:max-h-[70vh] object-contain"
                       data-testid="img-slide"
                     />
                   </div>
@@ -278,7 +278,7 @@ export default function Presenter() {
                   />
                 ) : (
                   <div className="text-center space-y-4">
-                    <h2 className="text-3xl font-bold">{currentSlide.question || "Question"}</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold">{currentSlide.question || "Question"}</h2>
                     <div className="text-muted-foreground">
                       {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
                     </div>
@@ -289,12 +289,12 @@ export default function Presenter() {
           </div>
         </main>
 
-        <aside className="w-96 border-l bg-muted/30 overflow-auto">
-          <div className="p-6 space-y-6">
+        <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6">
             {session ? (
               <RoomCodeDisplay code={session.code} participantCount={participantCount} />
             ) : (
-              <Card className="p-6">
+              <Card className="p-4 md:p-6">
                 <div className="text-center space-y-3">
                   <Skeleton className="h-8 w-32 mx-auto" />
                   <Skeleton className="h-12 w-48 mx-auto" />
