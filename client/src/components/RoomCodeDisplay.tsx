@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface RoomCodeDisplayProps {
   code: string;
@@ -16,6 +17,8 @@ export default function RoomCodeDisplay({ code, participantCount = 0 }: RoomCode
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const joinUrl = `${window.location.origin}/audience/${code}`;
 
   return (
     <Card className="p-6">
@@ -42,6 +45,17 @@ export default function RoomCodeDisplay({ code, participantCount = 0 }: RoomCode
                 <Copy className="h-5 w-5" />
               )}
             </Button>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <div className="p-4 bg-white rounded-lg" data-testid="qr-code-container">
+            <QRCodeSVG 
+              value={joinUrl} 
+              size={160}
+              level="M"
+              data-testid="qr-code"
+            />
           </div>
         </div>
         
