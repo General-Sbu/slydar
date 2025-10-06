@@ -169,19 +169,26 @@ Preferred communication style: Simple, everyday language.
 
 ### File Import Feature
 
-**PDF Import (Updated October 2025):**
-- Converts PDF files into presentation slides as images
+**PPTX/PDF Import (Updated October 2025):**
+- Converts PowerPoint (.pptx) and PDF files into presentation slides as images
 - Backend endpoint: `POST /api/presentations/:id/import`
-- **PDF files:** Converted to PNG images using `pdf-to-png-converter` library
+- **PDF files:** Converted to PNG images using `pdf-to-png-converter` library (pure JavaScript, no dependencies)
+- **PowerPoint files:** Converted to PNG images using ConvertAPI cloud service (requires CONVERTAPI_SECRET)
 - Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
-- **Note:** PPTX support removed due to LibreOffice dependency issues. Users can export PowerPoint to PDF first.
 
-**PDF to Image Conversion:**
+**File to Image Conversion:**
 - PDF pages are converted to PNG images at 2x scale for quality
+- PPTX slides are converted to PNG images using ConvertAPI's cloud conversion service
 - Images saved to `/public/uploads/presentation-{id}-{timestamp}/` directory
 - Each image becomes an "image" type slide with path stored in question field
 - Images served statically from the public directory
-- No system dependencies required (pure JavaScript conversion)
+
+**ConvertAPI Integration:**
+- Cloud-based PPTX to PNG conversion (no local dependencies required)
+- Free tier: 250 conversions per month
+- API secret stored in environment variable: CONVERTAPI_SECRET
+- Reliable conversion without LibreOffice or system dependencies
+- High-quality image output with full slide fidelity
 
 **Implementation Details:**
 - File upload via `multipart/form-data` with MIME type validation
