@@ -17,6 +17,8 @@ import { promisify } from "util";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
 
 const libreConvert = promisify(libre.convert);
+
+const SOFFICE_PATH = '/nix/store/j261ykwr6mxvai0v22sa9y6w421p30ay-libreoffice-7.6.7.2-wrapped/bin/soffice';
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
@@ -370,7 +372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { pdfToPng } = await import('pdf-to-png-converter');
         
         console.log('📄 Converting PPTX to PDF...');
-        const pdfBuffer = await libreConvert(req.file.buffer, '.pdf', undefined);
+        const pdfBuffer = await (libreConvert as any)(req.file.buffer, '.pdf', undefined, { 
+          sofficeBinaryPaths: [SOFFICE_PATH] 
+        });
         
         const tempPdfPath = `/tmp/${Date.now()}-converted.pdf`;
         await fs.promises.writeFile(tempPdfPath, pdfBuffer);

@@ -189,6 +189,12 @@ Preferred communication style: Simple, everyday language.
 - Preserves slide layout and formatting as images
 - Temp file processing with automatic cleanup
 
+**LibreOffice Configuration (NixOS):**
+- LibreOffice 7.6.7.2 installed via Nix at custom path
+- Binary location: `/nix/store/.../bin/soffice`
+- Configured using `sofficeBinaryPaths` option in libreoffice-convert
+- Resolves "Could not find soffice binary" error on Replit environment
+
 **Implementation Details:**
 - File upload via `multipart/form-data` with MIME type validation
 - Temp file written to `/tmp` during processing (timestamp-prefixed)
