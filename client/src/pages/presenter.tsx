@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, PresentationSession, Response } from "@shared/schema";
+import type { Presentation, Slide, PresentationSession, Response, Feedback } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +44,12 @@ export default function Presenter() {
     queryKey: ['/api/sessions', session?.id, 'responses'],
     enabled: !!session?.id,
     refetchInterval: 2000,
+  });
+
+  const { data: allFeedback = [] } = useQuery<Feedback[]>({
+    queryKey: ['/api/sessions', session?.id, 'feedback'],
+    enabled: !!session?.id,
+    refetchInterval: 3000,
   });
 
   const createSessionMutation = useMutation({
@@ -240,6 +246,11 @@ export default function Presenter() {
     return allResponses.filter(r => r.slideId === currentSlide.id);
   }, [allResponses, currentSlide]);
 
+  const slideFeedback = useMemo(() => {
+    if (!currentSlide) return [];
+    return allFeedback.filter(f => f.slideId === currentSlide.id);
+  }, [allFeedback, currentSlide]);
+
   const chartOptions = useMemo(() => {
     if (!currentSlide || currentSlide.type !== 'multiple_choice' || !currentSlide.options) {
       return [];
@@ -302,6 +313,14 @@ export default function Presenter() {
                 <Users className="h-4 w-4" />
                 <span className="font-medium" data-testid="text-participant-count">{participantCount}</span>
               </div>
+              {slideFeedback.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>|</span>
+                  <span className="font-medium" data-testid="text-feedback-count">
+                    {slideFeedback.length} feedback
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 const app = express();
 app.use(express.json());
@@ -39,6 +41,23 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database tables
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id VARCHAR NOT NULL,
+        slide_id VARCHAR NOT NULL,
+        participant_id VARCHAR NOT NULL,
+        content TEXT NOT NULL,
+        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+    log('✅ Database tables initialized');
+  } catch (error) {
+    log('⚠️ Database initialization warning: ' + (error instanceof Error ? error.message : String(error)));
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
