@@ -4,12 +4,13 @@ import {
   type PresentationSession, type InsertPresentationSession,
   type Response, type InsertResponse,
   type User, type UpsertUser,
-  type Note, type InsertNote
+  type Note, type InsertNote,
+  type Feedback, type InsertFeedback
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { 
-  users, presentations, slides, presentationSessions, responses, notes 
+  users, presentations, slides, presentationSessions, responses, notes, feedback
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -49,6 +50,10 @@ export interface IStorage {
   getNotesBySlide(userId: string, slideId: string): Promise<Note | undefined>;
   updateNote(id: string, content: string): Promise<Note | undefined>;
   deleteNote(id: string): Promise<boolean>;
+
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  getFeedbackBySession(sessionId: string): Promise<Feedback[]>;
+  getFeedbackBySlide(slideId: string, sessionId: string): Promise<Feedback[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -57,6 +62,7 @@ export class MemStorage implements IStorage {
   private slides: Map<string, Slide>;
   private sessions: Map<string, PresentationSession>;
   private responses: Map<string, Response>;
+  private feedbacks: Map<string, Feedback>;
 
   constructor() {
     this.users = new Map();
@@ -64,6 +70,7 @@ export class MemStorage implements IStorage {
     this.slides = new Map();
     this.sessions = new Map();
     this.responses = new Map();
+    this.feedbacks = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -298,6 +305,28 @@ export class MemStorage implements IStorage {
   async deleteNote(id: string): Promise<boolean> {
     return false;
   }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const id = randomUUID();
+    const feedbackItem: Feedback = { 
+      ...insertFeedback, 
+      id,
+      submittedAt: new Date()
+    };
+    this.feedbacks.set(id, feedbackItem);
+    return feedbackItem;
+  }
+
+  async getFeedbackBySession(sessionId: string): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values())
+      .filter(f => f.sessionId === sessionId)
+      .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+  }
+
+  async getFeedbackBySlide(slideId: string, sessionId: string): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values())
+      .filter(f => f.slideId === slideId && f.sessionId === sessionId);
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -478,6 +507,24 @@ export class DbStorage implements IStorage {
   async deleteNote(id: string): Promise<boolean> {
     const result = await db.delete(notes).where(eq(notes.id, id)).returning();
     return result.length > 0;
+  }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const [feedbackItem] = await db.insert(feedback).values(insertFeedback).returning();
+    return feedbackItem;
+  }
+
+  async getFeedbackBySession(sessionId: string): Promise<Feedback[]> {
+    return db.select()
+      .from(feedback)
+      .where(eq(feedback.sessionId, sessionId))
+      .orderBy(desc(feedback.submittedAt));
+  }
+
+  async getFeedbackBySlide(slideId: string, sessionId: string): Promise<Feedback[]> {
+    return db.select()
+      .from(feedback)
+      .where(and(eq(feedback.slideId, slideId), eq(feedback.sessionId, sessionId)));
   }
 }
 
