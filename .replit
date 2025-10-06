@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["libreoffice"]
+packages = ["libreoffice", "python311Packages.python-pptx"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -32,8 +32,8 @@ localPort = 41815
 externalPort = 3003
 
 [[ports]]
-localPort = 44565
-externalPort = 4200
+localPort = 44987
+externalPort = 5000
 
 [env]
 PORT = "5000"
