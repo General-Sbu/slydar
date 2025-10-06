@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
-import type { Slide, PresentationSession, Note } from "@shared/schema";
+import type { Slide, PresentationSession, Note, Feedback } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -27,6 +27,8 @@ export default function Audience() {
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const [feedbackContent, setFeedbackContent] = useState("");
+  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -66,6 +68,35 @@ export default function Audience() {
     },
   });
 
+  const submitFeedbackMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!currentSlide || !session || !participantId) throw new Error("No slide, session, or participant");
+      const res = await apiRequest('POST', '/api/feedback', {
+        slideId: currentSlide.id,
+        sessionId: session.id,
+        participantId,
+        content,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setFeedbackContent("");
+      setIsSavingFeedback(false);
+      toast({
+        title: "Feedback submitted",
+        description: "Thank you for your feedback!",
+      });
+    },
+    onError: () => {
+      setIsSavingFeedback(false);
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback",
+        variant: "destructive",
+      });
+    },
+  });
+
   const websocketOptions = useMemo(() => ({
     onSessionJoined: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
       setSession(data.session);
@@ -80,6 +111,7 @@ export default function Audience() {
       setSubmitted(false);
       setSelectedAnswer(null);
       setTextAnswer("");
+      setFeedbackContent("");
     },
     onSessionEnded: () => {
       toast({
@@ -123,6 +155,13 @@ export default function Audience() {
     if (noteContent.trim() && currentSlide) {
       setIsSavingNote(true);
       saveNoteMutation.mutate(noteContent.trim());
+    }
+  };
+
+  const handleSubmitFeedback = () => {
+    if (feedbackContent.trim() && currentSlide && session && participantId) {
+      setIsSavingFeedback(true);
+      submitFeedbackMutation.mutate(feedbackContent.trim());
     }
   };
 
@@ -272,6 +311,39 @@ export default function Audience() {
               </div>
             )}
           </div>
+        )}
+
+        {currentSlide && session && participantId && (
+          <Card className="mt-6 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Check className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">Slide Feedback</h3>
+            </div>
+            <div className="space-y-3">
+              <Textarea
+                value={feedbackContent}
+                onChange={(e) => setFeedbackContent(e.target.value)}
+                placeholder="Share your thoughts on this slide..."
+                className="min-h-[100px] resize-none"
+                data-testid="textarea-feedback"
+              />
+              <Button
+                onClick={handleSubmitFeedback}
+                disabled={!feedbackContent.trim() || isSavingFeedback}
+                className="w-full"
+                data-testid="button-submit-feedback"
+              >
+                {isSavingFeedback ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Feedback"
+                )}
+              </Button>
+            </div>
+          </Card>
         )}
 
         {isAuthenticated && currentSlide && (
