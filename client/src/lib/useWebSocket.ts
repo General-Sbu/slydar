@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { PresentationSession, Slide } from '@shared/schema';
+import type { PresentationSession, Slide, Reaction } from '@shared/schema';
 
 interface UseWebSocketOptions {
   onSessionJoined?: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => void;
@@ -9,6 +9,7 @@ interface UseWebSocketOptions {
   onParticipantCount?: (count: number) => void;
   onSessionUpdate?: (session: PresentationSession) => void;
   onSessionEnded?: () => void;
+  onReactionsUpdated?: (data: { slideId: string; reactions: Reaction[] }) => void;
   onError?: (error: string) => void;
 }
 
@@ -78,6 +79,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     socket.on('session_ended', () => {
       console.log('[Socket.IO] Session ended');
       optionsRef.current.onSessionEnded?.();
+    });
+
+    socket.on('reactions_updated', (data: { slideId: string; reactions: Reaction[] }) => {
+      console.log('[Socket.IO] Reactions updated:', data);
+      optionsRef.current.onReactionsUpdated?.(data);
     });
 
     socket.on('error', (data: { message: string }) => {
