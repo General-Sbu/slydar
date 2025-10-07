@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, PresentationSession, Response, Feedback } from "@shared/schema";
+import type { Presentation, Slide, PresentationSession, Response, Feedback, Reaction } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +50,11 @@ export default function Presenter() {
     queryKey: ['/api/sessions', session?.id, 'feedback'],
     enabled: !!session?.id,
     refetchInterval: 3000,
+  });
+
+  const { data: reactions = [] } = useQuery<Reaction[]>({
+    queryKey: currentSlide?.id && session?.id ? [`/api/slides/${currentSlide.id}/reactions/${session.id}`] : [],
+    enabled: !!currentSlide?.id && !!session?.id,
   });
 
   const createSessionMutation = useMutation({
@@ -111,6 +116,13 @@ export default function Presenter() {
     },
     onParticipantCount: (count) => {
       setParticipantCount(count);
+    },
+    onReactionsUpdated: (data) => {
+      if (currentSlide?.id && session?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/slides/${currentSlide.id}/reactions/${session.id}`] 
+        });
+      }
     },
     onSessionEnded: () => {
       toast({
@@ -288,6 +300,16 @@ export default function Presenter() {
     return slideResponses.slice(-10).reverse();
   }, [slideResponses]);
 
+  const reactionCounts = useMemo(() => {
+    const counts = { like: 0, heart: 0, thumbs_down: 0 };
+    reactions.forEach(reaction => {
+      if (reaction.reactionType === 'like') counts.like++;
+      else if (reaction.reactionType === 'heart') counts.heart++;
+      else if (reaction.reactionType === 'thumbs_down') counts.thumbs_down++;
+    });
+    return counts;
+  }, [reactions]);
+
   if (!presentationId) {
     return <div className="h-screen flex items-center justify-center">Invalid presentation ID</div>;
   }
@@ -429,6 +451,35 @@ export default function Presenter() {
               </Card>
             )}
             
+            <div>
+              <h3 className="font-semibold mb-3">Slide Reactions</h3>
+              <Card className="p-4">
+                <div className="flex items-center justify-around gap-3">
+                  <div className="flex flex-col items-center gap-1" data-testid="reaction-like">
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-lg font-semibold" data-testid="text-like-count">{reactionCounts.like}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Like</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1" data-testid="reaction-heart">
+                    <div className="flex items-center gap-1">
+                      <Heart className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      <span className="text-lg font-semibold" data-testid="text-heart-count">{reactionCounts.heart}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Love</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1" data-testid="reaction-thumbs_down">
+                    <div className="flex items-center gap-1">
+                      <ThumbsDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                      <span className="text-lg font-semibold" data-testid="text-thumbs_down-count">{reactionCounts.thumbs_down}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Dislike</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
             <div>
               <h3 className="font-semibold mb-3">Recent Responses</h3>
               <div className="space-y-2">

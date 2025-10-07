@@ -139,6 +139,13 @@ export default function Audience() {
       setTextAnswer("");
       setFeedbackContent("");
     },
+    onReactionsUpdated: (data: { slideId: string; reactions: Reaction[] }) => {
+      if (currentSlide?.id && session?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/slides/${currentSlide.id}/reactions/${session.id}`] 
+        });
+      }
+    },
     onSessionEnded: () => {
       toast({
         title: "Session ended",
@@ -152,7 +159,7 @@ export default function Audience() {
         variant: "destructive"
       });
     }
-  }), [toast]);
+  }), [toast, currentSlide?.id, session?.id]);
 
   const { isConnected, joinSession, submitResponse } = useWebSocket(websocketOptions);
 
