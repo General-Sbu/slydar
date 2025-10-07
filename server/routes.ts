@@ -8,7 +8,8 @@ import {
   insertPresentationSessionSchema,
   insertResponseSchema,
   insertNoteSchema,
-  insertFeedbackSchema
+  insertFeedbackSchema,
+  insertReactionSchema
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -683,6 +684,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(feedbacks);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.post("/api/reactions", async (req, res) => {
+    try {
+      const data = insertReactionSchema.parse(req.body);
+      
+      const existingReaction = await storage.getParticipantReaction(
+        data.slideId,
+        data.sessionId,
+        data.participantId
+      );
+      
+      if (existingReaction) {
+        await storage.deleteReaction(existingReaction.id);
+        
+        if (existingReaction.reactionType === data.reactionType) {
+          return res.json({ success: true, removed: true });
+        }
+      }
+      
+      const reaction = await storage.createReaction(data);
+      res.json(reaction);
+    } catch (error) {
+      console.error("Reaction creation error:", error);
+      res.status(400).json({ error: "Invalid reaction data" });
+    }
+  });
+
+  app.get("/api/slides/:slideId/reactions/:sessionId", async (req, res) => {
+    try {
+      const reactions = await storage.getReactionsBySlide(req.params.slideId, req.params.sessionId);
+      res.json(reactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reactions" });
     }
   });
 
