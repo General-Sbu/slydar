@@ -39,6 +39,7 @@ export interface IStorage {
   createSession(session: InsertPresentationSession): Promise<PresentationSession>;
   getSession(id: string): Promise<PresentationSession | undefined>;
   getSessionByCode(code: string): Promise<PresentationSession | undefined>;
+  getActiveSessionsByPresentation(presentationId: string): Promise<PresentationSession[]>;
   updateSession(id: string, session: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined>;
   endSession(id: string): Promise<boolean>;
   
@@ -244,6 +245,12 @@ export class MemStorage implements IStorage {
 
   async getSessionByCode(code: string): Promise<PresentationSession | undefined> {
     return Array.from(this.sessions.values()).find(s => s.code === code);
+  }
+
+  async getActiveSessionsByPresentation(presentationId: string): Promise<PresentationSession[]> {
+    return Array.from(this.sessions.values())
+      .filter(s => s.presentationId === presentationId && s.isActive)
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
   }
 
   async updateSession(id: string, update: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined> {
@@ -483,6 +490,13 @@ export class DbStorage implements IStorage {
   async getSessionByCode(code: string): Promise<PresentationSession | undefined> {
     const result = await db.select().from(presentationSessions).where(eq(presentationSessions.code, code)).limit(1);
     return result[0];
+  }
+
+  async getActiveSessionsByPresentation(presentationId: string): Promise<PresentationSession[]> {
+    return db.select()
+      .from(presentationSessions)
+      .where(and(eq(presentationSessions.presentationId, presentationId), eq(presentationSessions.isActive, true)))
+      .orderBy(desc(presentationSessions.startedAt));
   }
 
   async updateSession(id: string, update: Partial<Omit<InsertPresentationSession, 'presentationId' | 'code'>>): Promise<PresentationSession | undefined> {
