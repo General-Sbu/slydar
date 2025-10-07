@@ -40,6 +40,11 @@ export default function Presenter() {
     enabled: !!presentationId,
   });
 
+  const { data: activeSessions = [] } = useQuery<PresentationSession[]>({
+    queryKey: ['/api/presentations', presentationId, 'sessions', 'active'],
+    enabled: !!presentationId,
+  });
+
   const { data: responses = [] } = useQuery<Response[]>({
     queryKey: ['/api/sessions', session?.id, 'responses'],
     enabled: !!session?.id,
@@ -135,9 +140,19 @@ export default function Presenter() {
 
   useEffect(() => {
     if (!session && presentationId && slides.length > 0 && !createSessionMutation.isPending) {
-      createSessionMutation.mutate();
+      // Check if there's an active session to reuse
+      if (activeSessions.length > 0) {
+        const existingSession = activeSessions[0];
+        setSession(existingSession);
+        setCurrentSlideIndex(existingSession.currentSlideIndex);
+        if (slides[existingSession.currentSlideIndex]) {
+          setCurrentSlide(slides[existingSession.currentSlideIndex]);
+        }
+      } else {
+        createSessionMutation.mutate();
+      }
     }
-  }, [presentationId, slides]);
+  }, [presentationId, slides, activeSessions]);
 
   useEffect(() => {
     if (session && isConnected) {
