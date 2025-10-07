@@ -83,6 +83,18 @@ export const feedback = pgTable("feedback", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
+export const reactionTypeEnum = z.enum(["like", "heart", "thumbs_down"]);
+export type ReactionType = z.infer<typeof reactionTypeEnum>;
+
+export const reactions = pgTable("reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slideId: varchar("slide_id").notNull().references(() => slides.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id").notNull().references(() => presentationSessions.id, { onDelete: "cascade" }),
+  participantId: varchar("participant_id").notNull(),
+  reactionType: text("reaction_type").notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+});
+
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
   createdAt: true,
@@ -118,6 +130,13 @@ export const insertNoteSchema = createInsertSchema(notes).omit({
 export const insertFeedbackSchema = createInsertSchema(feedback).omit({
   id: true,
   submittedAt: true,
+});
+
+export const insertReactionSchema = createInsertSchema(reactions).omit({
+  id: true,
+  submittedAt: true,
+}).extend({
+  reactionType: reactionTypeEnum,
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -159,3 +178,6 @@ export type Note = typeof notes.$inferSelect;
 
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedback.$inferSelect;
+
+export type InsertReaction = z.infer<typeof insertReactionSchema>;
+export type Reaction = typeof reactions.$inferSelect;
