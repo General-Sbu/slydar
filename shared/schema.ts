@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, jsonb, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, jsonb, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -93,7 +93,9 @@ export const reactions = pgTable("reactions", {
   participantId: varchar("participant_id").notNull(),
   reactionType: text("reaction_type").notNull(),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
-});
+}, (table) => [
+  uniqueIndex("idx_reactions_unique").on(table.sessionId, table.slideId, table.participantId)
+]);
 
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,

@@ -337,6 +337,16 @@ export class MemStorage implements IStorage {
   }
 
   async createReaction(insertReaction: InsertReaction): Promise<Reaction> {
+    const existingReaction = await this.getParticipantReaction(
+      insertReaction.slideId,
+      insertReaction.sessionId,
+      insertReaction.participantId
+    );
+    
+    if (existingReaction) {
+      await this.deleteReaction(existingReaction.id);
+    }
+    
     const id = randomUUID();
     const reaction: Reaction = {
       ...insertReaction,
@@ -561,7 +571,16 @@ export class DbStorage implements IStorage {
   }
 
   async createReaction(insertReaction: InsertReaction): Promise<Reaction> {
-    const [reaction] = await db.insert(reactions).values(insertReaction).returning();
+    const [reaction] = await db.insert(reactions)
+      .values(insertReaction)
+      .onConflictDoUpdate({
+        target: [reactions.sessionId, reactions.slideId, reactions.participantId],
+        set: {
+          reactionType: insertReaction.reactionType,
+          submittedAt: new Date()
+        }
+      })
+      .returning();
     return reaction;
   }
 
