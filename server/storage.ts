@@ -5,12 +5,13 @@ import {
   type Response, type InsertResponse,
   type User, type UpsertUser,
   type Note, type InsertNote,
-  type Feedback, type InsertFeedback
+  type Feedback, type InsertFeedback,
+  type Reaction, type InsertReaction
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { 
-  users, presentations, slides, presentationSessions, responses, notes, feedback
+  users, presentations, slides, presentationSessions, responses, notes, feedback, reactions
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -54,6 +55,11 @@ export interface IStorage {
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   getFeedbackBySession(sessionId: string): Promise<Feedback[]>;
   getFeedbackBySlide(slideId: string, sessionId: string): Promise<Feedback[]>;
+
+  createReaction(reaction: InsertReaction): Promise<Reaction>;
+  getReactionsBySlide(slideId: string, sessionId: string): Promise<Reaction[]>;
+  getParticipantReaction(slideId: string, sessionId: string, participantId: string): Promise<Reaction | undefined>;
+  deleteReaction(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -63,6 +69,7 @@ export class MemStorage implements IStorage {
   private sessions: Map<string, PresentationSession>;
   private responses: Map<string, Response>;
   private feedbacks: Map<string, Feedback>;
+  private reactions: Map<string, Reaction>;
 
   constructor() {
     this.users = new Map();
@@ -71,6 +78,7 @@ export class MemStorage implements IStorage {
     this.sessions = new Map();
     this.responses = new Map();
     this.feedbacks = new Map();
+    this.reactions = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -327,6 +335,31 @@ export class MemStorage implements IStorage {
     return Array.from(this.feedbacks.values())
       .filter(f => f.slideId === slideId && f.sessionId === sessionId);
   }
+
+  async createReaction(insertReaction: InsertReaction): Promise<Reaction> {
+    const id = randomUUID();
+    const reaction: Reaction = {
+      ...insertReaction,
+      id,
+      submittedAt: new Date()
+    };
+    this.reactions.set(id, reaction);
+    return reaction;
+  }
+
+  async getReactionsBySlide(slideId: string, sessionId: string): Promise<Reaction[]> {
+    return Array.from(this.reactions.values())
+      .filter(r => r.slideId === slideId && r.sessionId === sessionId);
+  }
+
+  async getParticipantReaction(slideId: string, sessionId: string, participantId: string): Promise<Reaction | undefined> {
+    return Array.from(this.reactions.values())
+      .find(r => r.slideId === slideId && r.sessionId === sessionId && r.participantId === participantId);
+  }
+
+  async deleteReaction(id: string): Promise<boolean> {
+    return this.reactions.delete(id);
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -525,6 +558,34 @@ export class DbStorage implements IStorage {
     return db.select()
       .from(feedback)
       .where(and(eq(feedback.slideId, slideId), eq(feedback.sessionId, sessionId)));
+  }
+
+  async createReaction(insertReaction: InsertReaction): Promise<Reaction> {
+    const [reaction] = await db.insert(reactions).values(insertReaction).returning();
+    return reaction;
+  }
+
+  async getReactionsBySlide(slideId: string, sessionId: string): Promise<Reaction[]> {
+    return db.select()
+      .from(reactions)
+      .where(and(eq(reactions.slideId, slideId), eq(reactions.sessionId, sessionId)));
+  }
+
+  async getParticipantReaction(slideId: string, sessionId: string, participantId: string): Promise<Reaction | undefined> {
+    const result = await db.select()
+      .from(reactions)
+      .where(and(
+        eq(reactions.slideId, slideId),
+        eq(reactions.sessionId, sessionId),
+        eq(reactions.participantId, participantId)
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async deleteReaction(id: string): Promise<boolean> {
+    const result = await db.delete(reactions).where(eq(reactions.id, id)).returning();
+    return result.length > 0;
   }
 }
 
