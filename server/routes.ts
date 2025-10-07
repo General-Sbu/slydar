@@ -458,6 +458,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/presentations/:presentationId/sessions/active", isAuthenticated, async (req: any, res) => {
+    try {
+      const presentationId = req.params.presentationId;
+      const presentation = await storage.getPresentation(presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const sessions = await storage.getActiveSessionsByPresentation(presentationId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching active sessions:", error);
+      res.status(500).json({ error: "Failed to fetch active sessions" });
+    }
+  });
+
   app.get("/api/sessions/code/:code", async (req, res) => {
     try {
       const session = await storage.getSessionByCode(req.params.code);
