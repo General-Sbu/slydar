@@ -53,6 +53,23 @@ app.use((req, res, next) => {
         submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
       );
     `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS reactions (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        slide_id VARCHAR NOT NULL REFERENCES slides(id) ON DELETE CASCADE,
+        session_id VARCHAR NOT NULL REFERENCES presentation_sessions(id) ON DELETE CASCADE,
+        participant_id VARCHAR NOT NULL,
+        reaction_type TEXT NOT NULL,
+        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+    
+    await db.execute(sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_reactions_unique 
+      ON reactions(session_id, slide_id, participant_id);
+    `);
+    
     log('✅ Database tables initialized');
   } catch (error) {
     log('⚠️ Database initialization warning: ' + (error instanceof Error ? error.message : String(error)));
