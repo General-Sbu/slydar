@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Logo from "@/components/Logo";
 import AudienceAnswerButton from "@/components/AudienceAnswerButton";
+import SlideReactions from "@/components/SlideReactions";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
-import type { Slide, PresentationSession, Note, Feedback } from "@shared/schema";
+import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -35,6 +36,11 @@ export default function Audience() {
   const { data: existingNote } = useQuery<Note | null>({
     queryKey: currentSlide?.id ? [`/api/notes/slide/${currentSlide.id}`] : [],
     enabled: isAuthenticated && !!currentSlide?.id,
+  });
+
+  const { data: reactions = [] } = useQuery<Reaction[]>({
+    queryKey: currentSlide?.id && session?.id ? [`/api/slides/${currentSlide.id}/reactions/${session.id}`] : [],
+    enabled: !!currentSlide?.id && !!session?.id,
   });
 
   const saveNoteMutation = useMutation({
@@ -94,6 +100,26 @@ export default function Audience() {
         description: "Failed to submit feedback",
         variant: "destructive",
       });
+    },
+  });
+
+  const submitReactionMutation = useMutation({
+    mutationFn: async (reactionType: ReactionType) => {
+      if (!currentSlide || !session || !participantId) throw new Error("No slide, session, or participant");
+      const res = await apiRequest('POST', '/api/reactions', {
+        slideId: currentSlide.id,
+        sessionId: session.id,
+        participantId,
+        reactionType,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      if (currentSlide?.id && session?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/slides/${currentSlide.id}/reactions/${session.id}`] 
+        });
+      }
     },
   });
 
@@ -178,6 +204,10 @@ export default function Audience() {
       submitResponse(currentSlide.id, textAnswer.trim());
       setSubmitted(true);
     }
+  };
+
+  const handleReaction = (reactionType: ReactionType) => {
+    submitReactionMutation.mutate(reactionType);
   };
 
   if (!roomCode) {
@@ -310,6 +340,18 @@ export default function Audience() {
                 </Button>
               </div>
             )}
+          </div>
+        )}
+
+        {currentSlide && session && participantId && (
+          <div className="mt-6">
+            <SlideReactions
+              slideId={currentSlide.id}
+              sessionId={session.id}
+              participantId={participantId}
+              reactions={reactions}
+              onReact={handleReaction}
+            />
           </div>
         )}
 
