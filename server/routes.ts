@@ -701,11 +701,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.deleteReaction(existingReaction.id);
         
         if (existingReaction.reactionType === data.reactionType) {
+          const allReactions = await storage.getReactionsBySlide(data.slideId, data.sessionId);
+          io.to(data.sessionId).emit('reactions_updated', {
+            slideId: data.slideId,
+            reactions: allReactions
+          });
           return res.json({ success: true, removed: true });
         }
       }
       
       const reaction = await storage.createReaction(data);
+      const allReactions = await storage.getReactionsBySlide(data.slideId, data.sessionId);
+      
+      io.to(data.sessionId).emit('reactions_updated', {
+        slideId: data.slideId,
+        reactions: allReactions
+      });
+      
       res.json(reaction);
     } catch (error) {
       console.error("Reaction creation error:", error);
