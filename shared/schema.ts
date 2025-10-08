@@ -150,7 +150,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const registerSchema = insertUserSchema.extend({
   username: z.string().min(3).max(50),
   password: z.string().min(6),
-  email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal('')),
 });
 
 export const loginSchema = z.object({
