@@ -16,6 +16,11 @@ export default function Landing() {
             <Logo />
             
             <div className="flex items-center gap-4">
+              <Link href="/pricing">
+                <Button variant="ghost" data-testid="button-pricing">
+                  Pricing
+                </Button>
+              </Link>
               <Link href="/join">
                 <Button variant="ghost" data-testid="button-join-presentation">
                   Join Presentation
