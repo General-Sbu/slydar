@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
+import SlideWatermark from "@/components/SlideWatermark";
 import { 
   BarChart3, Cloud, MessageSquare, Type, 
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings 
@@ -525,7 +526,7 @@ export default function Editor() {
                   </div>
                 </Card>
               ) : (
-                <Card className="aspect-video flex items-center justify-center p-12">
+                <Card className="aspect-video flex items-center justify-center p-12 relative overflow-hidden">
                   <div className="w-full text-center space-y-6">
                     {currentSlide?.type === 'heading' ? (
                       <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
@@ -557,6 +558,7 @@ export default function Editor() {
                       </>
                     )}
                   </div>
+                  <SlideWatermark />
                 </Card>
               )}
             </div>

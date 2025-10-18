@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
+import SlideWatermark from "@/components/SlideWatermark";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -411,7 +412,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className="p-6 md:p-12 cursor-grab active:cursor-grabbing"
+                className="p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-hidden"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -448,6 +449,7 @@ export default function Presenter() {
                     </div>
                   </div>
                 )}
+                <SlideWatermark />
               </Card>
             )}
           </div>

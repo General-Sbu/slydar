@@ -279,3 +279,65 @@ Static images stored in `/attached_assets/generated_images/`:
 - Empty state illustration
 - Served via Vite's static asset handling
 - Imported directly in components with type safety
+
+### Branding & Watermark (Added October 2025)
+
+**Slidr Watermark Component:**
+- Custom watermark component added to all slides (`SlideWatermark.tsx`)
+- Displays "SLIDR" branding with presentation icon
+- Positioned at bottom-right corner of slides
+- Semi-transparent (30% opacity) and non-interactive
+- Test ID: `watermark-slidr` for automated testing
+
+**Watermark Implementation:**
+- Editor page: Appears on slide preview during editing
+- Presenter view: Visible on slides during live presentations
+- Audience view: Shows on heading and image slides for participants
+- Styling: Absolute positioning, pointer-events-none, select-none
+- Consistent across all slide types (multiple choice, word cloud, open ended, heading, image)
+
+**Purpose:**
+- Free tier branding as part of the pricing model
+- Non-intrusive visual indicator of platform
+- Can be removed in Pro/Enterprise tiers (future feature)
+
+### Pricing Tiers (Added October 2025)
+
+**Pricing Page (`/pricing`):**
+- Three-tier pricing model: Free, Pro, Enterprise
+- Focus on participant limits and branding/customization options
+- Accessible from landing page navigation
+
+**Free Plan ($0/month):**
+- Up to 50 participants per session
+- Platform branding included (watermark)
+- Basic presentation templates
+- Standard reactions & polls
+- PDF & PPTX import
+- Real-time engagement and analytics
+
+**Pro Plan ($29/month):**
+- Up to 500 participants per session
+- Custom branding & logo (watermark removal)
+- Custom color themes
+- Advanced presentation templates
+- Custom reaction emojis
+- Branded session pages
+- Priority support
+- Advanced analytics & insights
+
+**Enterprise Plan (Custom pricing):**
+- Unlimited participants
+- Full white-label solution
+- Complete UI customization
+- Custom domain support
+- Branded mobile experience
+- Custom integrations & API access
+- Dedicated account manager
+- SLA guarantee
+- On-premise deployment option
+
+**Key Differentiators:**
+- Participant limits scale with plan tier
+- Branding/customization is the primary value driver
+- Free tier includes watermark, paid tiers can customize or remove it
