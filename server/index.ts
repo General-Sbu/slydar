@@ -8,7 +8,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/uploads', express.static('/tmp/uploads'));
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use('/uploads', express.static(join(__dirname, '../public/uploads')));
 
 app.use((req, res, next) => {
   const start = Date.now();

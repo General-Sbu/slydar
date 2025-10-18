@@ -311,14 +311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await fs.promises.writeFile(tempFilePath, req.file.buffer);
         console.log('📄 PDF written to:', tempFilePath);
 
-        const uploadsDir = '/tmp/uploads';
-        await fs.promises.mkdir(uploadsDir, { recursive: true });
-        console.log('📁 Created uploads dir:', uploadsDir);
-
         const timestamp = Date.now();
-        const outputFolder = path.join(uploadsDir, `presentation-${presentationId}-${timestamp}`);
-        await fs.promises.mkdir(outputFolder, { recursive: true });
-        console.log('📁 Created output folder:', outputFolder);
+        const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
+        await fs.promises.mkdir(publicOutputFolder, { recursive: true });
+        console.log('📁 Created permanent output folder:', publicOutputFolder);
 
         let pngPages;
         try {
@@ -328,22 +324,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           for (let i = 0; i < pngPages.length; i++) {
             const pngFilename = `slide_${i + 1}.png`;
-            const pngPath = path.join(outputFolder, pngFilename);
+            const pngPath = path.join(publicOutputFolder, pngFilename);
             await fs.promises.writeFile(pngPath, pngPages[i].content);
           }
           
-          const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
-          await fs.promises.mkdir(publicOutputFolder, { recursive: true });
-          
-          for (let i = 0; i < pngPages.length; i++) {
-            const pngFilename = `slide_${i + 1}.png`;
-            const sourcePath = path.join(outputFolder, pngFilename);
-            const destPath = path.join(publicOutputFolder, pngFilename);
-            await fs.promises.copyFile(sourcePath, destPath);
-          }
-          
-          const files = await fs.promises.readdir(outputFolder);
-          console.log('✅ PDF converted. Files written:', files);
+          const files = await fs.promises.readdir(publicOutputFolder);
+          console.log('✅ PDF converted. Files written permanently:', files);
         } finally {
           await fs.promises.unlink(tempFilePath);
         }
