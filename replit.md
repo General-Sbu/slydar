@@ -2,9 +2,7 @@
 
 ## Overview
 
-Slidr is a web-based interactive presentation platform that enables real-time audience engagement through live polls, quizzes, word clouds, and Q&A sessions. The application allows presenters to create presentations with various interactive slide types and share them with audiences via simple room codes, requiring no downloads or participant authentication.
-
-The platform is built as a full-stack TypeScript application with a React frontend and Express backend, using Socket.IO for real-time bidirectional communication between presenters and audience members.
+Slidr is a web-based interactive presentation platform designed for real-time audience engagement. It allows presenters to create interactive presentations with live polls, quizzes, word clouds, and Q&A sessions. Audiences can join presentations via a simple room code without requiring downloads or authentication, fostering dynamic interaction. The platform aims to provide a robust, full-stack solution for engaging presentations with a focus on real-time capabilities and ease of use.
 
 ## User Preferences
 
@@ -12,332 +10,53 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### UI/UX Decisions
 
-**Framework & Build System:**
-- React 18 with TypeScript for the UI layer
-- Vite as the build tool and development server
-- Wouter for client-side routing (lightweight alternative to React Router)
-- TanStack Query (React Query) for server state management and caching
+The frontend uses React 18 with TypeScript, built with Vite. It incorporates Shadcn/ui components (based on Radix UI) and Tailwind CSS for styling, following a "New York" design variant with a custom color palette, typography (Inter and Space Grotesk), and dark mode support. State management primarily uses TanStack Query for server state and React hooks for local UI state.
 
-**Component Library:**
-- Shadcn/ui components built on Radix UI primitives
-- Tailwind CSS for styling with custom design tokens
-- Component composition pattern following the "New York" Shadcn style variant
-- Dark mode support with CSS variables and class-based theme switching
+### Technical Implementations
 
-**Design System:**
-- Custom color palette with HSL-based CSS variables for theming
-- Typography using Inter (UI/body) and Space Grotesk (headings) from Google Fonts
-- Consistent spacing and elevation system using custom Tailwind utilities
-- Hover and active state elevations implemented via custom CSS classes
+The application is a full-stack TypeScript project. The frontend is a React application, while the backend uses Express.js. Real-time communication is handled by Socket.IO, replacing earlier raw WebSocket implementations for improved proxy compatibility and automatic reconnection. Data persistence is managed with a PostgreSQL database and Drizzle ORM.
 
-**State Management:**
-- React Query for server state with infinite stale time (manual invalidation)
-- Local component state with React hooks for UI interactions
-- Custom WebSocket hook (`useWebSocket`) for real-time communication
-- Toast notifications using Radix UI Toast primitives
+Key features include:
+- **Dual Access Model:** Authenticated users (presenters) manage presentations, while anonymous participants (audience) interact via session codes.
+- **Real-time Interaction:** Socket.IO facilitates live updates for slide changes, response submissions, and participant tracking using a room-based broadcasting pattern.
+- **File Import:** Supports conversion of PPTX (via ConvertAPI) and PDF (via `pdf-to-png-converter`) files into image slides.
+- **Image Upload:** Allows authenticated users to upload individual images as slides, with robust security checks (MIME type and magic byte validation).
+- **Note-Taking:** Authenticated users can take and save notes on slides during presentations, accessible from a dedicated notes page.
+- **Slidr Watermark:** A custom watermark component is present on all slides for branding, indicating the platform's free tier offering.
 
-### Backend Architecture
+### System Design Choices
 
-**Server Framework:**
-- Express.js with TypeScript for HTTP API endpoints
-- Socket.IO server for real-time communication (replaced raw WebSockets for better proxy compatibility)
-- Session-based architecture without authentication (anonymous participation)
-- Development mode integrates Vite middleware for HMR
-
-**API Design:**
-- RESTful HTTP endpoints for CRUD operations on presentations, slides, and sessions
-- Socket.IO events for real-time communication (slide changes, response submissions, participant tracking)
-- Separation of presenter and audience Socket.IO roles
-- Room-based broadcasting pattern for session-wide updates
-
-**Socket.IO Event Types:**
-- `session_joined` - Initial connection with session data
-- `slide_changed` - Presenter navigates to new slide
-- `new_response` - Audience member submits answer
-- `participant_count` - Live participant tracking
-- `session_update` - Session state changes
-- `session_ended` - Presenter closes session
-
-**Data Layer:**
-- PostgreSQL database with Drizzle ORM for persistent storage
-- Interface-based storage abstraction (`IStorage`) allows database swapping
-- UUID-based primary keys for all entities
-- Authenticated user system with Passport.js local strategy
-
-### Data Storage
-
-**Database Schema (PostgreSQL via Drizzle ORM):**
-
-**Presentations Table:**
-- Stores presentation metadata (title, timestamps)
-- UUID primary key
-- Auto-managed created/updated timestamps
-
-**Slides Table:**
-- Polymorphic slide types (multiple_choice, word_cloud, open_ended, heading, image)
-- Foreign key to presentation with cascade delete
-- Order field for slide sequencing
-- JSONB config field for type-specific settings
-- Text array for multiple choice options
-- For image slides: question field stores the image path
-
-**Sessions Table:**
-- Live presentation instances with unique 6-character codes
-- Tracks current slide index and active state
-- Foreign key to presentation with cascade delete
-- Started timestamp for analytics
-
-**Responses Table:**
-- Stores participant answers during sessions
-- Links to both session and slide with cascade delete
-- Participant ID (generated on join, no authentication)
-- Submission timestamp for ordering
-
-**Users Table:**
-- Stores authenticated user accounts
-- Fields: id (UUID), username (unique), email (unique), password (hashed with bcrypt)
-- Auto-managed created/updated timestamps
-
-**Notes Table:**
-- Stores slide notes for authenticated users
-- Links to users, slides, and presentations with cascade delete
-- Each user can have one note per slide (upsert on save)
-- Auto-managed created/updated timestamps
-
-**Schema Validation:**
-- Zod schemas generated from Drizzle tables using `drizzle-zod`
-- Type-safe insert/update operations
-- Runtime validation of API payloads
-
-### Authentication & Authorization
-
-**Dual Access Model:**
-
-**Authenticated Users (Presenters):**
-- Username/password authentication using Passport.js local strategy
-- Password hashing with bcrypt (10 rounds)
-- Session-based authentication with express-session
-- Required for creating and managing presentations
-- Can take notes on slides during presentations (logged-in audience members)
-- Access to personal notes page showing all saved notes
-
-**Anonymous Participants (Audience):**
-- No authentication required for audience participation
-- Session codes serve as the only access control
-- Participant IDs generated client-side (UUID)
-- Can view and interact with presentations
-- Cannot save notes (requires login)
-
-**Note-Taking Feature:**
-- Authenticated users can take notes on any slide during audience participation
-- Notes are saved with slide references and auto-saved on change
-- Notes page displays all notes organized by presentation
-- Each user can have one note per slide (updates existing note on save)
-
-### Real-time Communication
-
-**Socket.IO Architecture:**
-- Socket.IO server instance handling all connections with automatic fallback transports
-- Client metadata stored on socket.data for each connection
-- Room-based broadcasting using session IDs (Socket.IO rooms)
-- Automatic reconnection logic with exponential backoff
-- Connection state tracking per client
-- Polling + WebSocket transports for better proxy compatibility
-
-**Message Flow:**
-1. Presenter creates session → HTTP POST returns session code
-2. Presenter connects via Socket.IO → joins session room as presenter role
-3. Audience navigates to /audience/:code → HTTP validates session
-4. Audience connects via Socket.IO → receives full session state
-5. Presenter changes slide → broadcasts to all session room members
-6. Audience submits response → stored in DB, broadcast to presenter
-7. Presenter ends session → broadcasts closure, cleans up connections
-
-**Error Handling:**
-- Socket.IO automatic reconnection with configurable attempts and delays
-- Toast notifications for connection state changes
-- Graceful fallback to long-polling when WebSocket unavailable
-- Session validation before joining
-
-**Migration Notes:**
-- Replaced raw WebSockets (ws library) with Socket.IO in October 2025
-- Reason: Better compatibility with reverse proxies (Replit infrastructure)
-- Socket.IO provides automatic transport fallback and reconnection handling
-- Client hook uses ref pattern to prevent reconnection loops
-
-### File Import Feature
-
-**PPTX/PDF Import (Updated October 2025):**
-- Converts PowerPoint (.pptx) and PDF files into presentation slides as images
-- Backend endpoint: `POST /api/presentations/:id/import`
-- **PDF files:** Converted to PNG images using `pdf-to-png-converter` library (pure JavaScript, no dependencies)
-- **PowerPoint files:** Converted to PNG images using ConvertAPI cloud service (requires CONVERTAPI_SECRET)
-- Uses `multer` middleware for file upload handling (memory storage, 50MB limit)
-
-**File to Image Conversion:**
-- PDF pages are converted to PNG images at 2x scale for quality
-- PPTX slides are converted to PNG images using ConvertAPI's cloud conversion service
-- Images saved to `/public/uploads/presentation-{id}-{timestamp}/` directory
-- Each image becomes an "image" type slide with path stored in question field
-- Images served statically from the public directory
-
-**ConvertAPI Integration:**
-- Cloud-based PPTX to PNG conversion (no local dependencies required)
-- Free tier: 250 conversions per month
-- API secret stored in environment variable: CONVERTAPI_SECRET
-- Reliable conversion without LibreOffice or system dependencies
-- High-quality image output with full slide fidelity
-
-**Implementation Details:**
-- File upload via `multipart/form-data` with MIME type validation
-- Temp file written to `/tmp` during processing (timestamp-prefixed)
-- PDF processing uses `pdf-to-png-converter` with configurable viewport scale
-- Automatic cleanup of temp files via `finally` block
-- Slides appended to existing presentation with proper ordering
-- Image files organized by presentation ID and timestamp
-
-**Error Handling:**
-- 400 error for missing file or invalid MIME type
-- 500 error for parsing/conversion failures
-- Guaranteed temp file deletion even on errors
-- Frontend shows toast notifications for success/failure
-
-**Security Measures:**
-- File type restriction (.pptx, .pdf only)
-- 50MB file size limit
-- Server-side MIME validation
-- Isolated temp file processing
-- Images stored in organized directory structure
+The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO server for real-time events. A session-based architecture supports anonymous audience participation. The data layer uses PostgreSQL with Drizzle ORM, employing UUIDs for primary keys and Zod schemas for validation. Authentication for presenters uses Passport.js with a local strategy and bcrypt for password hashing.
 
 ## External Dependencies
 
 ### Third-party Services
 
-**None currently integrated.** The application is fully self-contained with no external API dependencies.
-
-**Future Integration Points:**
-- Email service for presentation sharing (SendGrid, Postmark)
-- Analytics platform (Mixpanel, Amplitude)
-- Cloud storage for media uploads (S3, Cloudinary)
-- Authentication provider if adding user accounts (Auth0, Clerk)
+- **ConvertAPI:** Used for cloud-based PPTX to PNG conversion (requires `CONVERTAPI_SECRET`).
+- **Google Fonts:** Inter and Space Grotesk are used for typography.
 
 ### Database
 
-**Primary Database: PostgreSQL**
-- Accessed via Neon Serverless driver (`@neondatabase/serverless`)
-- Connection pooling handled by Neon driver
-- Connection string from `DATABASE_URL` environment variable
-- Drizzle ORM for migrations and query building
-
-**Migration Strategy:**
-- Drizzle Kit for schema migrations (`npm run db:push`)
-- Migrations output to `/migrations` directory
-- Schema defined in `/shared/schema.ts`
+- **PostgreSQL:** Primary database accessed via Neon Serverless driver.
+- **Drizzle ORM:** Used for database schema definition, migrations, and query building.
 
 ### UI Component Libraries
 
-**Radix UI Primitives:**
-- Complete set of unstyled, accessible components
-- Dialog, Dropdown, Popover, Toast, and 20+ other primitives
-- ARIA-compliant implementations
-- Keyboard navigation support
-
-**Supporting Libraries:**
-- `class-variance-authority` - Component variant management
-- `cmdk` - Command menu component
-- `embla-carousel-react` - Carousel/slider functionality
-- `react-day-picker` - Date picker implementation
-- `recharts` - Chart visualizations for poll results
-- `vaul` - Drawer component for mobile
+- **Radix UI Primitives:** Provides accessible, unstyled UI components.
+- **Shadcn/ui:** Component library built on Radix UI and styled with Tailwind CSS.
+- **Tailwind CSS:** Utility-first CSS framework for styling.
+- **Supporting Libraries:** `class-variance-authority`, `cmdk`, `embla-carousel-react`, `react-day-picker`, `recharts`, `vaul`.
 
 ### Development Tools
 
-**Replit-specific Plugins:**
-- `@replit/vite-plugin-runtime-error-modal` - Error overlay
-- `@replit/vite-plugin-cartographer` - Code navigation
-- `@replit/vite-plugin-dev-banner` - Development indicator
-
-**Build & Type Checking:**
-- TypeScript compiler with strict mode enabled
-- ESBuild for server-side bundling in production
-- TSX for running TypeScript directly in development
-- Path aliases for cleaner imports (`@/`, `@shared/`, `@assets/`)
-
-### Fonts
-
-**Google Fonts:**
-- Inter - UI components, body text, data display
-- Space Grotesk - Display headings, presentation titles
-- Additional fonts loaded for potential use: Architects Daughter, DM Sans, Fira Code, Geist Mono
+- **Vite:** Frontend build tool and development server.
+- **TypeScript:** For type-safe development across the stack.
+- **ESBuild:** For server-side bundling in production.
+- **TSX:** For running TypeScript directly in development.
+- **Replit-specific Plugins:** `@replit/vite-plugin-runtime-error-modal`, `@replit/vite-plugin-cartographer`, `@replit/vite-plugin-dev-banner`.
 
 ### Asset Management
 
-Static images stored in `/attached_assets/generated_images/`:
-- Hero mockup image
-- Empty state illustration
-- Served via Vite's static asset handling
-- Imported directly in components with type safety
-
-### Branding & Watermark (Added October 2025)
-
-**Slidr Watermark Component:**
-- Custom watermark component added to all slides (`SlideWatermark.tsx`)
-- Displays "SLIDR" branding with presentation icon
-- Positioned at bottom-right corner of slides
-- Semi-transparent (30% opacity) and non-interactive
-- Test ID: `watermark-slidr` for automated testing
-
-**Watermark Implementation:**
-- Editor page: Appears on slide preview during editing
-- Presenter view: Visible on slides during live presentations
-- Audience view: Shows on heading and image slides for participants
-- Styling: Absolute positioning, pointer-events-none, select-none
-- Consistent across all slide types (multiple choice, word cloud, open ended, heading, image)
-
-**Purpose:**
-- Free tier branding as part of the pricing model
-- Non-intrusive visual indicator of platform
-- Can be removed in Pro/Enterprise tiers (future feature)
-
-### Pricing Tiers (Added October 2025)
-
-**Pricing Page (`/pricing`):**
-- Three-tier pricing model: Free, Pro, Enterprise
-- Focus on participant limits and branding/customization options
-- Accessible from landing page navigation
-
-**Free Plan ($0/month):**
-- Up to 50 participants per session
-- Platform branding included (watermark)
-- Basic presentation templates
-- Standard reactions & polls
-- PDF & PPTX import
-- Real-time engagement and analytics
-
-**Pro Plan ($29/month):**
-- Up to 500 participants per session
-- Custom branding & logo (watermark removal)
-- Custom color themes
-- Advanced presentation templates
-- Custom reaction emojis
-- Branded session pages
-- Priority support
-- Advanced analytics & insights
-
-**Enterprise Plan (Custom pricing):**
-- Unlimited participants
-- Full white-label solution
-- Complete UI customization
-- Custom domain support
-- Branded mobile experience
-- Custom integrations & API access
-- Dedicated account manager
-- SLA guarantee
-- On-premise deployment option
-
-**Key Differentiators:**
-- Participant limits scale with plan tier
-- Branding/customization is the primary value driver
-- Free tier includes watermark, paid tiers can customize or remove it
+- Static images are stored in `/attached_assets/generated_images/` and served via Vite.
