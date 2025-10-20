@@ -128,6 +128,36 @@ export default function Editor() {
     }
   });
 
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`/api/presentations/${presentationId}/upload-image`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to upload image');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      toast({ 
+        title: "Success", 
+        description: "Image added to presentation" 
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   useEffect(() => {
     if (slides.length > 0 && slides[selectedSlideIndex]) {
       setEditingSlide({ ...slides[selectedSlideIndex] });
@@ -195,6 +225,14 @@ export default function Editor() {
     const file = event.target.files?.[0];
     if (file) {
       importMutation.mutate(file);
+      event.target.value = '';
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadImageMutation.mutate(file);
       event.target.value = '';
     }
   };
@@ -329,6 +367,36 @@ export default function Editor() {
         {importMutation.isPending && (
           <div className="mt-2 text-xs text-muted-foreground">
             Importing slides...
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-semibold mb-3">Upload Image</h3>
+        <input
+          type="file"
+          id="image-upload"
+          className="hidden"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onChange={handleImageUpload}
+          data-testid="input-image-upload"
+        />
+        <label htmlFor="image-upload">
+          <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-upload-image">
+            <div className="flex items-center gap-3">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-medium">Add Image</div>
+                <div className="text-xs text-muted-foreground">JPEG, PNG, GIF, WebP</div>
+              </div>
+            </div>
+          </Card>
+        </label>
+        {uploadImageMutation.isPending && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Uploading image...
           </div>
         )}
       </div>

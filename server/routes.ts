@@ -281,6 +281,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const imageUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp'
+      ];
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
+      }
+    }
+  });
+
   app.post("/api/presentations/:id/import", isAuthenticated, (req, res, next) => {
     upload.single('file')(req, res, (err) => {
       if (err) {
@@ -405,6 +423,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('File import error:', error);
       res.status(500).json({ error: error.message || "Failed to import file" });
+    }
+  });
+
+  app.post("/api/presentations/:id/upload-image", isAuthenticated, (req, res, next) => {
+    imageUpload.single('image')(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'Image size exceeds 10MB limit' });
+          }
+          return res.status(400).json({ error: err.message });
+        }
+        return res.status(400).json({ error: err.message || 'Invalid file type. Only image files are allowed.' });
+      }
+      next();
+    });
+  }, async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+      }
+
+      const presentationId = req.params.id;
+      const fs = await import('fs');
+      const path = await import('path');
+      const { fileTypeFromBuffer } = await import('file-type');
+
+      const presentation = await storage.getPresentation(presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const fileType = await fileTypeFromBuffer(req.file.buffer);
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      
+      if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
+        return res.status(400).json({ 
+          error: 'Invalid file content. Only JPEG, PNG, GIF, and WebP images are allowed.' 
+        });
+      }
+
+      const timestamp = Date.now();
+      const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
+      await fs.promises.mkdir(publicOutputFolder, { recursive: true });
+
+      const mimeToExtension: { [key: string]: string } = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/gif': '.gif',
+        'image/webp': '.webp'
+      };
+      const safeExtension = mimeToExtension[fileType.mime];
+      const fileName = `image${safeExtension}`;
+      const filePath = path.join(publicOutputFolder, fileName);
+      await fs.promises.writeFile(filePath, req.file.buffer);
+      
+      console.log('✅ Image uploaded to:', filePath);
+
+      const slides = await storage.getSlidesByPresentation(presentationId);
+      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+
+      const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/${fileName}`;
+      const slideData = insertSlideSchema.parse({
+        presentationId,
+        type: 'image',
+        order: maxOrder + 1,
+        question: imagePath,
+        options: [],
+        config: {}
+      });
+      const slide = await storage.createSlide(slideData);
+
+      res.json({ 
+        success: true, 
+        slide
+      });
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: error.message || "Failed to upload image" });
     }
   });
 
