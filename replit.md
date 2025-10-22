@@ -28,6 +28,7 @@ Key features include:
 - **Publish to Library:** Authenticated users can publish their presentations to a public library where all users (including anonymous visitors) can browse and view published presentations. The library page includes search functionality to filter presentations by title. Users can only publish/unpublish their own presentations (authorization enforced on the backend).
 - **Ownership Differentiation:** The library distinguishes between user-owned and other presentations. Owned presentations display a "Yours" badge and a "Present" button (launches presenter mode), while others' presentations show a "View" button (opens read-only viewer). Unauthenticated visitors see all presentations with "View" buttons only. The read-only viewer (`/view/:id`) allows browsing slides with keyboard navigation (arrow keys, ESC) without editing capabilities.
 - **Slidr Watermark:** A custom watermark component is present on all slides for branding, indicating the platform's free tier offering.
+- **Notification System:** A lightweight custom notification system replaces traditional toast notifications. Notifications appear at the top-right corner with color-coded backgrounds (green for success, red for errors, blue for info), include dismiss buttons, and auto-hide after 3 seconds. Implemented via `NotificationProvider` context and `useNotification` hook for consistent user feedback across all operations.
 
 ### System Design Choices
 
