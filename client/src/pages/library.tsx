@@ -2,20 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
-import PresentationCard from "@/components/PresentationCard";
+import LibraryCard from "@/components/LibraryCard";
 import { Search, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Presentation } from "@shared/schema";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Library() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
 
-  type PresentationWithCount = Presentation & { slideCount: number };
+  type PresentationWithDetails = Presentation & { 
+    slideCount: number;
+    presenterName: string;
+  };
   
-  const { data: presentations = [], isLoading } = useQuery<PresentationWithCount[]>({
+  const { data: presentations = [], isLoading } = useQuery<PresentationWithDetails[]>({
     queryKey: ['/api/library'],
   });
 
@@ -98,16 +103,22 @@ export default function Library() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredPresentations.map((presentation) => (
-              <PresentationCard
-                key={presentation.id}
-                id={presentation.id}
-                title={presentation.title}
-                slideCount={presentation.slideCount}
-                lastEdited={formatDate(presentation.updatedAt)}
-                data-testid={`presentation-card-${presentation.id}`}
-              />
-            ))}
+            {filteredPresentations.map((presentation) => {
+              const isOwner = user && presentation.userId === user.id;
+              return (
+                <LibraryCard
+                  key={presentation.id}
+                  id={presentation.id}
+                  title={presentation.title}
+                  slideCount={presentation.slideCount}
+                  presenterName={presentation.presenterName}
+                  lastEdited={formatDate(presentation.updatedAt)}
+                  isOwner={!!isOwner}
+                  onPresent={() => setLocation(`/presenter/${presentation.id}`)}
+                  onView={() => setLocation(`/view/${presentation.id}`)}
+                />
+              );
+            })}
           </div>
         )}
       </main>
