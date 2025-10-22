@@ -230,20 +230,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const presentations = await storage.getPublishedPresentations();
       
-      const presentationsWithCounts = await Promise.all(
+      const presentationsWithDetails = await Promise.all(
         presentations.map(async (presentation) => {
           const slides = await storage.getSlidesByPresentation(presentation.id);
+          const user = await storage.getUser(presentation.userId);
           return {
             ...presentation,
-            slideCount: slides.length
+            slideCount: slides.length,
+            presenterName: user?.username || 'Unknown'
           };
         })
       );
       
-      res.json(presentationsWithCounts);
+      res.json(presentationsWithDetails);
     } catch (error) {
       console.error("Library fetch error:", error);
       res.status(500).json({ error: "Failed to fetch library" });
+    }
+  });
+
+  app.get("/api/library/:id", async (req, res) => {
+    try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      if (!presentation.published) {
+        return res.status(403).json({ error: "This presentation is not published" });
+      }
+      
+      const slides = await storage.getSlidesByPresentation(req.params.id);
+      const user = await storage.getUser(presentation.userId);
+      
+      res.json({
+        ...presentation,
+        slides,
+        presenterName: user?.username || 'Unknown'
+      });
+    } catch (error) {
+      console.error("Library detail fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch presentation" });
     }
   });
 
