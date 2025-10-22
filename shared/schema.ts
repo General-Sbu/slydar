@@ -125,6 +125,7 @@ export const reactions = pgTable("reactions", {
 
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
+  published: true,
   createdAt: true,
   updatedAt: true,
 });

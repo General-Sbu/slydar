@@ -137,6 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const presentation = await storage.createPresentation(data);
       res.json(presentation);
     } catch (error) {
+      console.error("Presentation creation error:", error);
       res.status(400).json({ error: "Invalid presentation data" });
     }
   });
@@ -241,6 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(presentationsWithCounts);
     } catch (error) {
+      console.error("Library fetch error:", error);
       res.status(500).json({ error: "Failed to fetch library" });
     }
   });

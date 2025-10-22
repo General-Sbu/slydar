@@ -138,7 +138,7 @@ export class MemStorage implements IStorage {
     const presentation: Presentation = { 
       ...insertPresentation, 
       id,
-      published: insertPresentation.published ?? false,
+      published: false,
       createdAt: now,
       updatedAt: now
     };
