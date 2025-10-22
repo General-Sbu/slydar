@@ -13,7 +13,7 @@ import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings, Globe 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
@@ -96,6 +96,28 @@ export default function Editor() {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
       toast({ title: "Deleted", description: "Slide removed" });
       setSelectedSlideIndex(Math.max(0, selectedSlideIndex - 1));
+    }
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      const endpoint = presentation?.published 
+        ? `/api/presentations/${presentationId}/unpublish`
+        : `/api/presentations/${presentationId}/publish`;
+      const res = await fetch(endpoint, {
+        method: 'PATCH'
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId] });
+      toast({ 
+        title: presentation?.published ? "Unpublished" : "Published", 
+        description: presentation?.published 
+          ? "Presentation removed from library" 
+          : "Presentation is now in the library"
+      });
     }
   });
 
@@ -584,6 +606,17 @@ export default function Editor() {
               >
                 <Save className="h-4 w-4" />
                 <span className="hidden sm:inline">Save</span>
+              </Button>
+              <Button 
+                variant={presentation?.published ? "secondary" : "default"}
+                size="sm" 
+                className="gap-2" 
+                data-testid="button-publish"
+                onClick={() => publishMutation.mutate()}
+                disabled={publishMutation.isPending}
+              >
+                <Globe className="h-4 w-4" />
+                <span className="hidden sm:inline">{presentation?.published ? "Unpublish" : "Publish"}</span>
               </Button>
               <Button 
                 size="sm" 
