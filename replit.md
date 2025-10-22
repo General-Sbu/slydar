@@ -25,6 +25,7 @@ Key features include:
 - **Image Upload:** Allows authenticated users to upload individual images as slides, with robust security checks (MIME type and magic byte validation).
 - **Slide Element System:** Enables embedding and positioning images within slides (not as separate slides). Images can be dragged and resized with optimistic local state updates and debounced (500ms) persistence to prevent request flooding. Elements use percentage-based positioning for responsive scaling.
 - **Note-Taking:** Authenticated users can take and save notes on slides during presentations, accessible from a dedicated notes page.
+- **Publish to Library:** Authenticated users can publish their presentations to a public library where all users (including anonymous visitors) can browse and view published presentations. The library page includes search functionality to filter presentations by title. Users can only publish/unpublish their own presentations (authorization enforced on the backend).
 - **Slidr Watermark:** A custom watermark component is present on all slides for branding, indicating the platform's free tier offering.
 
 ### System Design Choices
