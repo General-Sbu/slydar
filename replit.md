@@ -23,6 +23,7 @@ Key features include:
 - **Real-time Interaction:** Socket.IO facilitates live updates for slide changes, response submissions, and participant tracking using a room-based broadcasting pattern.
 - **File Import:** Supports conversion of PPTX (via ConvertAPI) and PDF (via `pdf-to-png-converter`) files into image slides.
 - **Image Upload:** Allows authenticated users to upload individual images as slides, with robust security checks (MIME type and magic byte validation).
+- **Slide Element System:** Enables embedding and positioning images within slides (not as separate slides). Images can be dragged and resized with optimistic local state updates and debounced (500ms) persistence to prevent request flooding. Elements use percentage-based positioning for responsive scaling.
 - **Note-Taking:** Authenticated users can take and save notes on slides during presentations, accessible from a dedicated notes page.
 - **Slidr Watermark:** A custom watermark component is present on all slides for branding, indicating the platform's free tier offering.
 
