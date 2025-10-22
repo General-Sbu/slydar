@@ -12,14 +12,14 @@ import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Audience() {
   const [, params] = useRoute("/audience/:code");
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
   const roomCode = params?.code?.toUpperCase();
 
   const [session, setSession] = useState<PresentationSession | null>(null);
@@ -61,18 +61,11 @@ export default function Audience() {
       }
       queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
       setIsSavingNote(false);
-      toast({
-        title: "Note saved",
-        description: "Your note has been saved successfully",
-      });
+      showNotification("Note saved successfully", "success");
     },
     onError: () => {
       setIsSavingNote(false);
-      toast({
-        title: "Error",
-        description: "Failed to save note",
-        variant: "destructive",
-      });
+      showNotification("Failed to save note", "error");
     },
   });
 
@@ -90,18 +83,11 @@ export default function Audience() {
     onSuccess: () => {
       setFeedbackContent("");
       setIsSavingFeedback(false);
-      toast({
-        title: "Feedback submitted",
-        description: "Thank you for your feedback!",
-      });
+      showNotification("Thank you for your feedback!", "success");
     },
     onError: () => {
       setIsSavingFeedback(false);
-      toast({
-        title: "Error",
-        description: "Failed to submit feedback",
-        variant: "destructive",
-      });
+      showNotification("Failed to submit feedback", "error");
     },
   });
 
@@ -149,19 +135,12 @@ export default function Audience() {
       }
     },
     onSessionEnded: () => {
-      toast({
-        title: "Session ended",
-        description: "The presentation has been closed by the presenter"
-      });
+      showNotification("The presentation has been closed by the presenter", "info");
     },
     onError: (error: string) => {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive"
-      });
+      showNotification(error, "error");
     }
-  }), [toast, currentSlide?.id, session?.id]);
+  }), [showNotification, currentSlide?.id, session?.id]);
 
   const { isConnected, joinSession, submitResponse } = useWebSocket(websocketOptions);
 

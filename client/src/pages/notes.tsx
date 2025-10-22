@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Note, Presentation, Slide } from "@shared/schema";
 import { StickyNote, Trash2, Calendar } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 
@@ -18,7 +18,7 @@ interface NoteWithDetails extends Note {
 export default function Notes() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
 
   const { data: notes, isLoading } = useQuery<Note[]>({
     queryKey: ['/api/notes'],
@@ -37,17 +37,10 @@ export default function Notes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      toast({
-        title: "Note deleted",
-        description: "Your note has been removed",
-      });
+      showNotification("Note deleted", "success");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete note",
-        variant: "destructive",
-      });
+      showNotification("Failed to delete note", "error");
     },
   });
 

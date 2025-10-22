@@ -11,14 +11,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, PresentationSession, Response, Feedback, Reaction } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Presenter() {
   const [, params] = useRoute("/presenter/:id");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
   const { user } = useAuth();
   const presentationId = params?.id;
 
@@ -84,11 +84,7 @@ export default function Presenter() {
       console.log(`Join at: /audience/${data.code}`);
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to start presentation",
-        variant: "destructive"
-      });
+      showNotification("Failed to start presentation", "error");
     }
   });
 
@@ -102,10 +98,7 @@ export default function Presenter() {
       return res.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Session ended",
-        description: "Presentation has been closed"
-      });
+      showNotification("Presentation has been closed", "success");
       setLocation('/dashboard');
     }
   });
@@ -132,10 +125,7 @@ export default function Presenter() {
       }
     },
     onSessionEnded: () => {
-      toast({
-        title: "Session ended",
-        description: "Presentation has been closed"
-      });
+      showNotification("Presentation has been closed", "success");
       setLocation('/dashboard');
     }
   });

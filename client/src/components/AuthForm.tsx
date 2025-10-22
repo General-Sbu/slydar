@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { queryClient } from "@/lib/queryClient";
 
 type AuthMode = "login" | "register";
@@ -14,7 +14,7 @@ export default function AuthForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
 
   const authMutation = useMutation({
     mutationFn: async (data: { username: string; password: string; email?: string }) => {
@@ -35,17 +35,13 @@ export default function AuthForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Success",
-        description: mode === "login" ? "Logged in successfully" : "Account created successfully",
-      });
+      showNotification(
+        mode === "login" ? "Logged in successfully" : "Account created successfully",
+        "success"
+      );
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      showNotification(error.message, "error");
     },
   });
 

@@ -10,7 +10,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Presentation } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/authUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
   const { user } = useAuth();
 
   type PresentationWithCount = Presentation & { slideCount: number };
@@ -43,11 +43,7 @@ export default function Dashboard() {
       setLocation(`/editor/${data.id}`);
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create presentation",
-        variant: "destructive"
-      });
+      showNotification("Failed to create presentation", "error");
     }
   });
 
@@ -61,17 +57,10 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations'] });
-      toast({
-        title: "Success",
-        description: "Presentation deleted"
-      });
+      showNotification("Presentation deleted", "success");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete presentation",
-        variant: "destructive"
-      });
+      showNotification("Failed to delete presentation", "error");
     }
   });
 

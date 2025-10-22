@@ -5,12 +5,12 @@ import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import Logo from "./Logo";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 
 export default function JoinPresentation() {
   const [code, setCode] = useState("");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
   const [isChecking, setIsChecking] = useState(false);
 
   const handleJoin = async () => {
@@ -24,25 +24,13 @@ export default function JoinPresentation() {
         if (session.isActive) {
           setLocation(`/audience/${code.toUpperCase()}`);
         } else {
-          toast({
-            title: "Session not active",
-            description: "This presentation session has ended",
-            variant: "destructive"
-          });
+          showNotification("This presentation session has ended", "error");
         }
       } else {
-        toast({
-          title: "Invalid code",
-          description: "No active presentation found with this code",
-          variant: "destructive"
-        });
+        showNotification("No active presentation found with this code", "error");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to join presentation",
-        variant: "destructive"
-      });
+      showNotification("Failed to join presentation", "error");
     } finally {
       setIsChecking(false);
     }

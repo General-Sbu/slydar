@@ -20,13 +20,13 @@ import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, SlideType, SlideElement } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Editor() {
   const [, params] = useRoute("/editor/:id");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { showNotification } = useNotification();
   const presentationId = params?.id;
 
   const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
@@ -64,7 +64,7 @@ export default function Editor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
-      toast({ title: "Slide added", description: "New slide created" });
+      showNotification("New slide created", "success");
     }
   });
 
@@ -80,7 +80,7 @@ export default function Editor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
-      toast({ title: "Saved", description: "Slide updated" });
+      showNotification("Slide updated", "success");
     }
   });
 
@@ -94,7 +94,7 @@ export default function Editor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
-      toast({ title: "Deleted", description: "Slide removed" });
+      showNotification("Slide removed", "success");
       setSelectedSlideIndex(Math.max(0, selectedSlideIndex - 1));
     }
   });
@@ -112,12 +112,12 @@ export default function Editor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId] });
-      toast({ 
-        title: presentation?.published ? "Unpublished" : "Published", 
-        description: presentation?.published 
+      showNotification(
+        presentation?.published 
           ? "Presentation removed from library" 
-          : "Presentation is now in the library"
-      });
+          : "Presentation is now in the library",
+        "success"
+      );
     }
   });
 
@@ -137,17 +137,10 @@ export default function Editor() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
-      toast({ 
-        title: "Success", 
-        description: `Imported ${data.slidesCreated} slides from file` 
-      });
+      showNotification(`Imported ${data.slidesCreated} slides from file`, "success");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Import failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      showNotification(error.message, "error");
     }
   });
 
@@ -172,17 +165,10 @@ export default function Editor() {
         setEditingSlide({ ...editingSlide, config: { ...config, elements } });
       }
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
-      toast({ 
-        title: "Success", 
-        description: "Image added to slide" 
-      });
+      showNotification("Image added to slide", "success");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      showNotification(error.message, "error");
     }
   });
 
