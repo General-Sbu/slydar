@@ -2,20 +2,24 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import AuthForm from "@/components/AuthForm";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "wouter";
 import { useState } from "react";
+import { Menu, BookOpen, DollarSign, ArrowRight, LogIn } from "lucide-react";
 
 export default function Landing() {
   const [showAuth, setShowAuth] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between gap-4">
             <Logo />
             
-            <div className="flex items-center gap-4">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-3">
               <Link href="/library">
                 <Button variant="ghost" data-testid="button-library">
                   Library
@@ -38,6 +42,77 @@ export default function Landing() {
                 Get Started
               </Button>
               <ThemeToggle />
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex lg:hidden items-center gap-2">
+              <ThemeToggle />
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px]">
+                  <nav className="flex flex-col gap-4 mt-8">
+                    <Link href="/library">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-library-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Library
+                      </Button>
+                    </Link>
+                    <Link href="/pricing">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-pricing-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        Pricing
+                      </Button>
+                    </Link>
+                    <Link href="/join">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-join-presentation-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                        Join Presentation
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-2" 
+                      onClick={() => {
+                        setShowAuth(true);
+                        setMobileMenuOpen(false);
+                      }} 
+                      data-testid="button-login-mobile"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Sign In
+                    </Button>
+                    <Button 
+                      className="w-full gap-2" 
+                      onClick={() => {
+                        setShowAuth(true);
+                        setMobileMenuOpen(false);
+                      }} 
+                      data-testid="button-get-started-mobile"
+                    >
+                      Get Started
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>

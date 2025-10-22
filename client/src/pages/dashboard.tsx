@@ -84,28 +84,31 @@ export default function Dashboard() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
-            <Logo />
+          <div className="flex h-16 items-center justify-between gap-2">
+            <div>
+              <Logo showText={false} className="sm:hidden" />
+              <Logo showText={true} className="hidden sm:block" />
+            </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
-                className="gap-2"
+                className="gap-2 px-2 sm:px-3"
                 data-testid="button-library"
                 onClick={() => setLocation('/library')}
               >
-                <BookOpen className="h-4 w-4" />
+                <BookOpen className="h-4 w-4 shrink-0" />
                 <span className="hidden sm:inline">Library</span>
               </Button>
               <Button 
                 variant="default" 
-                className="gap-2"
+                className="gap-2 px-2 sm:px-3"
                 data-testid="button-new-presentation"
                 onClick={() => createMutation.mutate()}
                 disabled={createMutation.isPending}
               >
-                <PlusCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">New Presentation</span>
+                <PlusCircle className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">New</span>
               </Button>
               <ThemeToggle />
               <DropdownMenu>
