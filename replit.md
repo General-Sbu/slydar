@@ -14,6 +14,11 @@ Preferred communication style: Simple, everyday language.
 
 The frontend uses React 18 with TypeScript, built with Vite. It incorporates Shadcn/ui components (based on Radix UI) and Tailwind CSS for styling, following a "New York" design variant with a custom color palette, typography (Inter and Space Grotesk), and dark mode support. State management primarily uses TanStack Query for server state and React hooks for local UI state.
 
+**Mobile Responsiveness:** All page headers are fully responsive and optimized for mobile viewports:
+- **Landing Page:** Desktop shows all navigation buttons; mobile uses a hamburger menu with a Sheet component containing all navigation options (Library, Pricing, Join Presentation, Sign In, Get Started)
+- **Dashboard & Library:** Logos and buttons adapt to screen size, showing icon-only versions on mobile (<sm breakpoint) and including text labels on larger screens
+- Headers use consistent Tailwind responsive utilities (sm, lg breakpoints) to prevent overflow and ensure accessibility on all devices
+
 ### Technical Implementations
 
 The application is a full-stack TypeScript project. The frontend is a React application, while the backend uses Express.js. Real-time communication is handled by Socket.IO, replacing earlier raw WebSocket implementations for improved proxy compatibility and automatic reconnection. Data persistence is managed with a PostgreSQL database and Drizzle ORM.
