@@ -13,6 +13,7 @@ import Notes from "@/pages/notes";
 import FeedbackView from "@/pages/feedback";
 import JoinPresentation from "@/components/JoinPresentation";
 import Pricing from "@/pages/pricing";
+import Library from "@/pages/library";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -67,6 +68,7 @@ function Router() {
       <Route path="/join" component={JoinPresentation} />
       <Route path="/audience/:code" component={Audience} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/library" component={Library} />
       <Route component={NotFound} />
     </Switch>
   );

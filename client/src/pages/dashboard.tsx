@@ -4,7 +4,7 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import PresentationCard from "@/components/PresentationCard";
 import EmptyState from "@/components/EmptyState";
-import { PlusCircle, Search, LogOut, StickyNote } from "lucide-react";
+import { PlusCircle, Search, LogOut, StickyNote, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -99,6 +99,15 @@ export default function Dashboard() {
             <Logo />
             
             <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                className="gap-2"
+                data-testid="button-library"
+                onClick={() => setLocation('/library')}
+              >
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Library</span>
+              </Button>
               <Button 
                 variant="default" 
                 className="gap-2"
