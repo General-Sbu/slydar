@@ -26,6 +26,7 @@ Key features include:
 - **Slide Element System:** Enables embedding and positioning images within slides (not as separate slides). Images can be dragged and resized with optimistic local state updates and debounced (500ms) persistence to prevent request flooding. Elements use percentage-based positioning for responsive scaling.
 - **Note-Taking:** Authenticated users can take and save notes on slides during presentations, accessible from a dedicated notes page.
 - **Publish to Library:** Authenticated users can publish their presentations to a public library where all users (including anonymous visitors) can browse and view published presentations. The library page includes search functionality to filter presentations by title. Users can only publish/unpublish their own presentations (authorization enforced on the backend).
+- **Ownership Differentiation:** The library distinguishes between user-owned and other presentations. Owned presentations display a "Yours" badge and a "Present" button (launches presenter mode), while others' presentations show a "View" button (opens read-only viewer). Unauthenticated visitors see all presentations with "View" buttons only. The read-only viewer (`/view/:id`) allows browsing slides with keyboard navigation (arrow keys, ESC) without editing capabilities.
 - **Slidr Watermark:** A custom watermark component is present on all slides for branding, indicating the platform's free tier offering.
 
 ### System Design Choices
