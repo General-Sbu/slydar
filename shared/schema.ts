@@ -36,6 +36,31 @@ export const presentations = pgTable("presentations", {
 export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image"]);
 export type SlideType = z.infer<typeof slideTypeEnum>;
 
+export const imageElementSchema = z.object({
+  type: z.literal("image"),
+  id: z.string(),
+  src: z.string(),
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+  width: z.number().min(1).max(100),
+  height: z.number().min(1).max(100),
+  zIndex: z.number().default(1),
+});
+
+export const slideElementSchema = z.discriminatedUnion("type", [
+  imageElementSchema,
+]);
+
+export type SlideElement = z.infer<typeof slideElementSchema>;
+export type ImageElement = z.infer<typeof imageElementSchema>;
+
+export const slideConfigSchema = z.object({
+  elements: z.array(slideElementSchema).default([]),
+  background: z.string().optional(),
+}).passthrough();
+
+export type SlideConfig = z.infer<typeof slideConfigSchema>;
+
 export const slides = pgTable("slides", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   presentationId: varchar("presentation_id").notNull().references(() => presentations.id, { onDelete: "cascade" }),
@@ -43,7 +68,7 @@ export const slides = pgTable("slides", {
   order: integer("order").notNull(),
   question: text("question"),
   options: text("options").array(),
-  config: jsonb("config").$type<Record<string, any>>(),
+  config: jsonb("config").$type<SlideConfig>().default({ elements: [] }),
 });
 
 export const presentationSessions = pgTable("presentation_sessions", {

@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
 import SlideWatermark from "@/components/SlideWatermark";
+import { SlideCanvas } from "@/components/SlideCanvas";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -422,33 +423,41 @@ export default function Presenter() {
                 onMouseLeave={onMouseLeave}
                 data-testid="card-slide"
               >
-                {currentSlide.type === 'heading' ? (
-                  <div className="text-center">
-                    <h1 className="text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
-                  </div>
-                ) : currentSlide.type === 'image' ? (
-                  <div className="flex items-center justify-center">
-                    <img 
-                      src={currentSlide.question || ''} 
-                      alt={`Slide ${currentSlideIndex + 1}`} 
-                      className="max-w-full max-h-[50vh] md:max-h-[70vh] object-contain"
-                      data-testid="img-slide"
-                    />
-                  </div>
-                ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
-                  <LivePollChart
-                    question={currentSlide.question || "Question"}
-                    options={chartOptions}
-                    totalVotes={slideResponses.length}
+                <div className="absolute inset-0">
+                  <SlideCanvas
+                    elements={currentSlide?.config?.elements || []}
+                    isEditable={false}
                   />
-                ) : (
-                  <div className="text-center space-y-4">
-                    <h2 className="text-2xl md:text-3xl font-bold">{currentSlide.question || "Question"}</h2>
-                    <div className="text-muted-foreground">
-                      {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
+                </div>
+                <div className="relative z-10">
+                  {currentSlide.type === 'heading' ? (
+                    <div className="text-center">
+                      <h1 className="text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                     </div>
-                  </div>
-                )}
+                  ) : currentSlide.type === 'image' ? (
+                    <div className="flex items-center justify-center">
+                      <img 
+                        src={currentSlide.question || ''} 
+                        alt={`Slide ${currentSlideIndex + 1}`} 
+                        className="max-w-full max-h-[50vh] md:max-h-[70vh] object-contain"
+                        data-testid="img-slide"
+                      />
+                    </div>
+                  ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
+                    <LivePollChart
+                      question={currentSlide.question || "Question"}
+                      options={chartOptions}
+                      totalVotes={slideResponses.length}
+                    />
+                  ) : (
+                    <div className="text-center space-y-4">
+                      <h2 className="text-2xl md:text-3xl font-bold">{currentSlide.question || "Question"}</h2>
+                      <div className="text-muted-foreground">
+                        {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <SlideWatermark />
               </Card>
             )}

@@ -426,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/presentations/:id/upload-image", isAuthenticated, (req, res, next) => {
+  app.post("/api/slides/:slideId/upload-image", isAuthenticated, (req, res, next) => {
     imageUpload.single('image')(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
@@ -445,12 +445,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No image uploaded" });
       }
 
-      const presentationId = req.params.id;
+      const slideId = req.params.slideId;
       const fs = await import('fs');
       const path = await import('path');
       const { fileTypeFromBuffer } = await import('file-type');
+      const { randomUUID } = await import('crypto');
 
-      const presentation = await storage.getPresentation(presentationId);
+      const slide = await storage.getSlide(slideId);
+      if (!slide) {
+        return res.status(404).json({ error: "Slide not found" });
+      }
+
+      const presentation = await storage.getPresentation(slide.presentationId);
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
@@ -469,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const timestamp = Date.now();
-      const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
+      const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${slide.presentationId}-${timestamp}`);
       await fs.promises.mkdir(publicOutputFolder, { recursive: true });
 
       const mimeToExtension: { [key: string]: string } = {
@@ -479,29 +485,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'image/webp': '.webp'
       };
       const safeExtension = mimeToExtension[fileType.mime];
-      const fileName = `image${safeExtension}`;
+      const elementId = randomUUID();
+      const fileName = `element-${elementId}${safeExtension}`;
       const filePath = path.join(publicOutputFolder, fileName);
       await fs.promises.writeFile(filePath, req.file.buffer);
       
       console.log('✅ Image uploaded to:', filePath);
 
-      const slides = await storage.getSlidesByPresentation(presentationId);
-      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
-
-      const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/${fileName}`;
-      const slideData = insertSlideSchema.parse({
-        presentationId,
-        type: 'image',
-        order: maxOrder + 1,
-        question: imagePath,
-        options: [],
-        config: {}
+      const imagePath = `/uploads/presentation-${slide.presentationId}-${timestamp}/${fileName}`;
+      
+      const config = slide.config || { elements: [] };
+      const elements = config.elements || [];
+      
+      const newElement = {
+        type: 'image' as const,
+        id: elementId,
+        src: imagePath,
+        x: 25,
+        y: 25,
+        width: 50,
+        height: 50,
+        zIndex: elements.length + 1,
+      };
+      
+      elements.push(newElement);
+      
+      const updatedSlide = await storage.updateSlide(slideId, {
+        config: { ...config, elements }
       });
-      const slide = await storage.createSlide(slideData);
 
       res.json({ 
         success: true, 
-        slide
+        element: newElement,
+        slide: updatedSlide
       });
     } catch (error: any) {
       console.error('Image upload error:', error);

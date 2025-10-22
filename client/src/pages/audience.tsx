@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import AudienceAnswerButton from "@/components/AudienceAnswerButton";
 import SlideReactions from "@/components/SlideReactions";
 import SlideWatermark from "@/components/SlideWatermark";
+import { SlideCanvas } from "@/components/SlideCanvas";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
@@ -274,17 +275,33 @@ export default function Audience() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {currentSlide.type === 'heading' ? (
           <Card className="p-12 text-center relative overflow-hidden">
-            <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
+            <div className="absolute inset-0">
+              <SlideCanvas
+                elements={currentSlide?.config?.elements || []}
+                isEditable={false}
+              />
+            </div>
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
+            </div>
             <SlideWatermark />
           </Card>
         ) : currentSlide.type === 'image' ? (
           <Card className="p-0 overflow-hidden relative">
-            <img 
-              src={currentSlide.question || ''} 
-              alt="Presentation slide" 
-              className="w-full h-auto"
-              data-testid="img-slide"
-            />
+            <div className="absolute inset-0">
+              <SlideCanvas
+                elements={currentSlide?.config?.elements || []}
+                isEditable={false}
+              />
+            </div>
+            <div className="relative z-10">
+              <img 
+                src={currentSlide.question || ''} 
+                alt="Presentation slide" 
+                className="w-full h-auto"
+                data-testid="img-slide"
+              />
+            </div>
             <SlideWatermark />
           </Card>
         ) : submitted ? (

@@ -10,15 +10,16 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import SlideWatermark from "@/components/SlideWatermark";
+import { SlideCanvas } from "@/components/SlideCanvas";
 import { 
-  BarChart3, Cloud, MessageSquare, Type, 
+  BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings 
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, SlideType } from "@shared/schema";
+import type { Presentation, Slide, SlideType, SlideElement } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -129,10 +130,10 @@ export default function Editor() {
   });
 
   const uploadImageMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ slideId, file }: { slideId: string; file: File }) => {
       const formData = new FormData();
       formData.append('image', file);
-      const res = await fetch(`/api/presentations/${presentationId}/upload-image`, {
+      const res = await fetch(`/api/slides/${slideId}/upload-image`, {
         method: 'POST',
         body: formData
       });
@@ -142,11 +143,16 @@ export default function Editor() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (editingSlide && data.element) {
+        const config = editingSlide.config || { elements: [] };
+        const elements = [...(config.elements || []), data.element];
+        setEditingSlide({ ...editingSlide, config: { ...config, elements } });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
       toast({ 
         title: "Success", 
-        description: "Image added to presentation" 
+        description: "Image added to slide" 
       });
     },
     onError: (error: Error) => {
@@ -231,10 +237,42 @@ export default function Editor() {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      uploadImageMutation.mutate(file);
+    if (file && currentSlide?.id) {
+      uploadImageMutation.mutate({ slideId: currentSlide.id, file });
       event.target.value = '';
     }
+  };
+
+  const handleElementUpdate = (elementId: string, updates: Partial<SlideElement>) => {
+    if (!editingSlide || !editingSlide.id) return;
+    
+    const config = editingSlide.config || { elements: [] };
+    const elements = config.elements || [];
+    const updatedElements = elements.map(el => 
+      el.id === elementId ? { ...el, ...updates } : el
+    );
+    
+    const updatedConfig = { ...config, elements: updatedElements };
+    setEditingSlide({ ...editingSlide, config: updatedConfig });
+    
+    debouncedUpdate(editingSlide.id, updatedConfig);
+  };
+
+  const debouncedUpdateRef = useRef<NodeJS.Timeout>();
+  const debouncedUpdate = (slideId: string, config: any) => {
+    if (debouncedUpdateRef.current) {
+      clearTimeout(debouncedUpdateRef.current);
+    }
+    
+    debouncedUpdateRef.current = setTimeout(() => {
+      fetch(`/api/slides/${slideId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config })
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      });
+    }, 500);
   };
 
   if (!presentationId) {
@@ -371,35 +409,6 @@ export default function Editor() {
         )}
       </div>
 
-      <Separator />
-
-      <div>
-        <h3 className="font-semibold mb-3">Upload Image</h3>
-        <input
-          type="file"
-          id="image-upload"
-          className="hidden"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          onChange={handleImageUpload}
-          data-testid="input-image-upload"
-        />
-        <label htmlFor="image-upload">
-          <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-upload-image">
-            <div className="flex items-center gap-3">
-              <Upload className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">Add Image</div>
-                <div className="text-xs text-muted-foreground">JPEG, PNG, GIF, WebP</div>
-              </div>
-            </div>
-          </Card>
-        </label>
-        {uploadImageMutation.isPending && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Uploading image...
-          </div>
-        )}
-      </div>
     </div>
   );
 
@@ -466,6 +475,38 @@ export default function Editor() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="font-semibold mb-4">Media</h3>
+            <div className="space-y-3">
+              <input
+                type="file"
+                id="image-upload"
+                className="hidden"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleImageUpload}
+                data-testid="input-image-upload"
+              />
+              <label htmlFor="image-upload">
+                <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-upload-image">
+                  <div className="flex items-center gap-3">
+                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm font-medium">Add Image</div>
+                      <div className="text-xs text-muted-foreground">Embed on this slide</div>
+                    </div>
+                  </div>
+                </Card>
+              </label>
+              {uploadImageMutation.isPending && (
+                <div className="text-xs text-muted-foreground">
+                  Uploading image...
                 </div>
               )}
             </div>
@@ -595,7 +636,14 @@ export default function Editor() {
                 </Card>
               ) : (
                 <Card className="aspect-video flex items-center justify-center p-12 relative overflow-hidden">
-                  <div className="w-full text-center space-y-6">
+                  <div className="absolute inset-0">
+                    <SlideCanvas
+                      elements={editingSlide?.config?.elements || []}
+                      onElementUpdate={handleElementUpdate}
+                      isEditable={true}
+                    />
+                  </div>
+                  <div className="w-full text-center space-y-6 relative z-10 pointer-events-none">
                     {currentSlide?.type === 'heading' ? (
                       <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                     ) : currentSlide?.type === 'image' ? (
@@ -609,7 +657,7 @@ export default function Editor() {
                       <>
                         <h2 className="text-4xl font-bold">{currentSlide?.question || "Your question here"}</h2>
                         {currentSlide?.type === 'multiple_choice' && currentSlide.options && (
-                          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+                          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto pointer-events-auto">
                             {currentSlide.options.map((option, index) => (
                               <Card key={index} className="p-6 hover-elevate cursor-pointer">
                                 <div className="font-medium text-lg">{option}</div>
