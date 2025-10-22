@@ -28,7 +28,7 @@ export interface IStorage {
   getAllPresentations(): Promise<Presentation[]>;
   getPresentationsByUser(userId: string): Promise<Presentation[]>;
   getPublishedPresentations(): Promise<Presentation[]>;
-  updatePresentation(id: string, presentation: Partial<InsertPresentation>): Promise<Presentation | undefined>;
+  updatePresentation(id: string, presentation: Partial<Omit<Presentation, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Presentation | undefined>;
   deletePresentation(id: string): Promise<boolean>;
 
   createSlide(slide: InsertSlide): Promise<Slide>;
@@ -168,7 +168,7 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
-  async updatePresentation(id: string, update: Partial<InsertPresentation>): Promise<Presentation | undefined> {
+  async updatePresentation(id: string, update: Partial<Omit<Presentation, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Presentation | undefined> {
     const presentation = this.presentations.get(id);
     if (!presentation) return undefined;
     
@@ -449,7 +449,7 @@ export class DbStorage implements IStorage {
       .orderBy(desc(presentations.updatedAt));
   }
 
-  async updatePresentation(id: string, update: Partial<InsertPresentation>): Promise<Presentation | undefined> {
+  async updatePresentation(id: string, update: Partial<Omit<Presentation, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Presentation | undefined> {
     const [updated] = await db.update(presentations)
       .set({ ...update, updatedAt: new Date() })
       .where(eq(presentations.id, id))
