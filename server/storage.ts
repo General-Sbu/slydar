@@ -27,6 +27,7 @@ export interface IStorage {
   getPresentation(id: string): Promise<Presentation | undefined>;
   getAllPresentations(): Promise<Presentation[]>;
   getPresentationsByUser(userId: string): Promise<Presentation[]>;
+  getPublishedPresentations(): Promise<Presentation[]>;
   updatePresentation(id: string, presentation: Partial<InsertPresentation>): Promise<Presentation | undefined>;
   deletePresentation(id: string): Promise<boolean>;
 
@@ -137,6 +138,7 @@ export class MemStorage implements IStorage {
     const presentation: Presentation = { 
       ...insertPresentation, 
       id,
+      published: insertPresentation.published ?? false,
       createdAt: now,
       updatedAt: now
     };
@@ -157,6 +159,12 @@ export class MemStorage implements IStorage {
   async getPresentationsByUser(userId: string): Promise<Presentation[]> {
     return Array.from(this.presentations.values())
       .filter(p => p.userId === userId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async getPublishedPresentations(): Promise<Presentation[]> {
+    return Array.from(this.presentations.values())
+      .filter(p => p.published)
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
@@ -431,6 +439,13 @@ export class DbStorage implements IStorage {
     return db.select()
       .from(presentations)
       .where(eq(presentations.userId, userId))
+      .orderBy(desc(presentations.updatedAt));
+  }
+
+  async getPublishedPresentations(): Promise<Presentation[]> {
+    return db.select()
+      .from(presentations)
+      .where(eq(presentations.published, true))
       .orderBy(desc(presentations.updatedAt));
   }
 

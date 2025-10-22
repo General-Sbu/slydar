@@ -191,6 +191,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/presentations/:id/publish", isAuthenticated, async (req: any, res) => {
+    try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const updated = await storage.updatePresentation(req.params.id, { published: true });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to publish presentation" });
+    }
+  });
+
+  app.patch("/api/presentations/:id/unpublish", isAuthenticated, async (req: any, res) => {
+    try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const updated = await storage.updatePresentation(req.params.id, { published: false });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unpublish presentation" });
+    }
+  });
+
+  app.get("/api/library", async (req, res) => {
+    try {
+      const presentations = await storage.getPublishedPresentations();
+      
+      const presentationsWithCounts = await Promise.all(
+        presentations.map(async (presentation) => {
+          const slides = await storage.getSlidesByPresentation(presentation.id);
+          return {
+            ...presentation,
+            slideCount: slides.length
+          };
+        })
+      );
+      
+      res.json(presentationsWithCounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch library" });
+    }
+  });
+
   app.get("/api/presentations/:id/slides", isAuthenticated, async (req: any, res) => {
     try {
       const presentation = await storage.getPresentation(req.params.id);
