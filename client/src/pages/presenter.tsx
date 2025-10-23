@@ -4,6 +4,9 @@ import RoomCodeDisplay from "@/components/RoomCodeDisplay";
 import LivePollChart from "@/components/LivePollChart";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
+import PresentationTimer from "@/components/PresentationTimer";
+import PresenterNotes from "@/components/PresenterNotes";
+import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -455,7 +458,7 @@ export default function Presenter() {
         </main>
 
         <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto">
-          <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+          <div className="p-4 md:p-6 space-y-4">
             {session ? (
               <RoomCodeDisplay code={session.code} participantCount={participantCount} />
             ) : (
@@ -466,6 +469,19 @@ export default function Presenter() {
                 </div>
               </Card>
             )}
+            
+            <PresentationTimer />
+            
+            {currentSlide && presentationId && (
+              <PresenterNotes 
+                slideId={currentSlide.id} 
+                presentationId={presentationId}
+              />
+            )}
+            
+            <UpcomingSlidePreview 
+              slide={currentSlideIndex < slides.length - 1 ? slides[currentSlideIndex + 1] : null}
+            />
             
             <div>
               <h3 className="font-semibold mb-3">Slide Reactions</h3>
