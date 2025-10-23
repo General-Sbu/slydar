@@ -400,7 +400,7 @@ export default function Presenter() {
       </header>
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <main className="flex-1 md:flex-1 overflow-auto p-4 md:p-8 max-h-[50vh] md:max-h-none">
           <div className="max-w-5xl mx-auto">
             {isLoading || !currentSlide ? (
               <Card className="p-6 md:p-12">
@@ -462,7 +462,7 @@ export default function Presenter() {
           </div>
         </main>
 
-        <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto">
+        <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto flex-shrink-0">
           <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {session ? (
               <RoomCodeDisplay code={session.code} participantCount={participantCount} />
