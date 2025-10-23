@@ -380,7 +380,8 @@ export default function Presenter() {
                 <span className="sr-only sm:not-sr-only sm:ml-1">Prev</span>
               </Button>
               <span className="text-xs sm:text-sm font-medium px-1 sm:px-2" data-testid="text-slide-number">
-                {currentSlideIndex + 1}/{slides.length}
+                <span className="sm:hidden">{currentSlideIndex + 1}/{slides.length}</span>
+                <span className="hidden sm:inline">Slide {currentSlideIndex + 1} / {slides.length}</span>
               </span>
               <Button 
                 variant="outline" 
@@ -462,7 +463,7 @@ export default function Presenter() {
         </main>
 
         <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto">
-          <div className="p-4 md:p-6 space-y-4">
+          <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {session ? (
               <RoomCodeDisplay code={session.code} participantCount={participantCount} />
             ) : (
@@ -488,27 +489,27 @@ export default function Presenter() {
             />
             
             <div>
-              <h3 className="font-semibold mb-3">Slide Reactions</h3>
-              <Card className="p-4">
-                <div className="flex items-center justify-around gap-3">
+              <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Slide Reactions</h3>
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-around gap-2 sm:gap-3">
                   <div className="flex flex-col items-center gap-1" data-testid="reaction-like">
                     <div className="flex items-center gap-1">
-                      <ThumbsUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-lg font-semibold" data-testid="text-like-count">{reactionCounts.like}</span>
+                      <ThumbsUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-base sm:text-lg font-semibold" data-testid="text-like-count">{reactionCounts.like}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">Like</span>
                   </div>
                   <div className="flex flex-col items-center gap-1" data-testid="reaction-heart">
                     <div className="flex items-center gap-1">
-                      <Heart className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      <span className="text-lg font-semibold" data-testid="text-heart-count">{reactionCounts.heart}</span>
+                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
+                      <span className="text-base sm:text-lg font-semibold" data-testid="text-heart-count">{reactionCounts.heart}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">Love</span>
                   </div>
                   <div className="flex flex-col items-center gap-1" data-testid="reaction-thumbs_down">
                     <div className="flex items-center gap-1">
-                      <ThumbsDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                      <span className="text-lg font-semibold" data-testid="text-thumbs_down-count">{reactionCounts.thumbs_down}</span>
+                      <ThumbsDown className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
+                      <span className="text-base sm:text-lg font-semibold" data-testid="text-thumbs_down-count">{reactionCounts.thumbs_down}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">Dislike</span>
                   </div>
@@ -517,17 +518,17 @@ export default function Presenter() {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-3">Recent Responses</h3>
+              <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Recent Responses</h3>
               <div className="space-y-2">
                 {recentResponses.length === 0 ? (
-                  <Card className="p-4 text-center text-muted-foreground text-sm">
+                  <Card className="p-3 sm:p-4 text-center text-muted-foreground text-sm">
                     No responses yet
                   </Card>
                 ) : (
                   recentResponses.map((response, index) => (
-                    <Card key={response.id || index} className="p-3" data-testid={`card-response-${index}`}>
-                      <div className="text-sm font-medium">Participant {response.participantId.slice(0, 8)}</div>
-                      <div className="text-sm text-muted-foreground truncate">{response.answer}</div>
+                    <Card key={response.id || index} className="p-2.5 sm:p-3" data-testid={`card-response-${index}`}>
+                      <div className="text-xs sm:text-sm font-medium">Participant {response.participantId.slice(0, 8)}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground truncate">{response.answer}</div>
                     </Card>
                   ))
                 )}
