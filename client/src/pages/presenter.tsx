@@ -400,8 +400,8 @@ export default function Presenter() {
       </header>
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <main className="flex-1 md:flex-1 overflow-auto p-4 md:p-8 max-h-[50vh] md:max-h-none">
-          <div className="max-w-5xl mx-auto">
+        <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-8 min-h-0 bg-background">
+          <div className="w-full h-full flex items-center justify-center md:max-w-5xl md:mx-auto">
             {isLoading || !currentSlide ? (
               <Card className="p-6 md:p-12">
                 <div className="text-center space-y-4">
@@ -411,7 +411,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className="p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-hidden"
+                className="p-4 sm:p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-hidden w-full"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -430,14 +430,14 @@ export default function Presenter() {
                 <div className="relative z-10">
                   {currentSlide.type === 'heading' ? (
                     <div className="text-center">
-                      <h1 className="text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                      <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                     </div>
                   ) : currentSlide.type === 'image' ? (
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center min-h-[200px]">
                       <img 
                         src={currentSlide.question || ''} 
                         alt={`Slide ${currentSlideIndex + 1}`} 
-                        className="max-w-full max-h-[50vh] md:max-h-[70vh] object-contain"
+                        className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[70vh] object-contain"
                         data-testid="img-slide"
                       />
                     </div>
@@ -462,7 +462,7 @@ export default function Presenter() {
           </div>
         </main>
 
-        <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-auto flex-shrink-0">
+        <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-y-auto max-h-[40vh] md:max-h-none flex-shrink-0">
           <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {session ? (
               <RoomCodeDisplay code={session.code} participantCount={participantCount} />
