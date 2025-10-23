@@ -76,6 +76,31 @@ app.use((req, res, next) => {
       ON reactions(session_id, slide_id, participant_id);
     `);
     
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS questions (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id VARCHAR NOT NULL REFERENCES presentation_sessions(id) ON DELETE CASCADE,
+        participant_id VARCHAR NOT NULL,
+        question TEXT NOT NULL,
+        upvotes INTEGER NOT NULL DEFAULT 0,
+        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS question_votes (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        question_id VARCHAR NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+        participant_id VARCHAR NOT NULL,
+        voted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+    
+    await db.execute(sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_question_votes_unique 
+      ON question_votes(question_id, participant_id);
+    `);
+    
     log('✅ Database tables initialized');
   } catch (error) {
     log('⚠️ Database initialization warning: ' + (error instanceof Error ? error.message : String(error)));

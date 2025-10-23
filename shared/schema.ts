@@ -123,6 +123,24 @@ export const reactions = pgTable("reactions", {
   uniqueIndex("idx_reactions_unique").on(table.sessionId, table.slideId, table.participantId)
 ]);
 
+export const questions = pgTable("questions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull().references(() => presentationSessions.id, { onDelete: "cascade" }),
+  participantId: varchar("participant_id").notNull(),
+  question: text("question").notNull(),
+  upvotes: integer("upvotes").notNull().default(0),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+});
+
+export const questionVotes = pgTable("question_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  questionId: varchar("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
+  participantId: varchar("participant_id").notNull(),
+  votedAt: timestamp("voted_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("idx_question_votes_unique").on(table.questionId, table.participantId)
+]);
+
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
   published: true,
@@ -168,6 +186,17 @@ export const insertReactionSchema = createInsertSchema(reactions).omit({
   reactionType: reactionTypeEnum,
 });
 
+export const insertQuestionSchema = createInsertSchema(questions).omit({
+  id: true,
+  upvotes: true,
+  submittedAt: true,
+});
+
+export const insertQuestionVoteSchema = createInsertSchema(questionVotes).omit({
+  id: true,
+  votedAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -210,3 +239,9 @@ export type Feedback = typeof feedback.$inferSelect;
 
 export type InsertReaction = z.infer<typeof insertReactionSchema>;
 export type Reaction = typeof reactions.$inferSelect;
+
+export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
+export type Question = typeof questions.$inferSelect;
+
+export type InsertQuestionVote = z.infer<typeof insertQuestionVoteSchema>;
+export type QuestionVote = typeof questionVotes.$inferSelect;

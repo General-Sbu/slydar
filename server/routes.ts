@@ -9,7 +9,8 @@ import {
   insertResponseSchema,
   insertNoteSchema,
   insertFeedbackSchema,
-  insertReactionSchema
+  insertReactionSchema,
+  insertQuestionSchema
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -937,6 +938,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(reactions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch reactions" });
+    }
+  });
+
+  // Q&A Routes
+  app.post("/api/questions", async (req, res) => {
+    try {
+      const data = insertQuestionSchema.parse(req.body);
+      const question = await storage.createQuestion(data);
+      
+      io.to(data.sessionId).emit('new_question', question);
+      
+      res.json(question);
+    } catch (error) {
+      console.error("Question creation error:", error);
+      res.status(400).json({ error: "Invalid question data" });
+    }
+  });
+
+  app.get("/api/sessions/:sessionId/questions", async (req, res) => {
+    try {
+      const questions = await storage.getQuestionsBySession(req.params.sessionId);
+      res.json(questions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch questions" });
+    }
+  });
+
+  app.post("/api/questions/:questionId/upvote", async (req, res) => {
+    try {
+      const { participantId } = req.body;
+      if (!participantId) {
+        return res.status(400).json({ error: "participantId is required" });
+      }
+
+      const hasVoted = await storage.hasUpvoted(req.params.questionId, participantId);
+      
+      if (hasVoted) {
+        await storage.removeUpvote(req.params.questionId, participantId);
+      } else {
+        await storage.upvoteQuestion(req.params.questionId, participantId);
+      }
+      
+      const questions = await storage.getQuestionsBySession(req.body.sessionId);
+      io.to(req.body.sessionId).emit('questions_updated', questions);
+      
+      res.json({ success: true, upvoted: !hasVoted });
+    } catch (error) {
+      console.error("Upvote error:", error);
+      res.status(500).json({ error: "Failed to process upvote" });
     }
   });
 

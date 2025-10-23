@@ -6,12 +6,14 @@ import {
   type User, type UpsertUser,
   type Note, type InsertNote,
   type Feedback, type InsertFeedback,
-  type Reaction, type InsertReaction
+  type Reaction, type InsertReaction,
+  type Question, type InsertQuestion,
+  type QuestionVote, type InsertQuestionVote
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { 
-  users, presentations, slides, presentationSessions, responses, notes, feedback, reactions
+  users, presentations, slides, presentationSessions, responses, notes, feedback, reactions, questions, questionVotes
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -62,6 +64,12 @@ export interface IStorage {
   getReactionsBySlide(slideId: string, sessionId: string): Promise<Reaction[]>;
   getParticipantReaction(slideId: string, sessionId: string, participantId: string): Promise<Reaction | undefined>;
   deleteReaction(id: string): Promise<boolean>;
+
+  createQuestion(question: InsertQuestion): Promise<Question>;
+  getQuestionsBySession(sessionId: string): Promise<Question[]>;
+  upvoteQuestion(questionId: string, participantId: string): Promise<Question | undefined>;
+  removeUpvote(questionId: string, participantId: string): Promise<boolean>;
+  hasUpvoted(questionId: string, participantId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -72,6 +80,8 @@ export class MemStorage implements IStorage {
   private responses: Map<string, Response>;
   private feedbacks: Map<string, Feedback>;
   private reactions: Map<string, Reaction>;
+  private questions: Map<string, Question>;
+  private questionVotes: Map<string, QuestionVote>;
 
   constructor() {
     this.users = new Map();
@@ -81,6 +91,8 @@ export class MemStorage implements IStorage {
     this.responses = new Map();
     this.feedbacks = new Map();
     this.reactions = new Map();
+    this.questions = new Map();
+    this.questionVotes = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -385,6 +397,68 @@ export class MemStorage implements IStorage {
   async deleteReaction(id: string): Promise<boolean> {
     return this.reactions.delete(id);
   }
+
+  async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
+    const id = randomUUID();
+    const question: Question = {
+      ...insertQuestion,
+      id,
+      upvotes: 0,
+      submittedAt: new Date()
+    };
+    this.questions.set(id, question);
+    return question;
+  }
+
+  async getQuestionsBySession(sessionId: string): Promise<Question[]> {
+    return Array.from(this.questions.values())
+      .filter(q => q.sessionId === sessionId)
+      .sort((a, b) => b.upvotes - a.upvotes);
+  }
+
+  async upvoteQuestion(questionId: string, participantId: string): Promise<Question | undefined> {
+    const hasVoted = await this.hasUpvoted(questionId, participantId);
+    if (hasVoted) {
+      return this.questions.get(questionId);
+    }
+
+    const voteId = randomUUID();
+    const vote: QuestionVote = {
+      id: voteId,
+      questionId,
+      participantId,
+      votedAt: new Date()
+    };
+    this.questionVotes.set(voteId, vote);
+
+    const question = this.questions.get(questionId);
+    if (question) {
+      question.upvotes += 1;
+      this.questions.set(questionId, question);
+      return question;
+    }
+    return undefined;
+  }
+
+  async removeUpvote(questionId: string, participantId: string): Promise<boolean> {
+    const vote = Array.from(this.questionVotes.values())
+      .find(v => v.questionId === questionId && v.participantId === participantId);
+    
+    if (!vote) return false;
+
+    this.questionVotes.delete(vote.id);
+    const question = this.questions.get(questionId);
+    if (question && question.upvotes > 0) {
+      question.upvotes -= 1;
+      this.questions.set(questionId, question);
+    }
+    return true;
+  }
+
+  async hasUpvoted(questionId: string, participantId: string): Promise<boolean> {
+    return Array.from(this.questionVotes.values())
+      .some(v => v.questionId === questionId && v.participantId === participantId);
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -633,6 +707,63 @@ export class DbStorage implements IStorage {
 
   async deleteReaction(id: string): Promise<boolean> {
     const result = await db.delete(reactions).where(eq(reactions.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
+    const [question] = await db.insert(questions).values(insertQuestion).returning();
+    return question;
+  }
+
+  async getQuestionsBySession(sessionId: string): Promise<Question[]> {
+    return db.select()
+      .from(questions)
+      .where(eq(questions.sessionId, sessionId))
+      .orderBy(desc(questions.upvotes), desc(questions.submittedAt));
+  }
+
+  async upvoteQuestion(questionId: string, participantId: string): Promise<Question | undefined> {
+    const hasVoted = await this.hasUpvoted(questionId, participantId);
+    if (hasVoted) {
+      const [question] = await db.select().from(questions).where(eq(questions.id, questionId)).limit(1);
+      return question;
+    }
+
+    await db.insert(questionVotes).values({ questionId, participantId }).onConflictDoNothing();
+    
+    const [updatedQuestion] = await db.update(questions)
+      .set({ upvotes: sql`upvotes + 1` })
+      .where(eq(questions.id, questionId))
+      .returning();
+    
+    return updatedQuestion;
+  }
+
+  async removeUpvote(questionId: string, participantId: string): Promise<boolean> {
+    const result = await db.delete(questionVotes)
+      .where(and(
+        eq(questionVotes.questionId, questionId),
+        eq(questionVotes.participantId, participantId)
+      ))
+      .returning();
+    
+    if (result.length > 0) {
+      await db.update(questions)
+        .set({ upvotes: sql`GREATEST(upvotes - 1, 0)` })
+        .where(eq(questions.id, questionId));
+      return true;
+    }
+    return false;
+  }
+
+  async hasUpvoted(questionId: string, participantId: string): Promise<boolean> {
+    const result = await db.select()
+      .from(questionVotes)
+      .where(and(
+        eq(questionVotes.questionId, questionId),
+        eq(questionVotes.participantId, participantId)
+      ))
+      .limit(1);
     return result.length > 0;
   }
 }
