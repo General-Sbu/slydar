@@ -329,9 +329,9 @@ export default function Presenter() {
   return (
     <div className="h-screen flex flex-col bg-background">
       <header className="border-b bg-background/95 backdrop-blur">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="px-2 sm:px-4 lg:px-8">
+          <div className="flex h-14 items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -340,13 +340,13 @@ export default function Presenter() {
               >
                 <X className="h-5 w-5" />
               </Button>
-              <div className="font-semibold">{presentation?.title || 'Untitled'}</div>
-              <div className="flex items-center gap-2 text-sm">
+              <div className="font-semibold truncate hidden sm:block">{presentation?.title || 'Untitled'}</div>
+              <div className="flex items-center gap-1.5 text-sm">
                 <Users className="h-4 w-4" />
                 <span className="font-medium" data-testid="text-participant-count">{participantCount}</span>
               </div>
               {slideFeedback.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                   <span>|</span>
                   <span className="font-medium" data-testid="text-feedback-count">
                     {slideFeedback.length} feedback
@@ -354,7 +354,7 @@ export default function Presenter() {
                 </div>
               )}
               {session && allFeedback.length > 0 && (
-                <Link href={`/feedback/${session.id}`}>
+                <Link href={`/feedback/${session.id}`} className="hidden lg:block">
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -367,18 +367,20 @@ export default function Presenter() {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <Button 
                 variant="outline" 
                 size="sm"
                 data-testid="button-previous-slide"
                 onClick={handlePreviousSlide}
                 disabled={currentSlideIndex === 0}
+                className="h-9 w-9 sm:w-auto sm:px-3"
               >
                 <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-1">Prev</span>
               </Button>
-              <span className="text-sm font-medium px-3" data-testid="text-slide-number">
-                Slide {currentSlideIndex + 1} / {slides.length}
+              <span className="text-xs sm:text-sm font-medium px-1 sm:px-2" data-testid="text-slide-number">
+                {currentSlideIndex + 1}/{slides.length}
               </span>
               <Button 
                 variant="outline" 
@@ -386,8 +388,10 @@ export default function Presenter() {
                 data-testid="button-next-slide"
                 onClick={handleNextSlide}
                 disabled={currentSlideIndex === slides.length - 1}
+                className="h-9 w-9 sm:w-auto sm:px-3"
               >
                 <ChevronRight className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
               </Button>
             </div>
           </div>
