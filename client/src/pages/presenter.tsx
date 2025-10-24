@@ -7,6 +7,7 @@ import { SlideCanvas } from "@/components/SlideCanvas";
 import PresentationTimer from "@/components/PresentationTimer";
 import PresenterNotes from "@/components/PresenterNotes";
 import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
+import PresenterQA from "@/components/PresenterQA";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -516,6 +517,10 @@ export default function Presenter() {
                 </div>
               </Card>
             </div>
+
+            {session && (
+              <PresenterQA sessionId={session.id} />
+            )}
 
             <div>
               <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Recent Responses</h3>

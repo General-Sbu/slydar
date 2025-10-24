@@ -15,7 +15,7 @@ import { db } from "./db";
 import { 
   users, presentations, slides, presentationSessions, responses, notes, feedback, reactions, questions, questionVotes
 } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 type UserWithPassword = User & { password: string };
 

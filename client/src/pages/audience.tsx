@@ -7,6 +7,7 @@ import AudienceAnswerButton from "@/components/AudienceAnswerButton";
 import SlideReactions from "@/components/SlideReactions";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
+import AudienceQA from "@/components/AudienceQA";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
@@ -392,6 +393,12 @@ export default function Audience() {
               </Button>
             </div>
           </Card>
+        )}
+
+        {session && participantId && (
+          <div className="mt-6">
+            <AudienceQA sessionId={session.id} participantId={participantId} />
+          </div>
         )}
 
         {isAuthenticated && currentSlide && (
