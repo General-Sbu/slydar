@@ -194,6 +194,7 @@ export default function Dashboard() {
                   onEdit={() => setLocation(`/editor/${presentation.id}`)}
                   onDelete={() => deleteMutation.mutate(presentation.id)}
                   onPresent={() => setLocation(`/presenter/${presentation.id}`)}
+                  onAnalytics={() => setLocation(`/analytics/${presentation.id}`)}
                 />
               ))}
             </div>

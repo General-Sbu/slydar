@@ -10,7 +10,8 @@ import {
   insertNoteSchema,
   insertFeedbackSchema,
   insertReactionSchema,
-  insertQuestionSchema
+  insertQuestionSchema,
+  presentationSessions
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -18,6 +19,8 @@ import { setupAuth, isAuthenticated, getSession } from "./auth";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 interface SocketClient {
   sessionId?: string;
@@ -224,6 +227,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to unpublish presentation" });
+    }
+  });
+
+  app.get("/api/presentations/:id/analytics", isAuthenticated, async (req: any, res) => {
+    try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      const userId = req.user.id;
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const slides = await storage.getSlidesByPresentation(req.params.id);
+      const sessions = await db.select().from(presentationSessions).where(eq(presentationSessions.presentationId, req.params.id));
+      
+      const sessionIds = sessions.map((s: any) => s.id);
+      
+      const participantSet = new Set<string>();
+      
+      for (const sessionId of sessionIds) {
+        const sessionResponses = await storage.getResponsesBySession(sessionId);
+        sessionResponses.forEach(r => participantSet.add(r.participantId));
+        
+        const sessionFeedback = await storage.getFeedbackBySession(sessionId);
+        sessionFeedback.forEach(f => participantSet.add(f.participantId));
+        
+        const sessionQuestions = await storage.getQuestionsBySession(sessionId);
+        sessionQuestions.forEach(q => participantSet.add(q.participantId));
+      }
+      
+      for (const slide of slides) {
+        for (const sessionId of sessionIds) {
+          const slideReactions = await storage.getReactionsBySlide(slide.id, sessionId);
+          slideReactions.forEach(r => participantSet.add(r.participantId));
+        }
+      }
+
+      const slideAnalytics = await Promise.all(slides.map(async (slide) => {
+        let reactionCount = 0;
+        let responseCount = 0;
+        let feedbackCount = 0;
+        
+        for (const sessionId of sessionIds) {
+          const slideReactions = await storage.getReactionsBySlide(slide.id, sessionId);
+          reactionCount += slideReactions.filter(r => r.reactionType === 'like' || r.reactionType === 'heart').length;
+          
+          const slideResponses = await storage.getResponsesBySlide(slide.id, sessionId);
+          responseCount += slideResponses.length;
+          
+          const slideFeedback = await storage.getFeedbackBySlide(slide.id, sessionId);
+          feedbackCount += slideFeedback.length;
+        }
+
+        return {
+          slideId: slide.id,
+          slideTitle: slide.question || `Slide ${slide.order + 1}`,
+          slideType: slide.type,
+          reactions: reactionCount,
+          responses: responseCount,
+          feedback: feedbackCount
+        };
+      }));
+
+      let totalQuestions = 0;
+      for (const sessionId of sessionIds) {
+        const sessionQuestions = await storage.getQuestionsBySession(sessionId);
+        totalQuestions += sessionQuestions.length;
+      }
+
+      res.json({
+        presentationId: presentation.id,
+        presentationTitle: presentation.title,
+        totalSessions: sessions.length,
+        totalParticipants: participantSet.size,
+        totalQuestions,
+        slideAnalytics
+      });
+    } catch (error) {
+      console.error("Analytics fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
 

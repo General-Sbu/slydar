@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Play, Users, Calendar, Trash2, Edit2 } from "lucide-react";
+import { MoreVertical, Play, Users, Calendar, Trash2, Edit2, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -16,6 +16,7 @@ interface PresentationCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onPresent?: () => void;
+  onAnalytics?: () => void;
 }
 
 export default function PresentationCard({
@@ -26,7 +27,8 @@ export default function PresentationCard({
   isLive = false,
   onEdit,
   onDelete,
-  onPresent
+  onPresent,
+  onAnalytics
 }: PresentationCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -64,6 +66,10 @@ export default function PresentationCard({
                 <DropdownMenuItem onClick={onEdit} data-testid="menu-item-edit">
                   <Edit2 className="mr-2 h-4 w-4" />
                   <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onAnalytics} data-testid="menu-item-analytics">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <span>Analytics</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setShowDeleteDialog(true)}

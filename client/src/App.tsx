@@ -12,6 +12,7 @@ import Presenter from "@/pages/presenter";
 import Audience from "@/pages/audience";
 import Notes from "@/pages/notes";
 import FeedbackView from "@/pages/feedback";
+import Analytics from "@/pages/analytics";
 import JoinPresentation from "@/components/JoinPresentation";
 import Pricing from "@/pages/pricing";
 import Library from "@/pages/library";
@@ -66,6 +67,9 @@ function Router() {
       </Route>
       <Route path="/feedback/:sessionId">
         <ProtectedRoute component={FeedbackView} />
+      </Route>
+      <Route path="/analytics/:id">
+        <ProtectedRoute component={Analytics} />
       </Route>
       <Route path="/join" component={JoinPresentation} />
       <Route path="/audience/:code" component={Audience} />
