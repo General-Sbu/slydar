@@ -8,6 +8,7 @@ import PresentationTimer from "@/components/PresentationTimer";
 import PresenterNotes from "@/components/PresenterNotes";
 import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
 import PresenterQA from "@/components/PresenterQA";
+import FloatingEmojis from "@/components/FloatingEmojis";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -32,6 +33,7 @@ export default function Presenter() {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [allResponses, setAllResponses] = useState<Response[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([]);
   
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
@@ -127,6 +129,15 @@ export default function Presenter() {
           queryKey: [`/api/slides/${currentSlide.id}/reactions/${session.id}`] 
         });
       }
+    },
+    onEmojiSent: (data) => {
+      const id = `${Date.now()}-${Math.random()}`;
+      const x = Math.random() * 80 + 10;
+      setFloatingEmojis(prev => [...prev, { id, emoji: data.emoji, x }]);
+      
+      setTimeout(() => {
+        setFloatingEmojis(prev => prev.filter(e => e.id !== id));
+      }, 3000);
     },
     onSessionEnded: () => {
       showNotification("Presentation has been closed", "success");
@@ -542,6 +553,7 @@ export default function Presenter() {
           </div>
         </aside>
       </div>
+      <FloatingEmojis emojis={floatingEmojis} />
     </div>
   );
 }

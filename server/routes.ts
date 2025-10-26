@@ -1201,6 +1201,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    socket.on('send_emoji', ({ emoji }) => {
+      try {
+        if (!clientData.sessionId) {
+          socket.emit('error', { message: 'Not in a session' });
+          return;
+        }
+        
+        io.to(clientData.sessionId).emit('emoji_sent', {
+          emoji,
+          participantId: clientData.participantId
+        });
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to send emoji' });
+      }
+    });
+
     socket.on('navigate_slide', async ({ slideIndex }) => {
       try {
         if (!clientData.sessionId || clientData.role !== 'presenter') {

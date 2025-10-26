@@ -8,6 +8,7 @@ import SlideReactions from "@/components/SlideReactions";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import AudienceQA from "@/components/AudienceQA";
+import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
@@ -33,6 +34,7 @@ export default function Audience() {
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState("");
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
+  const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([]);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -135,6 +137,15 @@ export default function Audience() {
         });
       }
     },
+    onEmojiSent: (data: { emoji: string }) => {
+      const id = `${Date.now()}-${Math.random()}`;
+      const x = Math.random() * 80 + 10;
+      setFloatingEmojis(prev => [...prev, { id, emoji: data.emoji, x }]);
+      
+      setTimeout(() => {
+        setFloatingEmojis(prev => prev.filter(e => e.id !== id));
+      }, 3000);
+    },
     onSessionEnded: () => {
       showNotification("The presentation has been closed by the presenter", "info");
     },
@@ -143,7 +154,7 @@ export default function Audience() {
     }
   }), [showNotification, currentSlide?.id, session?.id]);
 
-  const { isConnected, joinSession, submitResponse } = useWebSocket(websocketOptions);
+  const { isConnected, joinSession, submitResponse, sendEmoji } = useWebSocket(websocketOptions);
 
   useEffect(() => {
     if (roomCode && isConnected && !session) {
@@ -362,6 +373,19 @@ export default function Audience() {
           </div>
         )}
 
+        {currentSlide && session && (
+          <Card className="mt-6 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🎉</span>
+              <h3 className="font-semibold">Live Reactions</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Send real-time emoji reactions that everyone can see!
+            </p>
+            <EmojiSelector onEmojiSelect={sendEmoji} data-testid="emoji-selector" />
+          </Card>
+        )}
+
         {currentSlide && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -437,6 +461,7 @@ export default function Audience() {
           </Card>
         )}
       </main>
+      <FloatingEmojis emojis={floatingEmojis} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ interface UseWebSocketOptions {
   onSessionUpdate?: (session: PresentationSession) => void;
   onSessionEnded?: () => void;
   onReactionsUpdated?: (data: { slideId: string; reactions: Reaction[] }) => void;
+  onEmojiSent?: (data: { emoji: string; participantId?: string }) => void;
   onError?: (error: string) => void;
 }
 
@@ -86,6 +87,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       optionsRef.current.onReactionsUpdated?.(data);
     });
 
+    socket.on('emoji_sent', (data: { emoji: string; participantId?: string }) => {
+      console.log('[Socket.IO] Emoji sent:', data);
+      optionsRef.current.onEmojiSent?.(data);
+    });
+
     socket.on('error', (data: { message: string }) => {
       console.error('[Socket.IO] Error:', data.message);
       optionsRef.current.onError?.(data.message);
@@ -115,11 +121,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, []);
 
+  const sendEmoji = useCallback((emoji: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('send_emoji', { emoji });
+    }
+  }, []);
+
   return {
     isConnected,
     participantId,
     joinSession,
     submitResponse,
-    navigateSlide
+    navigateSlide,
+    sendEmoji
   };
 }
