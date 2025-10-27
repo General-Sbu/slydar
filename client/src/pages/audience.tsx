@@ -265,7 +265,14 @@ export default function Audience() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {currentSlide.type === 'heading' ? (
-          <Card className="p-12 text-center relative overflow-hidden">
+          <div 
+            className="rounded-xl border shadow-sm p-12 text-center relative overflow-hidden"
+            style={{
+              backgroundColor: currentSlide?.config?.background || 'hsl(var(--card))',
+              color: currentSlide?.config?.textColor || 'hsl(var(--card-foreground))',
+              borderColor: 'hsl(var(--card-border))'
+            }}
+          >
             <div className="absolute inset-0">
               <SlideCanvas
                 elements={currentSlide?.config?.elements || []}
@@ -276,7 +283,7 @@ export default function Audience() {
               <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
             </div>
             <SlideWatermark />
-          </Card>
+          </div>
         ) : currentSlide.type === 'image' ? (
           <Card className="p-0 overflow-hidden relative">
             <div className="absolute inset-0">

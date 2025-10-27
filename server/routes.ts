@@ -170,10 +170,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const initialSlide = {
             presentationId: presentation.id,
             type: "heading" as const,
+            question: "Welcome to Your Presentation",
             order: 0,
             config: {
-              heading: "Welcome to Your Presentation",
-              subheading: "Click to edit this slide",
               background: template.colorScheme.background,
               textColor: template.colorScheme.text
             }

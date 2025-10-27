@@ -654,7 +654,13 @@ export default function Editor() {
                   </div>
                 </Card>
               ) : (
-                <Card className="aspect-video flex items-center justify-center p-12 relative overflow-hidden">
+                <Card 
+                  className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
+                  style={{
+                    backgroundColor: currentSlide?.config?.background || undefined,
+                    color: currentSlide?.config?.textColor || undefined
+                  }}
+                >
                   <div className="absolute inset-0">
                     <SlideCanvas
                       elements={editingSlide?.config?.elements || []}
