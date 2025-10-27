@@ -383,12 +383,6 @@ export default function Presenter() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              {session && typeof window !== 'undefined' && (
-                <CastButton 
-                  ref={castButtonRef}
-                  presentationUrl={`${window.location.origin}/audience/${session.code}`} 
-                />
-              )}
               <Button 
                 variant="outline" 
                 size="sm"
@@ -415,6 +409,12 @@ export default function Presenter() {
                 <ChevronRight className="h-4 w-4" />
                 <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
               </Button>
+              {session && typeof window !== 'undefined' && (
+                <CastButton 
+                  ref={castButtonRef}
+                  presentationUrl={`${window.location.origin}/audience/${session.code}`} 
+                />
+              )}
             </div>
           </div>
         </div>

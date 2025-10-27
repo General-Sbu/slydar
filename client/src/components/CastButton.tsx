@@ -118,12 +118,14 @@ const CastButton = forwardRef<CastButtonRef, CastButtonProps>(({ presentationUrl
       ) : (
         <Button
           variant="outline"
-          size="icon"
+          size="sm"
           onClick={() => setIsDialogOpen(true)}
           title="Cast to TV"
           data-testid="button-cast"
+          className="h-9 w-9 sm:w-auto sm:px-3"
         >
           <Cast className="h-4 w-4" />
+          <span className="sr-only sm:not-sr-only sm:ml-1">Cast</span>
         </Button>
       )}
 
