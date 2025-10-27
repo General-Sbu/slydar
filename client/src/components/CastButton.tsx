@@ -107,8 +107,7 @@ export default function CastButton({ presentationUrl }: CastButtonProps) {
           variant="outline"
           size="icon"
           onClick={() => setIsDialogOpen(true)}
-          disabled={!isAvailable}
-          title={isAvailable ? "Cast to TV" : "No casting devices available"}
+          title="Cast to TV"
           data-testid="button-cast"
         >
           <Cast className="h-4 w-4" />
@@ -128,63 +127,52 @@ export default function CastButton({ presentationUrl }: CastButtonProps) {
           </DialogHeader>
 
           <div className="space-y-4 pt-4">
-            {!isAvailable ? (
-              <Card className="p-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <WifiOff className="h-12 w-12 text-muted-foreground" />
-                  <div>
-                    <h3 className="font-semibold mb-1">No Devices Found</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Make sure your casting device (Chromecast, Smart TV, etc.) is on the same network
-                    </p>
-                  </div>
+            <Card className="p-6">
+              <div className="flex items-start gap-3">
+                <Monitor className="h-10 w-10 text-primary mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-1">Search for Devices</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Click the button below to search for nearby casting devices
+                  </p>
+                  <Button
+                    onClick={handleStartCasting}
+                    disabled={isConnecting}
+                    className="w-full gap-2"
+                    data-testid="button-search-devices"
+                  >
+                    {isConnecting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Searching for devices...
+                      </>
+                    ) : (
+                      <>
+                        <Cast className="h-4 w-4" />
+                        Search & Connect
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </Card>
-            ) : (
-              <>
-                <Card className="p-6">
-                  <div className="flex items-start gap-3">
-                    <Monitor className="h-10 w-10 text-primary mt-1" />
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-1">Available Devices</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Click the button below to search for nearby casting devices
-                      </p>
-                      <Button
-                        onClick={handleStartCasting}
-                        disabled={isConnecting}
-                        className="w-full gap-2"
-                        data-testid="button-search-devices"
-                      >
-                        {isConnecting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Searching for devices...
-                          </>
-                        ) : (
-                          <>
-                            <Cast className="h-4 w-4" />
-                            Search & Connect
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+              </div>
+            </Card>
 
-                <Card className="p-4 bg-muted/50">
-                  <div className="text-sm space-y-2">
-                    <p className="font-medium">Supported Devices:</p>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      <li>Google Chromecast</li>
-                      <li>Smart TVs with casting support</li>
-                      <li>AirPlay-compatible devices</li>
-                      <li>Other devices supporting the Presentation API</li>
-                    </ul>
-                  </div>
-                </Card>
-              </>
-            )}
+            <Card className="p-4 bg-muted/50">
+              <div className="text-sm space-y-2">
+                <p className="font-medium">Supported Devices:</p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                  <li>Google Chromecast</li>
+                  <li>Smart TVs with casting support</li>
+                  <li>AirPlay-compatible devices</li>
+                  <li>Other devices supporting the Presentation API</li>
+                </ul>
+                <p className="text-muted-foreground mt-3">
+                  {isAvailable 
+                    ? "Devices are available on your network" 
+                    : "Make sure your casting device is on the same network and powered on"}
+                </p>
+              </div>
+            </Card>
           </div>
         </DialogContent>
       </Dialog>
