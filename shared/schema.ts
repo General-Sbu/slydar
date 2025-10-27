@@ -141,6 +141,26 @@ export const questionVotes = pgTable("question_votes", {
   uniqueIndex("idx_question_votes_unique").on(table.questionId, table.participantId)
 ]);
 
+export const templateColorScheme = z.object({
+  primary: z.string(),
+  secondary: z.string(),
+  accent: z.string(),
+  background: z.string(),
+  text: z.string(),
+  textMuted: z.string(),
+});
+
+export type TemplateColorScheme = z.infer<typeof templateColorScheme>;
+
+export const templates = pgTable("templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  colorScheme: jsonb("color_scheme").$type<TemplateColorScheme>().notNull(),
+  thumbnail: text("thumbnail"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
   published: true,
@@ -245,3 +265,13 @@ export type Question = typeof questions.$inferSelect;
 
 export type InsertQuestionVote = z.infer<typeof insertQuestionVoteSchema>;
 export type QuestionVote = typeof questionVotes.$inferSelect;
+
+export const insertTemplateSchema = createInsertSchema(templates).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  colorScheme: templateColorScheme,
+});
+
+export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
+export type Template = typeof templates.$inferSelect;

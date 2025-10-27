@@ -8,12 +8,13 @@ import {
   type Feedback, type InsertFeedback,
   type Reaction, type InsertReaction,
   type Question, type InsertQuestion,
-  type QuestionVote, type InsertQuestionVote
+  type QuestionVote, type InsertQuestionVote,
+  type Template, type InsertTemplate
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { 
-  users, presentations, slides, presentationSessions, responses, notes, feedback, reactions, questions, questionVotes
+  users, presentations, slides, presentationSessions, responses, notes, feedback, reactions, questions, questionVotes, templates
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -70,6 +71,10 @@ export interface IStorage {
   upvoteQuestion(questionId: string, participantId: string): Promise<Question | undefined>;
   removeUpvote(questionId: string, participantId: string): Promise<boolean>;
   hasUpvoted(questionId: string, participantId: string): Promise<boolean>;
+
+  createTemplate(template: InsertTemplate): Promise<Template>;
+  getTemplate(id: string): Promise<Template | undefined>;
+  getAllTemplates(): Promise<Template[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -82,6 +87,7 @@ export class MemStorage implements IStorage {
   private reactions: Map<string, Reaction>;
   private questions: Map<string, Question>;
   private questionVotes: Map<string, QuestionVote>;
+  private templates: Map<string, Template>;
 
   constructor() {
     this.users = new Map();
@@ -93,6 +99,7 @@ export class MemStorage implements IStorage {
     this.reactions = new Map();
     this.questions = new Map();
     this.questionVotes = new Map();
+    this.templates = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -459,6 +466,27 @@ export class MemStorage implements IStorage {
     return Array.from(this.questionVotes.values())
       .some(v => v.questionId === questionId && v.participantId === participantId);
   }
+
+  async createTemplate(insertTemplate: InsertTemplate): Promise<Template> {
+    const id = randomUUID();
+    const template: Template = {
+      ...insertTemplate,
+      id,
+      createdAt: new Date()
+    };
+    this.templates.set(id, template);
+    return template;
+  }
+
+  async getTemplate(id: string): Promise<Template | undefined> {
+    return this.templates.get(id);
+  }
+
+  async getAllTemplates(): Promise<Template[]> {
+    return Array.from(this.templates.values()).sort((a, b) => 
+      a.createdAt.getTime() - b.createdAt.getTime()
+    );
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -765,6 +793,20 @@ export class DbStorage implements IStorage {
       ))
       .limit(1);
     return result.length > 0;
+  }
+
+  async createTemplate(template: InsertTemplate): Promise<Template> {
+    const [newTemplate] = await db.insert(templates).values(template).returning();
+    return newTemplate;
+  }
+
+  async getTemplate(id: string): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.id, id)).limit(1);
+    return template;
+  }
+
+  async getAllTemplates(): Promise<Template[]> {
+    return db.select().from(templates).orderBy(templates.createdAt);
   }
 }
 
