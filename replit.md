@@ -45,6 +45,8 @@ Key features include:
 
 The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO server for real-time events. A session-based architecture supports anonymous audience participation. The data layer uses PostgreSQL with Drizzle ORM, employing UUIDs for primary keys and Zod schemas for validation. Authentication for presenters uses Passport.js with a local strategy and bcrypt for password hashing.
 
+**Presentation Templates:** The system provides pre-built templates with curated color schemes to help users start their presentations with professional styling. When creating a new presentation, users select from 8 default templates (Professional Blue, Modern Dark, Warm Sunset, Fresh Green, Elegant Purple, Bold Red, Ocean Blue, Minimal Gray) via a visual template selector dialog. Each template defines a color palette including primary, secondary, accent, background, text, and muted text colors. The selected templateId is stored with the presentation for future reference. Templates are seeded automatically on server startup and displayed in a responsive grid with color swatches and preview text.
+
 ## External Dependencies
 
 ### Third-party Services

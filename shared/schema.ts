@@ -25,10 +25,31 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const templateColorScheme = z.object({
+  primary: z.string(),
+  secondary: z.string(),
+  accent: z.string(),
+  background: z.string(),
+  text: z.string(),
+  textMuted: z.string(),
+});
+
+export type TemplateColorScheme = z.infer<typeof templateColorScheme>;
+
+export const templates = pgTable("templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  colorScheme: jsonb("color_scheme").$type<TemplateColorScheme>().notNull(),
+  thumbnail: text("thumbnail"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const presentations = pgTable("presentations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
+  templateId: varchar("template_id").references(() => templates.id),
   published: boolean("published").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -140,26 +161,6 @@ export const questionVotes = pgTable("question_votes", {
 }, (table) => [
   uniqueIndex("idx_question_votes_unique").on(table.questionId, table.participantId)
 ]);
-
-export const templateColorScheme = z.object({
-  primary: z.string(),
-  secondary: z.string(),
-  accent: z.string(),
-  background: z.string(),
-  text: z.string(),
-  textMuted: z.string(),
-});
-
-export type TemplateColorScheme = z.infer<typeof templateColorScheme>;
-
-export const templates = pgTable("templates", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  colorScheme: jsonb("color_scheme").$type<TemplateColorScheme>().notNull(),
-  thumbnail: text("thumbnail"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,

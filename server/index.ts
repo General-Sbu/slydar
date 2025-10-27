@@ -113,6 +113,18 @@ app.use((req, res, next) => {
       );
     `);
     
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='presentations' AND column_name='template_id'
+        ) THEN
+          ALTER TABLE presentations ADD COLUMN template_id VARCHAR REFERENCES templates(id);
+        END IF;
+      END $$;
+    `);
+    
     log('✅ Database tables initialized');
     
     await seedTemplates();
