@@ -9,6 +9,7 @@ import PresenterNotes from "@/components/PresenterNotes";
 import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
 import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
+import CastButton from "@/components/CastButton";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -380,6 +381,9 @@ export default function Presenter() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {session && typeof window !== 'undefined' && (
+                <CastButton presentationUrl={`${window.location.origin}/audience/${session.code}`} />
+              )}
               <Button 
                 variant="outline" 
                 size="sm"
