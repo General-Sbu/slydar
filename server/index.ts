@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+import { seedTemplates } from "./seed-templates";
 
 const app = express();
 app.use(express.json());
@@ -101,7 +102,20 @@ app.use((req, res, next) => {
       ON question_votes(question_id, participant_id);
     `);
     
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS templates (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        color_scheme JSONB NOT NULL,
+        thumbnail TEXT,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `);
+    
     log('✅ Database tables initialized');
+    
+    await seedTemplates();
   } catch (error) {
     log('⚠️ Database initialization warning: ' + (error instanceof Error ? error.message : String(error)));
   }

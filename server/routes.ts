@@ -110,6 +110,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/templates", async (req, res) => {
+    try {
+      const templates = await storage.getAllTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  app.get("/api/templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
   app.get("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
