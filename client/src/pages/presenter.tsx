@@ -9,7 +9,7 @@ import PresenterNotes from "@/components/PresenterNotes";
 import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
 import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
-import CastButton from "@/components/CastButton";
+import CastButton, { CastButtonRef } from "@/components/CastButton";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -38,6 +38,7 @@ export default function Presenter() {
   
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
+  const castButtonRef = useRef<CastButtonRef>(null);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -191,6 +192,7 @@ export default function Presenter() {
   };
 
   const handleEndPresentation = () => {
+    castButtonRef.current?.terminate();
     endSessionMutation.mutate();
   };
 
@@ -382,7 +384,10 @@ export default function Presenter() {
 
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {session && typeof window !== 'undefined' && (
-                <CastButton presentationUrl={`${window.location.origin}/audience/${session.code}`} />
+                <CastButton 
+                  ref={castButtonRef}
+                  presentationUrl={`${window.location.origin}/audience/${session.code}`} 
+                />
               )}
               <Button 
                 variant="outline" 

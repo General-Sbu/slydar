@@ -8,20 +8,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Monitor, Tv, Loader2, WifiOff, Cast, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNotification } from "@/hooks/useNotification";
 
 interface CastButtonProps {
   presentationUrl: string;
 }
 
-export default function CastButton({ presentationUrl }: CastButtonProps) {
+export interface CastButtonRef {
+  terminate: () => void;
+}
+
+const CastButton = forwardRef<CastButtonRef, CastButtonProps>(({ presentationUrl }, ref) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [presentationRequest, setPresentationRequest] = useState<any>(null);
   const [connection, setConnection] = useState<any>(null);
   const { showNotification } = useNotification();
+
+  useImperativeHandle(ref, () => ({
+    terminate: () => {
+      if (connection) {
+        connection.terminate();
+        setConnection(null);
+      }
+    }
+  }));
 
   useEffect(() => {
     if ('PresentationRequest' in window) {
@@ -178,4 +191,8 @@ export default function CastButton({ presentationUrl }: CastButtonProps) {
       </Dialog>
     </>
   );
-}
+});
+
+CastButton.displayName = 'CastButton';
+
+export default CastButton;
