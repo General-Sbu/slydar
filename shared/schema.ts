@@ -69,12 +69,28 @@ export const imageElementSchema = z.object({
   zIndex: z.number().default(1),
 });
 
+export const textElementSchema = z.object({
+  type: z.literal("text"),
+  id: z.string(),
+  content: z.string(),
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+  width: z.number().min(10).max(100),
+  fontSize: z.number().min(12).max(200).default(32),
+  fontWeight: z.enum(["normal", "bold"]).default("normal"),
+  textAlign: z.enum(["left", "center", "right"]).default("left"),
+  color: z.string().optional(),
+  zIndex: z.number().default(1),
+});
+
 export const slideElementSchema = z.discriminatedUnion("type", [
   imageElementSchema,
+  textElementSchema,
 ]);
 
 export type SlideElement = z.infer<typeof slideElementSchema>;
 export type ImageElement = z.infer<typeof imageElementSchema>;
+export type TextElement = z.infer<typeof textElementSchema>;
 
 export const slideConfigSchema = z.object({
   elements: z.array(slideElementSchema).default([]),

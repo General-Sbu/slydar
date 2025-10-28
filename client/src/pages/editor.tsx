@@ -258,6 +258,36 @@ export default function Editor() {
     }
   };
 
+  const handleAddText = () => {
+    if (!editingSlide || !editingSlide.id) return;
+    
+    const config = editingSlide.config || { elements: [] };
+    const elements = config.elements || [];
+    
+    // Create a new text element
+    const newTextElement = {
+      type: 'text' as const,
+      id: `text-${Date.now()}`,
+      content: 'Double-click to edit',
+      x: 25,
+      y: 25,
+      width: 50,
+      fontSize: 32,
+      fontWeight: 'bold' as const,
+      textAlign: 'center' as const,
+      color: currentSlide?.config?.textColor || undefined,
+      zIndex: elements.length + 1,
+    };
+    
+    const updatedElements = [...elements, newTextElement];
+    const updatedConfig = { ...config, elements: updatedElements };
+    
+    setEditingSlide({ ...editingSlide, config: updatedConfig });
+    debouncedUpdate(editingSlide.id, updatedConfig);
+    
+    showNotification("Text added to slide", "success");
+  };
+
   const handleElementUpdate = (elementId: string, updates: Partial<SlideElement>) => {
     if (!editingSlide || !editingSlide.id) return;
     
@@ -586,6 +616,20 @@ export default function Editor() {
           <div>
             <h3 className="font-semibold mb-4">Media</h3>
             <div className="space-y-3">
+              <Card 
+                className="p-4 cursor-pointer hover-elevate" 
+                onClick={handleAddText}
+                data-testid="button-add-text"
+              >
+                <div className="flex items-center gap-3">
+                  <Type className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="text-sm font-medium">Add Text</div>
+                    <div className="text-xs text-muted-foreground">Add moveable text</div>
+                  </div>
+                </div>
+              </Card>
+              
               <input
                 type="file"
                 id="image-upload"
