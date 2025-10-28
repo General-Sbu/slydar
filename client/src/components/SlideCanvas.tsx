@@ -334,6 +334,12 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
               }}
+              onClick={(e) => {
+                if (!isEditingThis && isEditable) {
+                  e.stopPropagation();
+                  setSelectedElementId(element.id);
+                }
+              }}
               onMouseDown={(e) => !isEditingThis && handleMouseDown(e, element.id)}
               onTouchStart={(e) => !isEditingThis && handleTouchStart(e, element.id)}
               onDoubleClick={() => handleTextDoubleClick(element)}
@@ -345,8 +351,9 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                   onChange={(e) => setEditingTextContent(e.target.value)}
                   onBlur={handleTextEditBlur}
                   onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setEditingTextId(null);
+                    if (e.key === 'Escape' || e.key === 'Enter') {
+                      e.preventDefault();
+                      handleTextEditBlur();
                     }
                   }}
                   autoFocus
