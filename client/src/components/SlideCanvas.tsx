@@ -60,6 +60,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
 
   const handleTouchStart = (e: React.TouchEvent, elementId: string) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent scrolling while dragging
     if (e.touches.length > 0) {
       handlePointerDown(e.touches[0].clientX, e.touches[0].clientY, elementId);
     }
@@ -92,6 +93,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
 
   const handleResizeTouchStart = (e: React.TouchEvent, elementId: string, corner: 'nw' | 'ne' | 'sw' | 'se') => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent scrolling while resizing
     if (e.touches.length > 0) {
       handleResizePointerDown(e.touches[0].clientX, e.touches[0].clientY, elementId, corner);
     }
