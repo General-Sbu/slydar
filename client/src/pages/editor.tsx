@@ -33,6 +33,13 @@ export default function Editor() {
   const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
   const [slidesSheetOpen, setSlidesSheetOpen] = useState(false);
   const [propertiesSheetOpen, setPropertiesSheetOpen] = useState(false);
+  const [inlineEditingHeading, setInlineEditingHeading] = useState(false);
+  const [headingText, setHeadingText] = useState<string>('');
+  const [inlineEditingOptions, setInlineEditingOptions] = useState<number | null>(null);
+  const [optionText, setOptionText] = useState<string>('');
+  
+  // Debounce ref must be declared before any conditional returns
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -309,6 +316,92 @@ export default function Editor() {
   }
 
   const currentSlide = slides[selectedSlideIndex];
+
+  const handleInlineTextUpdate = (text: string, field: 'question') => {
+    if (!currentSlide) return;
+
+    // Update local state immediately for responsive UI
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Debounce the API call
+    debounceTimeoutRef.current = setTimeout(() => {
+      updateSlideMutation.mutate({
+        id: currentSlide.id,
+        data: { [field]: text }
+      });
+    }, 500);
+  };
+
+  const handleInlineOptionUpdate = (optionIndex: number, text: string) => {
+    if (!currentSlide || !currentSlide.options) return;
+
+    const newOptions = [...currentSlide.options];
+    newOptions[optionIndex] = text;
+
+    // Update local state immediately
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Debounce the API call
+    debounceTimeoutRef.current = setTimeout(() => {
+      updateSlideMutation.mutate({
+        id: currentSlide.id,
+        data: { options: newOptions }
+      });
+    }, 500);
+  };
+
+  const startEditingHeading = () => {
+    if (currentSlide) {
+      setHeadingText(currentSlide.question || '');
+      setInlineEditingHeading(true);
+    }
+  };
+
+  const finishEditingHeading = () => {
+    if (headingText !== currentSlide?.question) {
+      // Optimistic update: immediately update the UI
+      queryClient.setQueryData<Slide[]>(
+        ['/api/presentations', presentationId, 'slides'],
+        (old) => old?.map(slide => 
+          slide.id === currentSlide?.id 
+            ? { ...slide, question: headingText }
+            : slide
+        ) || []
+      );
+      handleInlineTextUpdate(headingText, 'question');
+    }
+    setInlineEditingHeading(false);
+  };
+
+  const startEditingOption = (index: number) => {
+    if (currentSlide && currentSlide.options && currentSlide.options[index]) {
+      setOptionText(currentSlide.options[index]);
+      setInlineEditingOptions(index);
+    }
+  };
+
+  const finishEditingOption = () => {
+    if (inlineEditingOptions !== null && optionText !== currentSlide?.options?.[inlineEditingOptions]) {
+      // Optimistic update: immediately update the UI
+      const newOptions = [...(currentSlide?.options || [])];
+      newOptions[inlineEditingOptions] = optionText;
+      
+      queryClient.setQueryData<Slide[]>(
+        ['/api/presentations', presentationId, 'slides'],
+        (old) => old?.map(slide => 
+          slide.id === currentSlide?.id 
+            ? { ...slide, options: newOptions }
+            : slide
+        ) || []
+      );
+      handleInlineOptionUpdate(inlineEditingOptions, optionText);
+    }
+    setInlineEditingOptions(null);
+  };
 
   const getSlidePreview = (slide: Slide) => {
     if (slide.type === 'image' && slide.question) {
@@ -668,33 +761,107 @@ export default function Editor() {
                       isEditable={true}
                     />
                   </div>
-                  <div className="w-full text-center space-y-6 relative z-10 pointer-events-none">
+                  <div className="w-full text-center space-y-6 relative z-10">
                     {currentSlide?.type === 'heading' ? (
-                      <h1 className="text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                      inlineEditingHeading ? (
+                        <Input
+                          value={headingText}
+                          onChange={(e) => setHeadingText(e.target.value)}
+                          onBlur={finishEditingHeading}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') finishEditingHeading();
+                            if (e.key === 'Escape') {
+                              setInlineEditingHeading(false);
+                              setHeadingText(currentSlide.question || '');
+                            }
+                          }}
+                          autoFocus
+                          className="text-5xl font-bold text-center bg-transparent border-2 border-dashed border-primary/50"
+                          data-testid="input-inline-heading"
+                        />
+                      ) : (
+                        <h1 
+                          className="text-5xl font-bold cursor-pointer hover:opacity-70 transition-opacity pointer-events-auto"
+                          onClick={startEditingHeading}
+                          data-testid="text-heading"
+                        >
+                          {currentSlide.question || "Click to edit heading"}
+                        </h1>
+                      )
                     ) : currentSlide?.type === 'image' ? (
-                      <img 
-                        src={currentSlide.question || ''} 
-                        alt={`Slide ${selectedSlideIndex + 1}`} 
-                        className="w-full h-full object-contain"
-                        data-testid="img-slide"
-                      />
+                      <div className="pointer-events-none">
+                        <img 
+                          src={currentSlide.question || ''} 
+                          alt={`Slide ${selectedSlideIndex + 1}`} 
+                          className="w-full h-full object-contain"
+                          data-testid="img-slide"
+                        />
+                      </div>
                     ) : (
                       <>
-                        <h2 className="text-4xl font-bold">{currentSlide?.question || "Your question here"}</h2>
+                        {inlineEditingHeading ? (
+                          <Textarea
+                            value={headingText}
+                            onChange={(e) => setHeadingText(e.target.value)}
+                            onBlur={finishEditingHeading}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                setInlineEditingHeading(false);
+                                setHeadingText(currentSlide.question || '');
+                              }
+                            }}
+                            autoFocus
+                            className="text-4xl font-bold text-center bg-transparent border-2 border-dashed border-primary/50 resize-none min-h-[100px]"
+                            data-testid="input-inline-question"
+                          />
+                        ) : (
+                          <h2 
+                            className="text-4xl font-bold cursor-pointer hover:opacity-70 transition-opacity pointer-events-auto"
+                            onClick={startEditingHeading}
+                            data-testid="text-question"
+                          >
+                            {currentSlide?.question || "Click to edit question"}
+                          </h2>
+                        )}
                         {currentSlide?.type === 'multiple_choice' && currentSlide.options && (
                           <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto pointer-events-auto">
                             {currentSlide.options.map((option, index) => (
-                              <Card key={index} className="p-6 hover-elevate cursor-pointer">
-                                <div className="font-medium text-lg">{option}</div>
+                              <Card 
+                                key={index} 
+                                className="p-6 hover-elevate cursor-pointer"
+                                onClick={() => startEditingOption(index)}
+                              >
+                                {inlineEditingOptions === index ? (
+                                  <Input
+                                    value={optionText}
+                                    onChange={(e) => setOptionText(e.target.value)}
+                                    onBlur={finishEditingOption}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') finishEditingOption();
+                                      if (e.key === 'Escape') {
+                                        setInlineEditingOptions(null);
+                                        setOptionText('');
+                                      }
+                                    }}
+                                    autoFocus
+                                    className="font-medium text-lg text-center bg-transparent border-2 border-dashed border-primary/50"
+                                    data-testid={`input-option-${index}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <div className="font-medium text-lg" data-testid={`text-option-${index}`}>
+                                    {option}
+                                  </div>
+                                )}
                               </Card>
                             ))}
                           </div>
                         )}
                         {currentSlide?.type === 'word_cloud' && (
-                          <div className="text-muted-foreground">Word cloud visualization will appear here</div>
+                          <div className="text-muted-foreground pointer-events-none">Word cloud visualization will appear here</div>
                         )}
                         {currentSlide?.type === 'open_ended' && (
-                          <div className="text-muted-foreground">Open text input will appear here</div>
+                          <div className="text-muted-foreground pointer-events-none">Open text input will appear here</div>
                         )}
                       </>
                     )}
