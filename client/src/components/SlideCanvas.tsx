@@ -28,10 +28,19 @@ interface ResizeState {
   startElementHeight: number;
 }
 
+interface RotateState {
+  elementId: string;
+  startAngle: number;
+  startRotation: number;
+  centerX: number;
+  centerY: number;
+}
+
 export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false }: SlideCanvasProps) {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [resizeState, setResizeState] = useState<ResizeState | null>(null);
+  const [rotateState, setRotateState] = useState<RotateState | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextContent, setEditingTextContent] = useState<string>('');
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -96,6 +105,42 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
     e.preventDefault(); // Prevent scrolling while resizing
     if (e.touches.length > 0) {
       handleResizePointerDown(e.touches[0].clientX, e.touches[0].clientY, elementId, corner);
+    }
+  };
+
+  const handleRotatePointerDown = (clientX: number, clientY: number, elementId: string) => {
+    if (!isEditable || !canvasRef.current) return;
+    
+    setSelectedElementId(elementId);
+    
+    const element = elements.find(el => el.id === elementId);
+    if (!element || element.type !== 'text') return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const elementCenterX = rect.left + (rect.width * (element.x + element.width / 2) / 100);
+    const elementCenterY = rect.top + (rect.height * (element.y + 10) / 100); // Approximate center
+
+    const startAngle = Math.atan2(clientY - elementCenterY, clientX - elementCenterX) * (180 / Math.PI);
+
+    setRotateState({
+      elementId,
+      startAngle,
+      startRotation: element.rotation || 0,
+      centerX: elementCenterX,
+      centerY: elementCenterY,
+    });
+  };
+
+  const handleRotateMouseDown = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    handleRotatePointerDown(e.clientX, e.clientY, elementId);
+  };
+
+  const handleRotateTouchStart = (e: React.TouchEvent, elementId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      handleRotatePointerDown(e.touches[0].clientX, e.touches[0].clientY, elementId);
     }
   };
 
@@ -199,6 +244,19 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
           });
         }
       }
+
+      if (rotateState) {
+        const currentAngle = Math.atan2(clientY - rotateState.centerY, clientX - rotateState.centerX) * (180 / Math.PI);
+        const angleDelta = currentAngle - rotateState.startAngle;
+        let newRotation = rotateState.startRotation + angleDelta;
+        
+        // Normalize to 0-360 range
+        newRotation = ((newRotation % 360) + 360) % 360;
+        
+        onElementUpdate?.(rotateState.elementId, {
+          rotation: Math.round(newRotation),
+        });
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -215,9 +273,10 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
     const handleEnd = () => {
       setDragState(null);
       setResizeState(null);
+      setRotateState(null);
     };
 
-    if (dragState || resizeState) {
+    if (dragState || resizeState || rotateState) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleEnd);
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -230,7 +289,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
         document.removeEventListener('touchend', handleEnd);
       };
     }
-  }, [dragState, resizeState, onElementUpdate]);
+  }, [dragState, resizeState, rotateState, onElementUpdate, elements]);
 
   const handleCanvasClick = () => {
     if (isEditable) {
@@ -335,6 +394,8 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 color: element.color || 'inherit',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
+                transform: `rotate(${element.rotation || 0}deg)`,
+                transformOrigin: 'center center',
               }}
               onClick={(e) => {
                 if (!isEditingThis && isEditable) {
@@ -377,6 +438,18 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
               
               {isSelected && !isEditingThis && (
                 <>
+                  {/* Rotation handle at top center */}
+                  <div
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 w-6 h-6 bg-accent border-2 border-background rounded-full cursor-grab active:cursor-grabbing touch-none flex items-center justify-center"
+                    onMouseDown={(e) => handleRotateMouseDown(e, element.id)}
+                    onTouchStart={(e) => handleRotateTouchStart(e, element.id)}
+                    data-testid={`rotate-${element.id}`}
+                  >
+                    <svg className="w-4 h-4 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  {/* Resize handle at bottom right */}
                   <div
                     className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary border-2 border-background rounded-full cursor-se-resize touch-none"
                     onMouseDown={(e) => handleResizeMouseDown(e, element.id, 'se')}

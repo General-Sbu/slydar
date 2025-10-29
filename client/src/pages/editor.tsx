@@ -276,6 +276,7 @@ export default function Editor() {
       fontWeight: 'bold' as const,
       textAlign: 'center' as const,
       color: currentSlide?.config?.textColor || undefined,
+      rotation: 0,
       zIndex: elements.length + 1,
     };
     

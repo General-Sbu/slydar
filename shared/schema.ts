@@ -80,6 +80,7 @@ export const textElementSchema = z.object({
   fontWeight: z.enum(["normal", "bold"]).default("normal"),
   textAlign: z.enum(["left", "center", "right"]).default("left"),
   color: z.string().optional(),
+  rotation: z.number().min(0).max(360).default(0),
   zIndex: z.number().default(1),
 });
 
