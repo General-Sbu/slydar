@@ -52,7 +52,7 @@ export default function Editor() {
   });
 
   const createSlideMutation = useMutation({
-    mutationFn: async (slideData: { type: SlideType; question: string; options?: string[] }) => {
+    mutationFn: async (slideData: { type: SlideType; question: string; options?: string[]; config?: any }) => {
       const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
       const res = await fetch('/api/slides', {
         method: 'POST',
@@ -63,7 +63,7 @@ export default function Editor() {
           order: maxOrder + 1,
           question: slideData.question,
           options: slideData.options || [],
-          config: {}
+          config: slideData.config || {}
         })
       });
       if (!res.ok) throw new Error('Failed to create');
@@ -186,12 +186,62 @@ export default function Editor() {
   }, [selectedSlideIndex, slides]);
 
   const handleAddSlide = (type: SlideType) => {
-    const defaultData: Record<SlideType, { type: SlideType; question: string; options?: string[] }> = {
-      multiple_choice: { type: 'multiple_choice', question: "New multiple choice question?", options: ["Option 1", "Option 2", "Option 3", "Option 4"] },
-      word_cloud: { type: 'word_cloud', question: "What words come to mind?", options: [] },
-      open_ended: { type: 'open_ended', question: "Share your thoughts...", options: [] },
-      heading: { type: 'heading', question: "New Section", options: [] },
-      image: { type: 'image', question: "", options: [] }
+    // Helper function to create a default text element
+    const createTextElement = (content: string, fontSize: number = 32, y: number = 30, fontWeight: "normal" | "bold" = "normal") => ({
+      id: crypto.randomUUID(),
+      type: "text" as const,
+      x: 10,
+      y,
+      width: 80,
+      content,
+      fontSize,
+      fontWeight,
+      textAlign: "center" as const,
+      color: presentation?.templateId ? "#000000" : "#000000", // Will inherit from template if available
+      rotation: 0
+    });
+
+    const defaultData: Record<SlideType, { type: SlideType; question: string; options?: string[]; config?: any }> = {
+      multiple_choice: { 
+        type: 'multiple_choice', 
+        question: "", 
+        options: ["Option 1", "Option 2", "Option 3", "Option 4"],
+        config: {
+          elements: [createTextElement("New multiple choice question?", 40, 20, "bold")]
+        }
+      },
+      word_cloud: { 
+        type: 'word_cloud', 
+        question: "", 
+        options: [],
+        config: {
+          elements: [createTextElement("What words come to mind?", 40, 30, "bold")]
+        }
+      },
+      open_ended: { 
+        type: 'open_ended', 
+        question: "", 
+        options: [],
+        config: {
+          elements: [createTextElement("Share your thoughts...", 40, 30, "bold")]
+        }
+      },
+      heading: { 
+        type: 'heading', 
+        question: "", 
+        options: [],
+        config: {
+          elements: [createTextElement("New Section", 48, 35, "bold")]
+        }
+      },
+      image: { 
+        type: 'image', 
+        question: "", 
+        options: [],
+        config: {
+          elements: []
+        }
+      }
     };
     
     createSlideMutation.mutate(defaultData[type]);
@@ -265,6 +315,7 @@ export default function Editor() {
     const elements = config.elements || [];
     
     // Create a new text element
+    const textColor = currentSlide?.config?.textColor;
     const newTextElement = {
       type: 'text' as const,
       id: `text-${Date.now()}`,
@@ -275,7 +326,7 @@ export default function Editor() {
       fontSize: 32,
       fontWeight: 'bold' as const,
       textAlign: 'center' as const,
-      color: currentSlide?.config?.textColor || undefined,
+      color: typeof textColor === 'string' ? textColor : undefined,
       rotation: 0,
       zIndex: elements.length + 1,
     };
@@ -795,8 +846,8 @@ export default function Editor() {
                 <Card 
                   className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
                   style={{
-                    backgroundColor: currentSlide?.config?.background || undefined,
-                    color: currentSlide?.config?.textColor || undefined
+                    backgroundColor: typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined,
+                    color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined
                   }}
                 >
                   <div className="absolute inset-0">

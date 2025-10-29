@@ -163,18 +163,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const presentation = await storage.createPresentation(data);
       
-      // If a template was selected, create an initial slide with template colors
+      // If a template was selected, create an initial slide with template colors and text element
       if (data.templateId) {
         const template = await storage.getTemplate(data.templateId);
         if (template) {
           const initialSlide = {
             presentationId: presentation.id,
             type: "heading" as const,
-            question: "Welcome to Your Presentation",
+            question: "",
             order: 0,
             config: {
               background: template.colorScheme.background,
-              textColor: template.colorScheme.text
+              textColor: template.colorScheme.text,
+              elements: [
+                {
+                  id: crypto.randomUUID(),
+                  type: "text" as const,
+                  x: 10,
+                  y: 30,
+                  width: 80,
+                  content: "Welcome to Your Presentation",
+                  fontSize: 48,
+                  fontWeight: "bold" as const,
+                  textAlign: "center" as const,
+                  color: template.colorScheme.text,
+                  rotation: 0
+                }
+              ]
             }
           };
           await storage.createSlide(initialSlide);
