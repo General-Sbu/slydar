@@ -51,14 +51,15 @@ The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO 
 
 **Default Slide Content:** All newly created slides include movable, resizable, rotatable text elements by default instead of static text:
 
-- **Initial Template Slide & Heading Slides:** Include ONE text element:
-  - **Body Text:** "Replace this with your body text. Duplicate this text as many times as you would like." (24px, normal weight, left-aligned, positioned at y=45%)
+- **Initial Template Slide & Heading Slides:** Include TWO text elements with center-left alignment:
+  - **Heading:** "Replace this with your heading" (18px, bold, left-aligned, positioned at y=38% - slightly above middle)
+  - **Body Text:** "Replace this with your body text. Duplicate this text as many times as you would like." (14px, normal weight, left-aligned, positioned at y=50% - directly below heading)
   
 - **Multiple Choice, Word Cloud, Open Ended:** Include ONE default heading text element with type-specific placeholder text (40px, bold, centered).
 
 - **Image Slides:** Start with no text elements.
 
-All text elements are fully editable (double-click inline editing), movable (drag), resizable (corner handles), and rotatable (rotation handle), providing complete flexibility for customization. The default layout uses left alignment for heading slides and eliminates legacy static text overlays, ensuring all content is managed through the unified SlideCanvas element system.
+All text elements are fully editable (double-click inline editing), movable (drag), resizable (corner handles), and rotatable (rotation handle), providing complete flexibility for customization. The default layout uses left alignment for heading slides with professional spacing between heading and body text, eliminating legacy static text overlays and ensuring all content is managed through the unified SlideCanvas element system.
 
 ## External Dependencies
 
