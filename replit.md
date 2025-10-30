@@ -51,15 +51,15 @@ The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO 
 
 **Default Slide Content:** All newly created slides include movable, resizable, rotatable text elements by default instead of static text. The system provides a professional two-element layout for most slides:
 
-- **Initial Template Slide & Heading Slides:** Include TWO text elements for a professional template layout:
-  - **Element 1 (Heading):** "Replace this with your heading." (56px, bold, centered, positioned at y=25%)
-  - **Element 2 (Body Text):** "Replace this with your body text. Duplicate this text as many times as you would like." (24px, normal weight, centered, positioned at y=50%)
+- **Initial Template Slide & Heading Slides:** Include TWO text elements for a professional template layout with center-left alignment:
+  - **Element 1 (Heading):** "Replace this with your heading." (56px, bold, left-aligned, positioned at y=35%)
+  - **Element 2 (Body Text):** "Replace this with your body text. Duplicate this text as many times as you would like." (24px, normal weight, left-aligned, positioned at y=55%)
   
 - **Multiple Choice, Word Cloud, Open Ended:** Include ONE default heading text element with type-specific placeholder text (40px, bold, centered).
 
 - **Image Slides:** Start with no text elements.
 
-All text elements are fully editable (double-click inline editing), movable (drag), resizable (corner handles), and rotatable (rotation handle), providing complete flexibility for customization. The two-element layout eliminates legacy static text overlays and ensures all content is managed through the unified SlideCanvas element system.
+All text elements are fully editable (double-click inline editing), movable (drag), resizable (corner handles), and rotatable (rotation handle), providing complete flexibility for customization. The two-element layout uses center-left alignment for heading slides (matching professional presentation standards) and eliminates legacy static text overlays, ensuring all content is managed through the unified SlideCanvas element system.
 
 ## External Dependencies
 

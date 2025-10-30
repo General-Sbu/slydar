@@ -187,7 +187,7 @@ export default function Editor() {
 
   const handleAddSlide = (type: SlideType) => {
     // Helper function to create a default text element
-    const createTextElement = (content: string, fontSize: number = 32, y: number = 30, fontWeight: "normal" | "bold" = "normal") => ({
+    const createTextElement = (content: string, fontSize: number = 32, y: number = 30, fontWeight: "normal" | "bold" = "normal", textAlign: "left" | "center" | "right" = "center") => ({
       id: crypto.randomUUID(),
       type: "text" as const,
       x: 10,
@@ -196,7 +196,7 @@ export default function Editor() {
       content,
       fontSize,
       fontWeight,
-      textAlign: "center" as const,
+      textAlign,
       color: presentation?.templateId ? "#000000" : "#000000", // Will inherit from template if available
       rotation: 0
     });
@@ -207,7 +207,7 @@ export default function Editor() {
         question: "", 
         options: ["Option 1", "Option 2", "Option 3", "Option 4"],
         config: {
-          elements: [createTextElement("New multiple choice question?", 40, 20, "bold")]
+          elements: [createTextElement("New multiple choice question?", 40, 20, "bold", "center")]
         }
       },
       word_cloud: { 
@@ -215,7 +215,7 @@ export default function Editor() {
         question: "", 
         options: [],
         config: {
-          elements: [createTextElement("What words come to mind?", 40, 30, "bold")]
+          elements: [createTextElement("What words come to mind?", 40, 30, "bold", "center")]
         }
       },
       open_ended: { 
@@ -223,7 +223,7 @@ export default function Editor() {
         question: "", 
         options: [],
         config: {
-          elements: [createTextElement("Share your thoughts...", 40, 30, "bold")]
+          elements: [createTextElement("Share your thoughts...", 40, 30, "bold", "center")]
         }
       },
       heading: { 
@@ -232,8 +232,8 @@ export default function Editor() {
         options: [],
         config: {
           elements: [
-            createTextElement("Replace this with your heading.", 56, 25, "bold"),
-            createTextElement("Replace this with your body text. Duplicate this text as many times as you would like.", 24, 50, "normal")
+            createTextElement("Replace this with your heading.", 56, 35, "bold", "left"),
+            createTextElement("Replace this with your body text. Duplicate this text as many times as you would like.", 24, 55, "normal", "left")
           ]
         }
       },
