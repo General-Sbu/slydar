@@ -49,7 +49,17 @@ The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO 
 
 **Presentation Templates:** The system provides pre-built templates with curated color schemes to help users start their presentations with professional styling. When creating a new presentation, users select from 8 default templates (Professional Blue, Modern Dark, Warm Sunset, Fresh Green, Elegant Purple, Bold Red, Ocean Blue, Minimal Gray) via a visual template selector dialog. Each template defines a color palette including primary, secondary, accent, background, text, and muted text colors. The selected templateId is stored with the presentation for future reference. When a template is selected, the system automatically creates an initial heading slide with the template's background and text colors applied, providing users with an immediate visual preview of their chosen theme. Templates are seeded automatically on server startup and displayed in a responsive grid with color swatches and preview text.
 
-**Default Slide Content:** All newly created slides include movable, resizable, rotatable text elements by default instead of static text. When creating a presentation with a template, the initial slide contains a text element with "Welcome to Your Presentation" (48px, bold, centered). When manually adding slides, each type gets appropriate default text: Heading slides have "New Section" (48px), Multiple Choice slides have "New multiple choice question?" (40px), Word Cloud slides have "What words come to mind?" (40px), Open Ended slides have "Share your thoughts..." (40px), and Image slides start with no text elements. All default text elements are fully editable, movable, resizable, and rotatable, providing users with immediate flexibility to customize their presentations.
+**Default Slide Content:** All newly created slides include movable, resizable, rotatable text elements by default instead of static text. The system provides a professional two-element layout for most slides:
+
+- **Initial Template Slide & Heading Slides:** Include TWO text elements for a professional template layout:
+  - **Element 1 (Heading):** "Replace this with your heading." (56px, bold, centered, positioned at y=25%)
+  - **Element 2 (Body Text):** "Replace this with your body text. Duplicate this text as many times as you would like." (24px, normal weight, centered, positioned at y=50%)
+  
+- **Multiple Choice, Word Cloud, Open Ended:** Include ONE default heading text element with type-specific placeholder text (40px, bold, centered).
+
+- **Image Slides:** Start with no text elements.
+
+All text elements are fully editable (double-click inline editing), movable (drag), resizable (corner handles), and rotatable (rotation handle), providing complete flexibility for customization. The two-element layout eliminates legacy static text overlays and ensures all content is managed through the unified SlideCanvas element system.
 
 ## External Dependencies
 
