@@ -231,7 +231,10 @@ export default function Editor() {
         question: "", 
         options: [],
         config: {
-          elements: [createTextElement("New Section", 48, 35, "bold")]
+          elements: [
+            createTextElement("Replace this with your heading.", 56, 25, "bold"),
+            createTextElement("Replace this with your body text. Duplicate this text as many times as you would like.", 24, 50, "normal")
+          ]
         }
       },
       image: { 

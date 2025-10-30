@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const presentation = await storage.createPresentation(data);
       
-      // If a template was selected, create an initial slide with template colors and text element
+      // If a template was selected, create an initial slide with template colors and text elements
       if (data.templateId) {
         const template = await storage.getTemplate(data.templateId);
         if (template) {
@@ -180,11 +180,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: crypto.randomUUID(),
                   type: "text" as const,
                   x: 10,
-                  y: 30,
+                  y: 25,
                   width: 80,
-                  content: "Welcome to Your Presentation",
-                  fontSize: 48,
+                  content: "Replace this with your heading.",
+                  fontSize: 56,
                   fontWeight: "bold" as const,
+                  textAlign: "center" as const,
+                  color: template.colorScheme.text,
+                  rotation: 0
+                },
+                {
+                  id: crypto.randomUUID(),
+                  type: "text" as const,
+                  x: 10,
+                  y: 50,
+                  width: 80,
+                  content: "Replace this with your body text. Duplicate this text as many times as you would like.",
+                  fontSize: 24,
+                  fontWeight: "normal" as const,
                   textAlign: "center" as const,
                   color: template.colorScheme.text,
                   rotation: 0
