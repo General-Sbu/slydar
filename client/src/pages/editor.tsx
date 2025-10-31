@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
@@ -13,7 +14,7 @@ import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings, Globe 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings, Globe, Copy, Palette 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
@@ -103,6 +104,30 @@ export default function Editor() {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
       showNotification("Slide removed", "success");
       setSelectedSlideIndex(Math.max(0, selectedSlideIndex - 1));
+    }
+  });
+
+  const duplicateSlideMutation = useMutation({
+    mutationFn: async (slide: Slide) => {
+      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+      const res = await fetch('/api/slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presentationId,
+          type: slide.type,
+          order: maxOrder + 1,
+          question: slide.question,
+          options: slide.options || [],
+          config: slide.config || {}
+        })
+      });
+      if (!res.ok) throw new Error('Failed to duplicate');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      showNotification("Slide duplicated", "success");
     }
   });
 
@@ -269,6 +294,23 @@ export default function Editor() {
     }
   };
 
+  const handleDuplicateSlide = () => {
+    if (currentSlide) {
+      duplicateSlideMutation.mutate(currentSlide);
+    }
+  };
+
+  const handleBackgroundColorChange = (color: string) => {
+    if (!editingSlide || !editingSlide.id) return;
+    
+    const config = editingSlide.config || { elements: [] };
+    const updatedConfig = { ...config, background: color };
+    
+    setEditingSlide({ ...editingSlide, config: updatedConfig });
+    debouncedUpdate(editingSlide.id, updatedConfig);
+    showNotification("Background color updated", "success");
+  };
+
   const handleUpdateOption = (index: number, value: string) => {
     if (editingSlide && editingSlide.options) {
       const newOptions = [...editingSlide.options];
@@ -349,7 +391,7 @@ export default function Editor() {
     const config = editingSlide.config || { elements: [] };
     const elements = config.elements || [];
     const updatedElements = elements.map(el => 
-      el.id === elementId ? { ...el, ...updates } : el
+      el.id === elementId ? { ...el, ...updates } as SlideElement : el
     );
     
     const updatedConfig = { ...config, elements: updatedElements };
@@ -838,7 +880,114 @@ export default function Editor() {
 
         <main className="flex-1 overflow-auto bg-muted/20">
           <div className="p-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto space-y-4">
+              {/* Slide Toolbar */}
+              {slides.length > 0 && currentSlide && (
+                <Card className="p-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddText}
+                      data-testid="toolbar-add-text"
+                    >
+                      <Type className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Add Text</span>
+                    </Button>
+
+                    <input
+                      type="file"
+                      id="toolbar-image-upload"
+                      className="hidden"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleImageUpload}
+                    />
+                    <label htmlFor="toolbar-image-upload">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        data-testid="toolbar-upload-image"
+                      >
+                        <span>
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Add Image</span>
+                        </span>
+                      </Button>
+                    </label>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          data-testid="toolbar-background-color"
+                        >
+                          <Palette className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Background</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64">
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm">Background Color</h4>
+                          <div className="grid grid-cols-5 gap-2">
+                            {[
+                              '#ffffff', '#f8fafc', '#1e293b', '#0f172a',
+                              '#3b82f6', '#8b5cf6', '#ec4899', '#f97316',
+                              '#eab308', '#22c55e', '#14b8a6', '#06b6d4'
+                            ].map((color) => (
+                              <button
+                                key={color}
+                                className="h-10 w-10 rounded-md border-2 hover-elevate active-elevate-2"
+                                style={{ backgroundColor: color }}
+                                onClick={() => handleBackgroundColorChange(color)}
+                                data-testid={`color-${color}`}
+                              />
+                            ))}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-color" className="text-sm">Custom Color</Label>
+                            <Input
+                              id="custom-color"
+                              type="color"
+                              defaultValue={currentSlide?.config?.background || '#ffffff'}
+                              onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                              className="h-10"
+                              data-testid="input-custom-color"
+                            />
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Separator orientation="vertical" className="h-8" />
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDuplicateSlide}
+                      disabled={duplicateSlideMutation.isPending}
+                      data-testid="toolbar-duplicate-slide"
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Duplicate</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteSlide}
+                      disabled={deleteSlideMutation.isPending || slides.length <= 1}
+                      data-testid="toolbar-delete-slide"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Slide Canvas */}
               {slides.length === 0 ? (
                 <Card className="aspect-video flex items-center justify-center p-12">
                   <div className="text-center text-muted-foreground">
