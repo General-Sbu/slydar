@@ -232,8 +232,8 @@ export default function Editor() {
         options: [],
         config: {
           elements: [
-            createTextElement("Replace this with your heading", 18, 38, "bold", "left"),
-            createTextElement("Replace this with your body text. Duplicate this text as many times as you would like.", 14, 50, "normal", "left")
+            createTextElement("Replace this with your heading", 18, 30, "bold", "left"),
+            createTextElement("Replace this with your body text. Duplicate this text as many times as you would like.", 14, 45, "normal", "left")
           ]
         }
       },
