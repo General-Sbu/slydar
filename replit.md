@@ -52,8 +52,8 @@ The backend features RESTful HTTP endpoints for CRUD operations and a Socket.IO 
 **Default Slide Content:** All newly created slides include movable, resizable, rotatable text elements by default instead of static text:
 
 - **Initial Template Slide & Heading Slides:** Include TWO text elements with center-left alignment:
-  - **Heading:** "Replace this with your heading" (18px, bold, left-aligned, positioned at y=30% - higher up for mobile visibility)
-  - **Body Text:** "Replace this with your body text. Duplicate this text as many times as you would like." (14px, normal weight, left-aligned, positioned at y=45% - below heading with clear separation)
+  - **Heading:** "Replace this with your heading" (18px, bold, left-aligned, positioned at y=20% - very high for optimal mobile visibility)
+  - **Body Text:** "Replace this with your body text. Duplicate this text as many times as you would like." (14px, normal weight, left-aligned, positioned at y=50% - below heading with 30% vertical separation)
   
 - **Multiple Choice, Word Cloud, Open Ended:** Include ONE default heading text element with type-specific placeholder text (40px, bold, centered).
 
