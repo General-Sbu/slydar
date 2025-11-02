@@ -613,17 +613,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slidesCreated: createdSlides.length,
           slides: createdSlides
         });
-      } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-        const convertapi = require('convertapi')(process.env.CONVERTAPI_SECRET || '');
+      } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || 
+                 req.file.mimetype === 'application/vnd.ms-powerpoint') {
+        const path = await import('path');
+        const fs = await import('fs');
+        const ConvertAPI = (await import('convertapi')).default;
+        const convertapi = new ConvertAPI(process.env.CONVERTAPI_SECRET || '');
         
-        console.log('📊 Converting PPTX to PNG using ConvertAPI...');
+        const fileType = req.file.mimetype === 'application/vnd.ms-powerpoint' ? 'ppt' : 'pptx';
+        console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using ConvertAPI...`);
         
         const timestamp = Date.now();
         const result = await convertapi.convert('png', { 
           File: req.file.buffer 
-        }, 'pptx');
+        }, fileType);
         
-        console.log('✅ PPTX converted. Files received:', result.files.length);
+        console.log(`✅ ${fileType.toUpperCase()} converted. Files received:`, result.files.length);
         
         const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
         await fs.promises.mkdir(publicOutputFolder, { recursive: true });
