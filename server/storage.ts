@@ -18,12 +18,8 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
-type UserWithPassword = User & { password: string };
-
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<UserWithPassword | undefined>;
-  createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
@@ -78,7 +74,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, UserWithPassword>;
+  private users: Map<string, User>;
   private presentations: Map<string, Presentation>;
   private slides: Map<string, Slide>;
   private sessions: Map<string, PresentationSession>;
@@ -103,52 +99,24 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-  }
-
-  async getUserByUsername(username: string): Promise<UserWithPassword | undefined> {
-    return Array.from(this.users.values()).find(u => u.username === username);
-  }
-
-  async createUser(userData: UpsertUser): Promise<User> {
-    const id = randomUUID();
-    const now = new Date();
-    const user: UserWithPassword = {
-      ...userData,
-      id,
-      username: userData.username!,
-      password: userData.password!,
-      email: userData.email ?? null,
-      firstName: userData.firstName ?? null,
-      lastName: userData.lastName ?? null,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.users.set(user.id, user);
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.users.get(id);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existingUser = userData.id ? this.users.get(userData.id) : undefined;
     const now = new Date();
-    const user: UserWithPassword = {
+    const user: User = {
       ...userData,
       id: userData.id || randomUUID(),
-      username: userData.username!,
-      password: userData.password!,
       email: userData.email ?? null,
       firstName: userData.firstName ?? null,
       lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
       createdAt: existingUser?.createdAt ?? now,
       updatedAt: now
     };
     this.users.set(user.id, user);
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return user;
   }
 
   async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {
@@ -492,20 +460,7 @@ export class MemStorage implements IStorage {
 export class DbStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    if (!result[0]) return undefined;
-    const { password: _, ...userWithoutPassword } = result[0];
-    return userWithoutPassword as User;
-  }
-
-  async getUserByUsername(username: string): Promise<UserWithPassword | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    return result[0] as UserWithPassword | undefined;
-  }
-
-  async createUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword as User;
+    return result[0];
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -519,8 +474,7 @@ export class DbStorage implements IStorage {
         }
       })
       .returning();
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword as User;
+    return user;
   }
 
   async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {
