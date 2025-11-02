@@ -18,11 +18,21 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
+const getDatabaseUrl = () => {
+  if (process.env.PGHOST) {
+    return `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=require`;
+  }
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+  throw new Error('Database credentials not found');
+};
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    conString: getDatabaseUrl(),
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
