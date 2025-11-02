@@ -27,7 +27,7 @@ Slidr is a full-stack TypeScript application with a React frontend and an Expres
 -   **Screen Casting:** Utilizes the Web Presentation API for casting presentations to external displays.
 -   **Audience Q&A:** Anonymous audience members can submit and upvote questions in real-time.
 -   **Slide Analytics:** Provides presenters with engagement metrics, including unique participants, reactions, and poll responses.
--   **Slide Editor Toolbar:** Offers tools to add text/image elements, change slide background colors, duplicate, and delete slides.
+-   **Slide Editor Toolbar:** Offers tools to add text/image elements, a tabbed Colors interface for changing both individual slide backgrounds (12 presets + custom picker) and presentation color schemes (template selector with visual previews), duplicate slides, and delete slides. Color changes provide optimistic updates for immediate visual feedback.
 -   **Publish to Library:** Presenters can publish presentations to a public library with search functionality.
 -   **Ownership Differentiation:** Differentiates between user-owned and public presentations in the library, offering distinct actions (Present vs. View).
 -   **Slidr Watermark:** A branding watermark is displayed on all slides.

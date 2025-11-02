@@ -14,7 +14,7 @@ import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings, Globe, Copy, Palette 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Settings, Globe, Copy, Palette, Check 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
@@ -23,6 +23,8 @@ import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, SlideType, SlideElement } from "@shared/schema";
 import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { Template } from "@shared/schema";
 
 export default function Editor() {
   const [, params] = useRoute("/editor/:id");
@@ -50,6 +52,10 @@ export default function Editor() {
   const { data: slides = [], isLoading: slidesLoading } = useQuery<Slide[]>({
     queryKey: ['/api/presentations', presentationId, 'slides'],
     enabled: !!presentationId,
+  });
+
+  const { data: templates = [] } = useQuery<Template[]>({
+    queryKey: ['/api/templates'],
   });
 
   const createSlideMutation = useMutation({
@@ -300,6 +306,22 @@ export default function Editor() {
     }
   };
 
+  const updatePresentationTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      const res = await fetch(`/api/presentations/${presentationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId })
+      });
+      if (!res.ok) throw new Error('Failed to update template');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId] });
+      showNotification("Presentation color scheme updated", "success");
+    }
+  });
+
   const handleBackgroundColorChange = (color: string) => {
     if (!editingSlide || !editingSlide.id) return;
     
@@ -308,7 +330,11 @@ export default function Editor() {
     
     setEditingSlide({ ...editingSlide, config: updatedConfig });
     debouncedUpdate(editingSlide.id, updatedConfig);
-    showNotification("Background color updated", "success");
+    showNotification("Slide background updated", "success");
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    updatePresentationTemplateMutation.mutate(templateId);
   };
 
   const handleUpdateOption = (index: number, value: string) => {
@@ -924,39 +950,95 @@ export default function Editor() {
                           data-testid="toolbar-background-color"
                         >
                           <Palette className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Background</span>
+                          <span className="hidden sm:inline">Colors</span>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-64">
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-sm">Background Color</h4>
-                          <div className="grid grid-cols-5 gap-2">
-                            {[
-                              '#ffffff', '#f8fafc', '#1e293b', '#0f172a',
-                              '#3b82f6', '#8b5cf6', '#ec4899', '#f97316',
-                              '#eab308', '#22c55e', '#14b8a6', '#06b6d4'
-                            ].map((color) => (
-                              <button
-                                key={color}
-                                className="h-10 w-10 rounded-md border-2 hover-elevate active-elevate-2"
-                                style={{ backgroundColor: color }}
-                                onClick={() => handleBackgroundColorChange(color)}
-                                data-testid={`color-${color}`}
+                      <PopoverContent className="w-80">
+                        <Tabs defaultValue="slide" className="w-full">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="slide" data-testid="tab-slide-background">Slide</TabsTrigger>
+                            <TabsTrigger value="presentation" data-testid="tab-presentation-scheme">Presentation</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="slide" className="space-y-3 mt-3">
+                            <h4 className="font-medium text-sm">Slide Background</h4>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[
+                                '#ffffff', '#f8fafc', '#1e293b', '#0f172a',
+                                '#3b82f6', '#8b5cf6', '#ec4899', '#f97316',
+                                '#eab308', '#22c55e', '#14b8a6', '#06b6d4'
+                              ].map((color) => (
+                                <button
+                                  key={color}
+                                  className="h-10 w-10 rounded-md border-2 hover-elevate active-elevate-2"
+                                  style={{ backgroundColor: color }}
+                                  onClick={() => handleBackgroundColorChange(color)}
+                                  data-testid={`color-${color}`}
+                                />
+                              ))}
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-color" className="text-sm">Custom Color</Label>
+                              <Input
+                                id="custom-color"
+                                type="color"
+                                defaultValue={currentSlide?.config?.background || '#ffffff'}
+                                onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                                className="h-10"
+                                data-testid="input-custom-color"
                               />
-                            ))}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-color" className="text-sm">Custom Color</Label>
-                            <Input
-                              id="custom-color"
-                              type="color"
-                              defaultValue={currentSlide?.config?.background || '#ffffff'}
-                              onChange={(e) => handleBackgroundColorChange(e.target.value)}
-                              className="h-10"
-                              data-testid="input-custom-color"
-                            />
-                          </div>
-                        </div>
+                            </div>
+                          </TabsContent>
+
+                          <TabsContent value="presentation" className="space-y-3 mt-3">
+                            <h4 className="font-medium text-sm">Presentation Color Scheme</h4>
+                            <ScrollArea className="h-[300px] pr-3">
+                              <div className="space-y-2">
+                                {templates.map((template) => (
+                                  <button
+                                    key={template.id}
+                                    className={`w-full p-3 rounded-md border-2 text-left hover-elevate active-elevate-2 transition-all ${
+                                      presentation?.templateId === template.id ? 'ring-2 ring-primary border-primary' : 'border-border'
+                                    }`}
+                                    onClick={() => handleTemplateSelect(template.id)}
+                                    data-testid={`template-${template.id}`}
+                                  >
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium text-sm">{template.name}</span>
+                                        {presentation?.templateId === template.id && (
+                                          <Check className="h-4 w-4 text-primary" />
+                                        )}
+                                      </div>
+                                      <div className="flex gap-1">
+                                        <div 
+                                          className="h-6 w-6 rounded border"
+                                          style={{ backgroundColor: template.colorScheme.primary }}
+                                          title="Primary"
+                                        />
+                                        <div 
+                                          className="h-6 w-6 rounded border"
+                                          style={{ backgroundColor: template.colorScheme.secondary }}
+                                          title="Secondary"
+                                        />
+                                        <div 
+                                          className="h-6 w-6 rounded border"
+                                          style={{ backgroundColor: template.colorScheme.accent }}
+                                          title="Accent"
+                                        />
+                                        <div 
+                                          className="h-6 w-6 rounded border"
+                                          style={{ backgroundColor: template.colorScheme.background }}
+                                          title="Background"
+                                        />
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </TabsContent>
+                        </Tabs>
                       </PopoverContent>
                     </Popover>
 
@@ -998,9 +1080,10 @@ export default function Editor() {
                 <Card 
                   className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
                   style={{
-                    backgroundColor: typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined,
+                    backgroundColor: typeof editingSlide?.config?.background === 'string' ? editingSlide.config.background : (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                     color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined
                   }}
+                  data-testid="slide-canvas"
                 >
                   <div className="absolute inset-0">
                     <SlideCanvas
