@@ -511,10 +511,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       if (file.mimetype === 'application/pdf' || 
-          file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+          file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+          file.mimetype === 'application/vnd.ms-powerpoint') {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only PDF and PPTX files are allowed.'));
+        cb(new Error('Invalid file type. Only PDF, PPT, and PPTX files are allowed.'));
       }
     }
   });
@@ -617,6 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                  req.file.mimetype === 'application/vnd.ms-powerpoint') {
         const path = await import('path');
         const fs = await import('fs');
+        const os = await import('os');
         const ConvertAPI = (await import('convertapi')).default;
         const convertapi = new ConvertAPI(process.env.CONVERTAPI_SECRET || '');
         
@@ -624,11 +626,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using ConvertAPI...`);
         
         const timestamp = Date.now();
-        const result = await convertapi.convert('png', { 
-          File: req.file.buffer 
-        }, fileType);
         
-        console.log(`✅ ${fileType.toUpperCase()} converted. Files received:`, result.files.length);
+        // Save buffer to temporary file
+        const tempFilePath = path.join(os.tmpdir(), `upload-${presentationId}-${timestamp}.${fileType}`);
+        await fs.promises.writeFile(tempFilePath, req.file.buffer);
+        
+        let result;
+        try {
+          result = await convertapi.convert('png', { 
+            File: tempFilePath 
+          }, fileType);
+          
+          console.log(`✅ ${fileType.toUpperCase()} converted. Files received:`, result.files.length);
+        } finally {
+          // Clean up temporary file
+          await fs.promises.unlink(tempFilePath);
+        }
         
         const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
         await fs.promises.mkdir(publicOutputFolder, { recursive: true });
