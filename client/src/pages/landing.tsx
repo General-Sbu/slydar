@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
-import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "wouter";
 import { useState } from "react";
 import { Menu, BookOpen, DollarSign, ArrowRight, LogIn } from "lucide-react";
 
 export default function Landing() {
-  const [showAuth, setShowAuth] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const handleSignIn = () => {
+    window.location.href = "/api/login";
+  };
 
   return (
     <div className="min-h-screen">
@@ -35,10 +37,10 @@ export default function Landing() {
                   Join Presentation
                 </Button>
               </Link>
-              <Button variant="outline" onClick={() => setShowAuth(true)} data-testid="button-login">
+              <Button variant="outline" onClick={handleSignIn} data-testid="button-login">
                 Sign In
               </Button>
-              <Button onClick={() => setShowAuth(true)} data-testid="button-get-started-nav">
+              <Button onClick={handleSignIn} data-testid="button-get-started-nav">
                 Get Started
               </Button>
               <ThemeToggle />
@@ -91,10 +93,7 @@ export default function Landing() {
                     <Button 
                       variant="outline" 
                       className="w-full justify-start gap-2" 
-                      onClick={() => {
-                        setShowAuth(true);
-                        setMobileMenuOpen(false);
-                      }} 
+                      onClick={handleSignIn} 
                       data-testid="button-login-mobile"
                     >
                       <LogIn className="h-4 w-4" />
@@ -102,10 +101,7 @@ export default function Landing() {
                     </Button>
                     <Button 
                       className="w-full gap-2" 
-                      onClick={() => {
-                        setShowAuth(true);
-                        setMobileMenuOpen(false);
-                      }} 
+                      onClick={handleSignIn} 
                       data-testid="button-get-started-mobile"
                     >
                       Get Started
@@ -119,54 +115,29 @@ export default function Landing() {
       </header>
 
       <main>
-        {showAuth ? (
-          <section className="py-20 lg:py-32">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-8">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl lg:text-5xl font-bold">
-                  Welcome to <span className="gradient-text">Slidr</span>
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Sign in or create an account to get started
-                </p>
+        <section className="py-20 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-8">
+              <h1 className="text-5xl lg:text-7xl font-bold">
+                Interactive Presentations
+                <span className="gradient-text block">Made Simple</span>
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Engage your audience with real-time polls, word clouds, and interactive Q&A
+              </p>
+              <div className="flex justify-center gap-4">
+                <Button onClick={handleSignIn} size="lg" data-testid="button-get-started">
+                  Get Started
+                </Button>
+                <Link href="/join">
+                  <Button variant="outline" size="lg" data-testid="button-join">
+                    Join Presentation
+                  </Button>
+                </Link>
               </div>
-              <AuthForm />
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowAuth(false)}
-                data-testid="button-back"
-              >
-                Back to Home
-              </Button>
             </div>
-          </section>
-        ) : (
-          <>
-            <section className="py-20 lg:py-32">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center space-y-8">
-                  <h1 className="text-5xl lg:text-7xl font-bold">
-                    Interactive Presentations
-                    <span className="gradient-text block">Made Simple</span>
-                  </h1>
-                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Engage your audience with real-time polls, word clouds, and interactive Q&A
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Button onClick={() => setShowAuth(true)} size="lg" data-testid="button-get-started">
-                      Get Started
-                    </Button>
-                    <Link href="/join">
-                      <Button variant="outline" size="lg" data-testid="button-join">
-                        Join Presentation
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
+          </div>
+        </section>
       </main>
 
       <footer className="border-t py-12 mt-20">
