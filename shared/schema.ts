@@ -16,11 +16,10 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: varchar("username").unique().notNull(),
-  password: varchar("password").notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -241,21 +240,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const registerSchema = insertUserSchema.extend({
-  username: z.string().min(3).max(50),
-  password: z.string().min(6),
-  email: z.string().email().optional().or(z.literal('')),
-});
-
-export const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-});
-
 export type UpsertUser = typeof users.$inferInsert;
-export type User = Omit<typeof users.$inferSelect, 'password'>;
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
+export type User = typeof users.$inferSelect;
 
 export type InsertPresentation = z.infer<typeof insertPresentationSchema>;
 export type Presentation = typeof presentations.$inferSelect;
