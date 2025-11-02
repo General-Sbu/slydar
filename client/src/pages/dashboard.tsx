@@ -4,36 +4,28 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import PresentationCard from "@/components/PresentationCard";
 import EmptyState from "@/components/EmptyState";
-import TemplateSelector from "@/components/TemplateSelector";
 import { PlusCircle, Search, LogOut, StickyNote, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Presentation, Template } from "@shared/schema";
+import type { Presentation } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/authUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
   const { showNotification } = useNotification();
   const { user } = useAuth();
-  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   type PresentationWithCount = Presentation & { slideCount: number };
   
   const { data: presentations = [], isLoading } = useQuery<PresentationWithCount[]>({
     queryKey: ['/api/presentations'],
-  });
-
-  const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
-    queryKey: ['/api/templates'],
   });
 
   const createMutation = useMutation({
@@ -42,8 +34,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          title: 'Untitled Presentation',
-          templateId: selectedTemplate?.id
+          title: 'Untitled Presentation'
         })
       });
       if (!res.ok) throw new Error('Failed to create');
@@ -51,8 +42,6 @@ export default function Dashboard() {
     },
     onSuccess: (data: Presentation) => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations'] });
-      setShowTemplateDialog(false);
-      setSelectedTemplate(null);
       setLocation(`/editor/${data.id}`);
     },
     onError: () => {
@@ -117,10 +106,11 @@ export default function Dashboard() {
                 variant="default" 
                 className="gap-2 px-2 sm:px-3"
                 data-testid="button-new-presentation"
-                onClick={() => setShowTemplateDialog(true)}
+                onClick={() => createMutation.mutate()}
+                disabled={createMutation.isPending}
               >
                 <PlusCircle className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">New</span>
+                <span className="hidden sm:inline">{createMutation.isPending ? "Creating..." : "New"}</span>
               </Button>
               <ThemeToggle />
               <DropdownMenu>
@@ -211,7 +201,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : presentations.length === 0 ? (
-            <EmptyState onCreate={() => setShowTemplateDialog(true)} />
+            <EmptyState onCreate={() => createMutation.mutate()} />
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No presentations found matching "{searchQuery}"</p>
@@ -219,51 +209,6 @@ export default function Dashboard() {
           )}
         </div>
       </main>
-
-      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="dialog-template-selector">
-          <DialogHeader>
-            <DialogTitle>Choose a Template</DialogTitle>
-            <DialogDescription>
-              Select a template to start your presentation with a beautiful color scheme
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            {templatesLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading templates...</p>
-              </div>
-            ) : (
-              <TemplateSelector
-                templates={templates}
-                selectedTemplateId={selectedTemplate?.id}
-                onSelect={setSelectedTemplate}
-              />
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowTemplateDialog(false);
-                setSelectedTemplate(null);
-              }}
-              data-testid="button-cancel-template"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => createMutation.mutate()}
-              disabled={!selectedTemplate || createMutation.isPending}
-              data-testid="button-create-from-template"
-            >
-              {createMutation.isPending ? "Creating..." : "Create Presentation"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
