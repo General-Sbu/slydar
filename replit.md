@@ -37,18 +37,7 @@ Slidr is a full-stack TypeScript application with a React frontend and an Expres
 
 ### System Design Choices
 
-The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO server for real-time events. It employs a session-based architecture for anonymous participation. PostgreSQL with Drizzle ORM handles data, using UUIDs for primary keys and Zod for validation.
-
-**Authentication System:**
-- Presenter authentication uses Replit Auth (OpenID Connect) with Passport.js
-- Supports multiple providers: Google OAuth, GitHub, Apple, X (Twitter), and email/password
-- User sessions stored in PostgreSQL with 7-day TTL and automatic token refresh
-- Session cookies configured with: httpOnly: true, secure: 'auto', sameSite: 'lax'
-- Database connection uses PGHOST environment variables (Replit's built-in PostgreSQL)
-- Users table schema: id, email, firstName, lastName, profileImageUrl, created_at, updated_at
-- Authentication flow: Landing page → /api/login → OIDC provider → /api/callback → Dashboard
-
-The system offers pre-built presentation templates with curated color schemes. New slides are pre-populated with editable, movable, resizable, and rotatable text elements, providing flexible content management.
+The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO server for real-time events. It employs a session-based architecture for anonymous participation. PostgreSQL with Drizzle ORM handles data, using UUIDs for primary keys and Zod for validation. Presenter authentication uses Passport.js with a local strategy and bcrypt. The system offers pre-built presentation templates with curated color schemes. New slides are pre-populated with editable, movable, resizable, and rotatable text elements, providing flexible content management.
 
 ## External Dependencies
 
