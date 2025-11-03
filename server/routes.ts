@@ -405,6 +405,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/featured-presentations", async (req, res) => {
+    try {
+      const presentations = await storage.getPublishedPresentations();
+      
+      const featuredPresentations = await Promise.all(
+        presentations.slice(0, 6).map(async (presentation) => {
+          const slides = await storage.getSlidesByPresentation(presentation.id);
+          const user = await storage.getUser(presentation.userId);
+          const firstSlide = slides[0];
+          
+          return {
+            ...presentation,
+            slideCount: slides.length,
+            presenterName: user?.username || 'Unknown',
+            previewSlide: firstSlide || null
+          };
+        })
+      );
+      
+      res.json(featuredPresentations);
+    } catch (error) {
+      console.error("Featured presentations fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch featured presentations" });
+    }
+  });
+
   app.get("/api/library/:id", async (req, res) => {
     try {
       const presentation = await storage.getPresentation(req.params.id);
