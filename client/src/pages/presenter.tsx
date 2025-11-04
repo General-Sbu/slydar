@@ -449,8 +449,8 @@ export default function Presenter() {
               <Card 
                 className="p-4 sm:p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-visible w-full"
                 style={{
-                  backgroundColor: currentSlide?.config?.background || undefined,
-                  color: currentSlide?.config?.textColor || undefined
+                  backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
+                  color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined)
                 }}
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}

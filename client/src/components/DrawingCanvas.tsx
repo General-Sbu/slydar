@@ -27,6 +27,28 @@ export default function DrawingCanvas({
     content: string;
   } | null>(null);
 
+  // Normalize coordinates to 0-1 range (percentage)
+  const normalizeCoordinate = (x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    return {
+      x: x / canvas.width,
+      y: y / canvas.height,
+    };
+  };
+
+  // Denormalize coordinates from 0-1 range to pixels
+  const denormalizeCoordinate = (x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    return {
+      x: x * canvas.width,
+      y: y * canvas.height,
+    };
+  };
+
   // Get coordinates relative to canvas
   const getCanvasCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -61,17 +83,20 @@ export default function DrawingCanvas({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Render each annotation
+    // Render each annotation (denormalize coordinates for current canvas size)
     annotations.forEach((annotation) => {
       if (annotation.type === "pen" || annotation.type === "highlighter" || annotation.type === "eraser") {
         // Draw path
         if (annotation.points.length < 2) return;
 
-        ctx.beginPath();
-        ctx.moveTo(annotation.points[0].x, annotation.points[0].y);
+        // Denormalize all points
+        const denormalizedPoints = annotation.points.map(p => denormalizeCoordinate(p.x, p.y));
 
-        for (let i = 1; i < annotation.points.length; i++) {
-          ctx.lineTo(annotation.points[i].x, annotation.points[i].y);
+        ctx.beginPath();
+        ctx.moveTo(denormalizedPoints[0].x, denormalizedPoints[0].y);
+
+        for (let i = 1; i < denormalizedPoints.length; i++) {
+          ctx.lineTo(denormalizedPoints[i].x, denormalizedPoints[i].y);
         }
 
         ctx.strokeStyle = annotation.color;
@@ -89,23 +114,30 @@ export default function DrawingCanvas({
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = "source-over";
       } else if (annotation.type === "rectangle") {
-        const width = annotation.endX - annotation.startX;
-        const height = annotation.endY - annotation.startY;
+        // Denormalize coordinates
+        const start = denormalizeCoordinate(annotation.startX, annotation.startY);
+        const end = denormalizeCoordinate(annotation.endX, annotation.endY);
+        const width = end.x - start.x;
+        const height = end.y - start.y;
 
         ctx.strokeStyle = annotation.color;
         ctx.lineWidth = annotation.strokeWidth;
 
         if (annotation.fillColor) {
           ctx.fillStyle = annotation.fillColor;
-          ctx.fillRect(annotation.startX, annotation.startY, width, height);
+          ctx.fillRect(start.x, start.y, width, height);
         }
 
-        ctx.strokeRect(annotation.startX, annotation.startY, width, height);
+        ctx.strokeRect(start.x, start.y, width, height);
       } else if (annotation.type === "circle") {
-        const radiusX = Math.abs(annotation.endX - annotation.startX) / 2;
-        const radiusY = Math.abs(annotation.endY - annotation.startY) / 2;
-        const centerX = annotation.startX + (annotation.endX - annotation.startX) / 2;
-        const centerY = annotation.startY + (annotation.endY - annotation.startY) / 2;
+        // Denormalize coordinates
+        const start = denormalizeCoordinate(annotation.startX, annotation.startY);
+        const end = denormalizeCoordinate(annotation.endX, annotation.endY);
+        
+        const radiusX = Math.abs(end.x - start.x) / 2;
+        const radiusY = Math.abs(end.y - start.y) / 2;
+        const centerX = start.x + (end.x - start.x) / 2;
+        const centerY = start.y + (end.y - start.y) / 2;
 
         ctx.beginPath();
         ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
@@ -120,9 +152,13 @@ export default function DrawingCanvas({
 
         ctx.stroke();
       } else if (annotation.type === "line") {
+        // Denormalize coordinates
+        const start = denormalizeCoordinate(annotation.startX, annotation.startY);
+        const end = denormalizeCoordinate(annotation.endX, annotation.endY);
+
         ctx.beginPath();
-        ctx.moveTo(annotation.startX, annotation.startY);
-        ctx.lineTo(annotation.endX, annotation.endY);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
 
         ctx.strokeStyle = annotation.color;
         ctx.lineWidth = annotation.strokeWidth;
@@ -130,13 +166,17 @@ export default function DrawingCanvas({
 
         ctx.stroke();
       } else if (annotation.type === "arrow") {
+        // Denormalize coordinates
+        const start = denormalizeCoordinate(annotation.startX, annotation.startY);
+        const end = denormalizeCoordinate(annotation.endX, annotation.endY);
+        
         const headLength = 15;
-        const angle = Math.atan2(annotation.endY - annotation.startY, annotation.endX - annotation.startX);
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
 
         // Draw line
         ctx.beginPath();
-        ctx.moveTo(annotation.startX, annotation.startY);
-        ctx.lineTo(annotation.endX, annotation.endY);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
 
         ctx.strokeStyle = annotation.color;
         ctx.lineWidth = annotation.strokeWidth;
@@ -146,22 +186,25 @@ export default function DrawingCanvas({
 
         // Draw arrow head
         ctx.beginPath();
-        ctx.moveTo(annotation.endX, annotation.endY);
+        ctx.moveTo(end.x, end.y);
         ctx.lineTo(
-          annotation.endX - headLength * Math.cos(angle - Math.PI / 6),
-          annotation.endY - headLength * Math.sin(angle - Math.PI / 6)
+          end.x - headLength * Math.cos(angle - Math.PI / 6),
+          end.y - headLength * Math.sin(angle - Math.PI / 6)
         );
-        ctx.moveTo(annotation.endX, annotation.endY);
+        ctx.moveTo(end.x, end.y);
         ctx.lineTo(
-          annotation.endX - headLength * Math.cos(angle + Math.PI / 6),
-          annotation.endY - headLength * Math.sin(angle + Math.PI / 6)
+          end.x - headLength * Math.cos(angle + Math.PI / 6),
+          end.y - headLength * Math.sin(angle + Math.PI / 6)
         );
 
         ctx.stroke();
       } else if (annotation.type === "text") {
+        // Denormalize coordinates
+        const pos = denormalizeCoordinate(annotation.x, annotation.y);
+        
         ctx.font = `${annotation.fontSize}px Arial`;
         ctx.fillStyle = annotation.color;
-        ctx.fillText(annotation.content, annotation.x, annotation.y);
+        ctx.fillText(annotation.content, pos.x, pos.y);
       }
     });
   }, [annotations]);
@@ -291,10 +334,13 @@ export default function DrawingCanvas({
 
     if (activeTool === "pen" || activeTool === "highlighter" || activeTool === "eraser") {
       if (currentPath.length > 0) {
+        // Normalize all points to 0-1 range
+        const normalizedPoints = currentPath.map(p => normalizeCoordinate(p.x, p.y));
+        
         onAnnotationAdd({
           type: activeTool,
           id: `${activeTool}-${Date.now()}`,
-          points: currentPath,
+          points: normalizedPoints,
           color: activeColor,
           strokeWidth,
         });
@@ -303,13 +349,17 @@ export default function DrawingCanvas({
       const endPoint = currentPath[currentPath.length - 1];
 
       if (activeTool === "rectangle" || activeTool === "circle" || activeTool === "line" || activeTool === "arrow") {
+        // Normalize start and end points to 0-1 range
+        const normalizedStart = normalizeCoordinate(startPoint.x, startPoint.y);
+        const normalizedEnd = normalizeCoordinate(endPoint.x, endPoint.y);
+        
         onAnnotationAdd({
           type: activeTool,
           id: `${activeTool}-${Date.now()}`,
-          startX: startPoint.x,
-          startY: startPoint.y,
-          endX: endPoint.x,
-          endY: endPoint.y,
+          startX: normalizedStart.x,
+          startY: normalizedStart.y,
+          endX: normalizedEnd.x,
+          endY: normalizedEnd.y,
           color: activeColor,
           strokeWidth: 2,
         });
@@ -323,12 +373,15 @@ export default function DrawingCanvas({
 
   const handleTextSubmit = () => {
     if (textInput && textInput.content.trim()) {
+      // Normalize text position to 0-1 range
+      const normalizedPos = normalizeCoordinate(textInput.x, textInput.y);
+      
       onAnnotationAdd({
         type: "text",
         id: `text-${Date.now()}`,
         content: textInput.content,
-        x: textInput.x,
-        y: textInput.y,
+        x: normalizedPos.x,
+        y: normalizedPos.y,
         color: activeColor,
         fontSize: 24,
       });

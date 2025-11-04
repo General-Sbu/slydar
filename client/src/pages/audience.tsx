@@ -282,8 +282,8 @@ export default function Audience() {
           <div 
             className="rounded-xl border shadow-sm p-12 text-center relative overflow-visible"
             style={{
-              backgroundColor: currentSlide?.config?.background || 'hsl(var(--card))',
-              color: currentSlide?.config?.textColor || 'hsl(var(--card-foreground))',
+              backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : 'hsl(var(--card))'),
+              color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : 'hsl(var(--card-foreground))'),
               borderColor: 'hsl(var(--card-border))'
             }}
           >
@@ -331,8 +331,8 @@ export default function Audience() {
             <SlideWatermark />
           </Card>
         ) : submitted ? (
-          <Card className="p-12 text-center">
-            <div className="flex flex-col items-center gap-4">
+          <Card className="p-12 text-center relative overflow-visible">
+            <div className="flex flex-col items-center gap-4 relative z-10">
               <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
                 <Check className="h-8 w-8 text-green-500" />
               </div>
@@ -343,57 +343,73 @@ export default function Audience() {
                 </p>
               </div>
             </div>
+            <DrawingCanvas
+              annotations={annotations}
+              activeTool="pen"
+              activeColor="#000000"
+              isDrawingMode={false}
+              onAnnotationAdd={() => {}}
+            />
           </Card>
         ) : (
-          <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-bold" data-testid="text-question">
-                {currentSlide.question || "Question"}
-              </h1>
-              {currentSlide.type === 'multiple_choice' && (
-                <p className="text-muted-foreground">Select one option</p>
+          <Card className="p-8 relative overflow-visible" data-testid="card-slide">
+            <div className="space-y-8 relative z-10">
+              <div className="text-center space-y-2">
+                <h1 className="text-3xl sm:text-4xl font-bold" data-testid="text-question">
+                  {currentSlide.question || "Question"}
+                </h1>
+                {currentSlide.type === 'multiple_choice' && (
+                  <p className="text-muted-foreground">Select one option</p>
+                )}
+                {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
+                  <p className="text-muted-foreground">Type your answer below</p>
+                )}
+              </div>
+
+              {currentSlide.type === 'multiple_choice' && currentSlide.options && (
+                <div className="grid gap-3">
+                  {currentSlide.options.map((option, index) => (
+                    <AudienceAnswerButton
+                      key={index}
+                      label={option}
+                      selected={selectedAnswer === option}
+                      onClick={() => handleMultipleChoiceAnswer(option)}
+                      data-testid={`button-option-${index}`}
+                    />
+                  ))}
+                </div>
               )}
+
               {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
-                <p className="text-muted-foreground">Type your answer below</p>
+                <div className="space-y-4">
+                  <Input
+                    value={textAnswer}
+                    onChange={(e) => setTextAnswer(e.target.value)}
+                    placeholder={currentSlide.type === 'word_cloud' ? 'Enter a word or phrase...' : 'Type your answer...'}
+                    className="text-lg h-14"
+                    data-testid="input-text-answer"
+                    onKeyDown={(e) => e.key === "Enter" && handleTextSubmit()}
+                  />
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={handleTextSubmit}
+                    disabled={!textAnswer.trim()}
+                    data-testid="button-submit-text"
+                  >
+                    Submit Response
+                  </Button>
+                </div>
               )}
             </div>
-
-            {currentSlide.type === 'multiple_choice' && currentSlide.options && (
-              <div className="grid gap-3">
-                {currentSlide.options.map((option, index) => (
-                  <AudienceAnswerButton
-                    key={index}
-                    label={option}
-                    selected={selectedAnswer === option}
-                    onClick={() => handleMultipleChoiceAnswer(option)}
-                    data-testid={`button-option-${index}`}
-                  />
-                ))}
-              </div>
-            )}
-
-            {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
-              <div className="space-y-4">
-                <Input
-                  value={textAnswer}
-                  onChange={(e) => setTextAnswer(e.target.value)}
-                  placeholder={currentSlide.type === 'word_cloud' ? 'Enter a word or phrase...' : 'Type your answer...'}
-                  className="text-lg h-14"
-                  data-testid="input-text-answer"
-                  onKeyDown={(e) => e.key === "Enter" && handleTextSubmit()}
-                />
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handleTextSubmit}
-                  disabled={!textAnswer.trim()}
-                  data-testid="button-submit-text"
-                >
-                  Submit Response
-                </Button>
-              </div>
-            )}
-          </div>
+            <DrawingCanvas
+              annotations={annotations}
+              activeTool="pen"
+              activeColor="#000000"
+              isDrawingMode={false}
+              onAnnotationAdd={() => {}}
+            />
+          </Card>
         )}
 
         {currentSlide && session && participantId && (
