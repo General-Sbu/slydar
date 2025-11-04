@@ -36,6 +36,7 @@ export default function Audience() {
   const [feedbackContent, setFeedbackContent] = useState("");
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([]);
+  const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -130,6 +131,7 @@ export default function Audience() {
       setSelectedAnswer(null);
       setTextAnswer("");
       setFeedbackContent("");
+      setAnnotations([]);
     },
     onReactionsUpdated: (data: { slideId: string; reactions: Reaction[] }) => {
       if (currentSlide?.id && session?.id) {
@@ -146,6 +148,12 @@ export default function Audience() {
       setTimeout(() => {
         setFloatingEmojis(prev => prev.filter(e => e.id !== id));
       }, 3000);
+    },
+    onAnnotationAdded: (data: { annotation: AnnotationData }) => {
+      setAnnotations((prev) => [...prev, data.annotation]);
+    },
+    onAnnotationsCleared: () => {
+      setAnnotations([]);
     },
     onSessionEnded: () => {
       showNotification("The presentation has been closed by the presenter", "info");
@@ -283,6 +291,13 @@ export default function Audience() {
             <div className="relative z-10">
               <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
             </div>
+            <DrawingCanvas
+              annotations={annotations}
+              activeTool="pen"
+              activeColor="#000000"
+              isDrawingMode={false}
+              onAnnotationAdd={() => {}}
+            />
             <SlideWatermark />
           </div>
         ) : currentSlide.type === 'image' ? (
@@ -301,6 +316,13 @@ export default function Audience() {
                 data-testid="img-slide"
               />
             </div>
+            <DrawingCanvas
+              annotations={annotations}
+              activeTool="pen"
+              activeColor="#000000"
+              isDrawingMode={false}
+              onAnnotationAdd={() => {}}
+            />
             <SlideWatermark />
           </Card>
         ) : submitted ? (
