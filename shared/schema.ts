@@ -179,6 +179,64 @@ export const questionVotes = pgTable("question_votes", {
   uniqueIndex("idx_question_votes_unique").on(table.questionId, table.participantId)
 ]);
 
+// Annotation schemas for drawing tools
+export const annotationToolTypeEnum = z.enum(["pen", "highlighter", "eraser", "rectangle", "circle", "arrow", "line", "text"]);
+export type AnnotationToolType = z.infer<typeof annotationToolTypeEnum>;
+
+export const pointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
+
+export const pathAnnotationSchema = z.object({
+  type: z.enum(["pen", "highlighter", "eraser"]),
+  id: z.string(),
+  points: z.array(pointSchema),
+  color: z.string(),
+  strokeWidth: z.number(),
+});
+
+export const shapeAnnotationSchema = z.object({
+  type: z.enum(["rectangle", "circle", "arrow", "line"]),
+  id: z.string(),
+  startX: z.number(),
+  startY: z.number(),
+  endX: z.number(),
+  endY: z.number(),
+  color: z.string(),
+  strokeWidth: z.number(),
+  fillColor: z.string().optional(),
+});
+
+export const textAnnotationSchema = z.object({
+  type: z.literal("text"),
+  id: z.string(),
+  content: z.string(),
+  x: z.number(),
+  y: z.number(),
+  color: z.string(),
+  fontSize: z.number(),
+});
+
+export const annotationDataSchema = z.discriminatedUnion("type", [
+  pathAnnotationSchema,
+  shapeAnnotationSchema,
+  textAnnotationSchema,
+]);
+
+export type AnnotationData = z.infer<typeof annotationDataSchema>;
+export type PathAnnotation = z.infer<typeof pathAnnotationSchema>;
+export type ShapeAnnotation = z.infer<typeof shapeAnnotationSchema>;
+export type TextAnnotation = z.infer<typeof textAnnotationSchema>;
+
+export const annotations = pgTable("annotations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull().references(() => presentationSessions.id, { onDelete: "cascade" }),
+  slideId: varchar("slide_id").notNull().references(() => slides.id, { onDelete: "cascade" }),
+  data: jsonb("data").$type<AnnotationData>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertPresentationSchema = createInsertSchema(presentations).omit({
   id: true,
   published: true,
@@ -235,6 +293,13 @@ export const insertQuestionVoteSchema = createInsertSchema(questionVotes).omit({
   votedAt: true,
 });
 
+export const insertAnnotationSchema = createInsertSchema(annotations).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  data: annotationDataSchema,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -283,6 +348,9 @@ export type Question = typeof questions.$inferSelect;
 
 export type InsertQuestionVote = z.infer<typeof insertQuestionVoteSchema>;
 export type QuestionVote = typeof questionVotes.$inferSelect;
+
+export type InsertAnnotation = z.infer<typeof insertAnnotationSchema>;
+export type Annotation = typeof annotations.$inferSelect;
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
   id: true,

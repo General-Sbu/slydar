@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { PresentationSession, Slide, Reaction } from '@shared/schema';
+import type { PresentationSession, Slide, Reaction, AnnotationData } from '@shared/schema';
 
 interface UseWebSocketOptions {
   onSessionJoined?: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => void;
@@ -11,6 +11,8 @@ interface UseWebSocketOptions {
   onSessionEnded?: () => void;
   onReactionsUpdated?: (data: { slideId: string; reactions: Reaction[] }) => void;
   onEmojiSent?: (data: { emoji: string; participantId?: string }) => void;
+  onAnnotationAdded?: (data: { annotation: AnnotationData }) => void;
+  onAnnotationsCleared?: () => void;
   onError?: (error: string) => void;
 }
 
@@ -92,6 +94,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       optionsRef.current.onEmojiSent?.(data);
     });
 
+    socket.on('annotation_added', (data: { annotation: AnnotationData }) => {
+      console.log('[Socket.IO] Annotation added:', data);
+      optionsRef.current.onAnnotationAdded?.(data);
+    });
+
+    socket.on('annotations_cleared', () => {
+      console.log('[Socket.IO] Annotations cleared');
+      optionsRef.current.onAnnotationsCleared?.();
+    });
+
     socket.on('error', (data: { message: string }) => {
       console.error('[Socket.IO] Error:', data.message);
       optionsRef.current.onError?.(data.message);
@@ -127,12 +139,26 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, []);
 
+  const addAnnotation = useCallback((annotation: AnnotationData) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('add_annotation', { annotation });
+    }
+  }, []);
+
+  const clearAnnotations = useCallback(() => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('clear_annotations');
+    }
+  }, []);
+
   return {
     isConnected,
     participantId,
     joinSession,
     submitResponse,
     navigateSlide,
-    sendEmoji
+    sendEmoji,
+    addAnnotation,
+    clearAnnotations
   };
 }

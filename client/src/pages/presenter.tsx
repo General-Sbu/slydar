@@ -10,12 +10,14 @@ import UpcomingSlidePreview from "@/components/UpcomingSlidePreview";
 import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
 import CastButton, { CastButtonRef } from "@/components/CastButton";
+import DrawingToolbar from "@/components/DrawingToolbar";
+import DrawingCanvas from "@/components/DrawingCanvas";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, PresentationSession, Response, Feedback, Reaction } from "@shared/schema";
+import type { Presentation, Slide, PresentationSession, Response, Feedback, Reaction, AnnotationData, AnnotationToolType } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +37,12 @@ export default function Presenter() {
   const [allResponses, setAllResponses] = useState<Response[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([]);
+  
+  // Drawing state
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [activeTool, setActiveTool] = useState<AnnotationToolType | null>(null);
+  const [activeColor, setActiveColor] = useState("#ef4444");
+  const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
   
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
@@ -111,13 +119,14 @@ export default function Presenter() {
     }
   });
 
-  const { isConnected, joinSession, navigateSlide } = useWebSocket({
+  const { isConnected, joinSession, navigateSlide, addAnnotation, clearAnnotations: clearAnnotationsSocket } = useWebSocket({
     onSessionJoined: (data) => {
       setCurrentSlide(data.currentSlide);
     },
     onSlideChanged: (data) => {
       setCurrentSlideIndex(data.slideIndex);
       setCurrentSlide(data.slide);
+      setAnnotations([]);
     },
     onNewResponse: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sessions', session?.id, 'responses'] });
@@ -140,6 +149,12 @@ export default function Presenter() {
       setTimeout(() => {
         setFloatingEmojis(prev => prev.filter(e => e.id !== id));
       }, 3000);
+    },
+    onAnnotationAdded: (data) => {
+      setAnnotations(prev => [...prev, data.annotation]);
+    },
+    onAnnotationsCleared: () => {
+      setAnnotations([]);
     },
     onSessionEnded: () => {
       showNotification("Presentation has been closed", "success");
@@ -452,6 +467,18 @@ export default function Presenter() {
                     isEditable={false}
                   />
                 </div>
+                {/* Drawing Canvas Overlay */}
+                <DrawingCanvas
+                  annotations={annotations}
+                  activeTool={activeTool}
+                  activeColor={activeColor}
+                  isDrawingMode={isDrawingMode}
+                  onAnnotationAdd={(annotation) => {
+                    // Only emit via Socket.IO - don't add locally to avoid duplication
+                    // The socket broadcast will add it for all clients including presenter
+                    addAnnotation(annotation);
+                  }}
+                />
                 <div className="relative z-10">
                   {currentSlide.type === 'heading' ? (
                     <div className="text-center">
@@ -567,6 +594,33 @@ export default function Presenter() {
         </aside>
       </div>
       <FloatingEmojis emojis={floatingEmojis} />
+      
+      {/* Drawing Toolbar */}
+      <DrawingToolbar
+        activeTool={activeTool}
+        activeColor={activeColor}
+        isDrawingMode={isDrawingMode}
+        onToolSelect={(tool) => {
+          setActiveTool(tool);
+          if (!isDrawingMode) {
+            setIsDrawingMode(true);
+          }
+        }}
+        onColorSelect={setActiveColor}
+        onToggleDrawingMode={() => {
+          setIsDrawingMode(!isDrawingMode);
+          if (isDrawingMode) {
+            setActiveTool(null);
+          } else {
+            setActiveTool("pen");
+          }
+        }}
+        onClearAnnotations={() => {
+          // Only emit via Socket.IO - the socket broadcast will clear for all clients
+          clearAnnotationsSocket();
+          showNotification("Annotations cleared", "success");
+        }}
+      />
     </div>
   );
 }

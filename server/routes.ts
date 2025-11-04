@@ -1356,6 +1356,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    socket.on('add_annotation', async ({ annotation }) => {
+      try {
+        if (!clientData.sessionId || clientData.role !== 'presenter') {
+          socket.emit('error', { message: 'Unauthorized' });
+          return;
+        }
+        
+        // Broadcast annotation to all participants in the session
+        io.to(clientData.sessionId).emit('annotation_added', { annotation });
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to add annotation' });
+      }
+    });
+
+    socket.on('clear_annotations', async () => {
+      try {
+        if (!clientData.sessionId || clientData.role !== 'presenter') {
+          socket.emit('error', { message: 'Unauthorized' });
+          return;
+        }
+        
+        // Broadcast clear command to all participants
+        io.to(clientData.sessionId).emit('annotations_cleared');
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to clear annotations' });
+      }
+    });
+
     socket.on('disconnect', async () => {
       if (clientData.sessionId) {
         const sockets = await io.in(clientData.sessionId).fetchSockets();
