@@ -150,7 +150,12 @@ export default function Audience() {
       }, 3000);
     },
     onAnnotationAdded: (data: { annotation: AnnotationData }) => {
-      setAnnotations((prev) => [...prev, data.annotation]);
+      console.log("[Audience] Annotation received:", data.annotation);
+      setAnnotations((prev) => {
+        const updated = [...prev, data.annotation];
+        console.log("[Audience] Total annotations:", updated.length);
+        return updated;
+      });
     },
     onAnnotationsCleared: () => {
       setAnnotations([]);
@@ -275,7 +280,7 @@ export default function Audience() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {currentSlide.type === 'heading' ? (
           <div 
-            className="rounded-xl border shadow-sm p-12 text-center relative overflow-hidden"
+            className="rounded-xl border shadow-sm p-12 text-center relative overflow-visible"
             style={{
               backgroundColor: currentSlide?.config?.background || 'hsl(var(--card))',
               color: currentSlide?.config?.textColor || 'hsl(var(--card-foreground))',
@@ -301,7 +306,7 @@ export default function Audience() {
             <SlideWatermark />
           </div>
         ) : currentSlide.type === 'image' ? (
-          <Card className="p-0 overflow-hidden relative">
+          <Card className="p-0 overflow-visible relative">
             <div className="absolute inset-0">
               <SlideCanvas
                 elements={currentSlide?.config?.elements || []}

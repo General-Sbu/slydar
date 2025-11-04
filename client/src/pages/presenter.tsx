@@ -447,7 +447,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className="p-4 sm:p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-hidden w-full"
+                className="p-4 sm:p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-visible w-full"
                 style={{
                   backgroundColor: currentSlide?.config?.background || undefined,
                   color: currentSlide?.config?.textColor || undefined
