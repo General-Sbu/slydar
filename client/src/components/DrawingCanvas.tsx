@@ -9,6 +9,11 @@ interface DrawingCanvasProps {
   onAnnotationAdd: (annotation: AnnotationData) => void;
 }
 
+// Canonical slide resolution for coordinate normalization
+// All coordinates are normalized to this reference space for consistent alignment
+const CANONICAL_WIDTH = 1920;
+const CANONICAL_HEIGHT = 1080;
+
 export default function DrawingCanvas({
   annotations,
   activeTool,
@@ -27,25 +32,68 @@ export default function DrawingCanvas({
     content: string;
   } | null>(null);
 
-  // Normalize coordinates to 0-1 range (percentage)
+  /**
+   * Normalize pixel coordinates to canonical space (0-1 range based on 1920x1080)
+   * Uses aspect-ratio-aware scaling to ensure drawings align across all devices
+   * 
+   * @param x - Pixel X coordinate relative to canvas
+   * @param y - Pixel Y coordinate relative to canvas
+   * @returns Normalized coordinates in 0-1 range
+   */
   const normalizeCoordinate = (x: number, y: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
+    // Use uniform scaling to maintain aspect ratio
+    // Take the minimum scale to ensure content fits in both dimensions
+    const scaleX = canvas.width / CANONICAL_WIDTH;
+    const scaleY = canvas.height / CANONICAL_HEIGHT;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Calculate content box dimensions (respecting aspect ratio)
+    const contentWidth = CANONICAL_WIDTH * scale;
+    const contentHeight = CANONICAL_HEIGHT * scale;
+    
+    // Calculate letterbox offsets (centering the content)
+    const offsetX = (canvas.width - contentWidth) / 2;
+    const offsetY = (canvas.height - contentHeight) / 2;
+    
+    // Remove offset and normalize to 0-1 range
     return {
-      x: x / canvas.width,
-      y: y / canvas.height,
+      x: (x - offsetX) / contentWidth,
+      y: (y - offsetY) / contentHeight,
     };
   };
 
-  // Denormalize coordinates from 0-1 range to pixels
+  /**
+   * Denormalize coordinates from canonical space to current viewport pixels
+   * Accounts for letterboxing to maintain consistent positioning across devices
+   * 
+   * @param x - Normalized X coordinate (0-1 range)
+   * @param y - Normalized Y coordinate (0-1 range)
+   * @returns Pixel coordinates for current canvas size
+   */
   const denormalizeCoordinate = (x: number, y: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
+    // Use uniform scaling to maintain aspect ratio
+    const scaleX = canvas.width / CANONICAL_WIDTH;
+    const scaleY = canvas.height / CANONICAL_HEIGHT;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Calculate content box dimensions
+    const contentWidth = CANONICAL_WIDTH * scale;
+    const contentHeight = CANONICAL_HEIGHT * scale;
+    
+    // Calculate letterbox offsets
+    const offsetX = (canvas.width - contentWidth) / 2;
+    const offsetY = (canvas.height - contentHeight) / 2;
+    
+    // Denormalize and add offset
     return {
-      x: x * canvas.width,
-      y: y * canvas.height,
+      x: (x * contentWidth) + offsetX,
+      y: (y * contentHeight) + offsetY,
     };
   };
 
