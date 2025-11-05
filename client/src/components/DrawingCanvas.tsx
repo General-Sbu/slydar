@@ -9,8 +9,56 @@ interface DrawingCanvasProps {
   onAnnotationAdd: (annotation: AnnotationData) => void;
 }
 
-// Canonical slide resolution for coordinate normalization
-// All coordinates are normalized to this reference space for consistent alignment
+/**
+ * COORDINATE NORMALIZATION SYSTEM
+ * ================================
+ * 
+ * Canonical slide resolution for coordinate normalization.
+ * All annotations are normalized to this reference space (1920x1080, 16:9 aspect ratio)
+ * to ensure consistent alignment across devices with different screen sizes and aspect ratios.
+ * 
+ * HOW IT WORKS:
+ * -------------
+ * 1. Presenter draws at pixel coordinates (e.g., 400, 300 on 800x600 canvas)
+ * 2. Coordinates are normalized to 0-1 range based on canonical resolution
+ * 3. Normalized coordinates are broadcast via Socket.IO to all participants
+ * 4. Each viewer denormalizes coordinates to their own screen size
+ * 5. Result: Annotations appear at the same relative position on all devices
+ * 
+ * ASPECT RATIO HANDLING:
+ * ----------------------
+ * When canvas aspect ratio ≠ canonical aspect ratio:
+ * - We use uniform scaling: scale = min(scaleX, scaleY)
+ * - This creates letterbox bars (black padding) on sides or top/bottom
+ * - Coordinates are normalized relative to the content box (not full canvas)
+ * - Letterbox offsets are calculated and applied during normalization/denormalization
+ * - Coordinates are clamped to [0,1] to handle draws in letterbox margins
+ * 
+ * FUTURE: ZOOM & PAN SUPPORT
+ * ---------------------------
+ * To add zoom/pan functionality:
+ * 1. Extend AnnotationData schema to include viewport transform:
+ *    - viewportScale: number (1.0 = 100%, 2.0 = 200% zoom)
+ *    - viewportOffsetX: number (pan horizontal in normalized units)
+ *    - viewportOffsetY: number (pan vertical in normalized units)
+ * 
+ * 2. Update normalization to account for transform:
+ *    normalizedX = ((x - offsetX) / contentWidth - viewportOffsetX) / viewportScale
+ * 
+ * 3. Update denormalization to reverse transform:
+ *    pixelX = ((normalizedX * viewportScale) + viewportOffsetX) * contentWidth + offsetX
+ * 
+ * 4. Store current viewport state in presenter session:
+ *    - Broadcast viewport changes to all participants
+ *    - Sync zoom/pan state when participants join mid-session
+ * 
+ * 5. Add UI controls for zoom (pinch, buttons) and pan (drag)
+ * 
+ * Example with 2x zoom centered on slide:
+ *    - viewportScale = 2.0
+ *    - viewportOffsetX = -0.25 (shift left to keep center visible)
+ *    - viewportOffsetY = -0.25 (shift up to keep center visible)
+ */
 const CANONICAL_WIDTH = 1920;
 const CANONICAL_HEIGHT = 1080;
 
@@ -36,21 +84,30 @@ export default function DrawingCanvas({
    * Normalize pixel coordinates to canonical space (0-1 range based on 1920x1080)
    * Uses aspect-ratio-aware scaling to ensure drawings align across all devices
    * 
+   * IMPORTANT: Coordinates are clamped to [0, 1] to handle letterbox margins.
+   * If users draw in letterbox areas, coordinates will be constrained to slide edges.
+   * 
    * @param x - Pixel X coordinate relative to canvas
    * @param y - Pixel Y coordinate relative to canvas
-   * @returns Normalized coordinates in 0-1 range
+   * @returns Normalized coordinates clamped to 0-1 range
    */
   const normalizeCoordinate = (x: number, y: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
+    // Guard against pathological cases
+    if (canvas.width === 0 || canvas.height === 0) {
+      return { x: 0, y: 0 };
+    }
+    
     // Use uniform scaling to maintain aspect ratio
-    // Take the minimum scale to ensure content fits in both dimensions
+    // We use min(scaleX, scaleY) to ensure content fits in both dimensions
+    // This creates letterbox bars when aspect ratios don't match
     const scaleX = canvas.width / CANONICAL_WIDTH;
     const scaleY = canvas.height / CANONICAL_HEIGHT;
     const scale = Math.min(scaleX, scaleY);
     
-    // Calculate content box dimensions (respecting aspect ratio)
+    // Calculate content box dimensions (respecting canonical aspect ratio)
     const contentWidth = CANONICAL_WIDTH * scale;
     const contentHeight = CANONICAL_HEIGHT * scale;
     
@@ -59,9 +116,14 @@ export default function DrawingCanvas({
     const offsetY = (canvas.height - contentHeight) / 2;
     
     // Remove offset and normalize to 0-1 range
+    const normalizedX = (x - offsetX) / contentWidth;
+    const normalizedY = (y - offsetY) / contentHeight;
+    
+    // Clamp to [0, 1] to handle draws in letterbox margins
+    // This ensures annotations stay within the canonical slide boundaries
     return {
-      x: (x - offsetX) / contentWidth,
-      y: (y - offsetY) / contentHeight,
+      x: Math.max(0, Math.min(1, normalizedX)),
+      y: Math.max(0, Math.min(1, normalizedY)),
     };
   };
 
@@ -397,7 +459,40 @@ export default function DrawingCanvas({
       const endPoint = currentPath[currentPath.length - 1];
 
       if (activeTool === "rectangle" || activeTool === "circle" || activeTool === "line" || activeTool === "arrow") {
-        // Normalize start and end points to 0-1 range
+        // Get raw normalized coordinates (before clamping) to check gesture size
+        const canvas = canvasRef.current;
+        if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+        
+        const scaleX = canvas.width / CANONICAL_WIDTH;
+        const scaleY = canvas.height / CANONICAL_HEIGHT;
+        const scale = Math.min(scaleX, scaleY);
+        const contentWidth = CANONICAL_WIDTH * scale;
+        const contentHeight = CANONICAL_HEIGHT * scale;
+        const offsetX = (canvas.width - contentWidth) / 2;
+        const offsetY = (canvas.height - contentHeight) / 2;
+        
+        // Calculate unclamped deltas to determine true gesture size
+        const rawNormalizedStartX = (startPoint.x - offsetX) / contentWidth;
+        const rawNormalizedStartY = (startPoint.y - offsetY) / contentHeight;
+        const rawNormalizedEndX = (endPoint.x - offsetX) / contentWidth;
+        const rawNormalizedEndY = (endPoint.y - offsetY) / contentHeight;
+        
+        const deltaX = rawNormalizedEndX - rawNormalizedStartX;
+        const deltaY = rawNormalizedEndY - rawNormalizedStartY;
+        const gestureSize = Math.hypot(deltaX, deltaY);
+        
+        // Reject only truly zero-size gestures (e.g., accidental clicks)
+        // MIN_SIZE of 0.005 = ~10px at canonical 1920x1080 resolution
+        const MIN_SIZE = 0.005;
+        if (gestureSize < MIN_SIZE) {
+          console.log('Rejecting zero-size annotation', { gestureSize, minSize: MIN_SIZE });
+          setIsDrawing(false);
+          setCurrentPath([]);
+          setStartPoint(null);
+          return;
+        }
+        
+        // Now get clamped coordinates for storage
         const normalizedStart = normalizeCoordinate(startPoint.x, startPoint.y);
         const normalizedEnd = normalizeCoordinate(endPoint.x, endPoint.y);
         
