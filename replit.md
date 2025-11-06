@@ -34,6 +34,9 @@ Slidr is a full-stack TypeScript application with a React frontend and an Expres
 -   **Slidr Watermark:** A branding watermark is displayed on all slides.
 -   **Notification System:** A custom, context-based notification system provides user feedback.
 -   **Floating Emoji Reactions:** Real-time emoji reactions animate across participants' screens.
+-   **Multi-Step Onboarding:** New users complete a personalized onboarding flow to customize their experience:
+    -   **Step 1 (Use Case Selection):** Users select where they'll use Slidr (Company, Education, Student, or Other).
+    -   **Step 2 (Exploration Goal):** Users indicate their primary purpose - creating slides with interactive features, exploring the platform, or other activities. The flow tracks progress (Step X of 4) and saves data incrementally.
 
 ### System Design Choices
 
