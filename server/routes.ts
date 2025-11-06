@@ -18,7 +18,7 @@ import multer from "multer";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
 import passport from "passport";
 import bcrypt from "bcrypt";
-import { registerSchema, loginSchema } from "@shared/schema";
+import { registerSchema, loginSchema, updateOnboardingSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -107,6 +107,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.patch('/api/onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const data = updateOnboardingSchema.parse(req.body);
+      const userId = req.user.id;
+      
+      const updatedUser = await storage.updateUserOnboarding(userId, data);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating onboarding:", error);
+      res.status(400).json({ message: "Invalid onboarding data" });
     }
   });
 

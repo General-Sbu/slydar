@@ -25,6 +25,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<UserWithPassword | undefined>;
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserOnboarding(userId: string, data: { useCase?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined>;
 
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
   getPresentation(id: string): Promise<Presentation | undefined>;
@@ -124,6 +125,11 @@ export class MemStorage implements IStorage {
       email: userData.email ?? null,
       firstName: userData.firstName ?? null,
       lastName: userData.lastName ?? null,
+      onboardingComplete: userData.onboardingComplete ?? false,
+      useCase: userData.useCase ?? null,
+      organizationSize: userData.organizationSize ?? null,
+      role: userData.role ?? null,
+      industry: userData.industry ?? null,
       createdAt: now,
       updatedAt: now
     };
@@ -143,11 +149,30 @@ export class MemStorage implements IStorage {
       email: userData.email ?? null,
       firstName: userData.firstName ?? null,
       lastName: userData.lastName ?? null,
+      onboardingComplete: userData.onboardingComplete ?? existingUser?.onboardingComplete ?? false,
+      useCase: userData.useCase ?? existingUser?.useCase ?? null,
+      organizationSize: userData.organizationSize ?? existingUser?.organizationSize ?? null,
+      role: userData.role ?? existingUser?.role ?? null,
+      industry: userData.industry ?? existingUser?.industry ?? null,
       createdAt: existingUser?.createdAt ?? now,
       updatedAt: now
     };
     this.users.set(user.id, user);
     const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async updateUserOnboarding(userId: string, data: { useCase?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined> {
+    const existingUser = this.users.get(userId);
+    if (!existingUser) return undefined;
+
+    const updatedUser: UserWithPassword = {
+      ...existingUser,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.users.set(userId, updatedUser);
+    const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 
@@ -519,6 +544,16 @@ export class DbStorage implements IStorage {
         }
       })
       .returning();
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
+  }
+
+  async updateUserOnboarding(userId: string, data: { useCase?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!user) return undefined;
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
   }

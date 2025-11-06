@@ -21,6 +21,11 @@ export const users = pgTable("users", {
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
+  useCase: varchar("use_case"),
+  organizationSize: varchar("organization_size"),
+  role: varchar("role"),
+  industry: varchar("industry"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -304,6 +309,14 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const updateOnboardingSchema = z.object({
+  useCase: z.string().optional(),
+  organizationSize: z.string().optional(),
+  role: z.string().optional(),
+  industry: z.string().optional(),
+  onboardingComplete: z.boolean().optional(),
 });
 
 export const registerSchema = insertUserSchema.extend({

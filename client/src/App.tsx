@@ -17,6 +17,7 @@ import JoinPresentation from "@/components/JoinPresentation";
 import Pricing from "@/pages/pricing";
 import Library from "@/pages/library";
 import View from "@/pages/view";
+import Onboarding from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -38,7 +39,7 @@ function ProtectedRoute({ component: Component, path }: { component: any; path?:
 }
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   return (
     <Switch>
@@ -48,10 +49,13 @@ function Router() {
             <div className="text-muted-foreground">Loading...</div>
           </div>
         ) : isAuthenticated ? (
-          <Redirect to="/dashboard" />
+          <Redirect to={!user?.onboardingComplete ? "/onboarding" : "/dashboard"} />
         ) : (
           <Landing />
         )}
+      </Route>
+      <Route path="/onboarding">
+        <ProtectedRoute component={Onboarding} />
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
