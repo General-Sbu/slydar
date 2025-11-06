@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
   useCase: varchar("use_case"),
+  explorationGoal: varchar("exploration_goal"),
   organizationSize: varchar("organization_size"),
   role: varchar("role"),
   industry: varchar("industry"),
@@ -313,6 +314,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export const updateOnboardingSchema = z.object({
   useCase: z.string().optional(),
+  explorationGoal: z.string().optional(),
   organizationSize: z.string().optional(),
   role: z.string().optional(),
   industry: z.string().optional(),

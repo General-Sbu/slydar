@@ -25,7 +25,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<UserWithPassword | undefined>;
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
-  updateUserOnboarding(userId: string, data: { useCase?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined>;
+  updateUserOnboarding(userId: string, data: { useCase?: string; explorationGoal?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined>;
 
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
   getPresentation(id: string): Promise<Presentation | undefined>;
