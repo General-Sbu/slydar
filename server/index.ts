@@ -125,6 +125,18 @@ app.use((req, res, next) => {
       END $$;
     `);
     
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='users' AND column_name='exploration_goal'
+        ) THEN
+          ALTER TABLE users ADD COLUMN exploration_goal VARCHAR;
+        END IF;
+      END $$;
+    `);
+    
     log('✅ Database tables initialized');
     
     await seedTemplates();
