@@ -12,6 +12,7 @@ import FloatingEmojis from "@/components/FloatingEmojis";
 import CastButton, { CastButtonRef } from "@/components/CastButton";
 import DrawingToolbar from "@/components/DrawingToolbar";
 import DrawingCanvas from "@/components/DrawingCanvas";
+import WordCloud from "@/components/WordCloud";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -498,6 +499,11 @@ export default function Presenter() {
                       question={currentSlide.question || "Question"}
                       options={chartOptions}
                       totalVotes={slideResponses.length}
+                    />
+                  ) : currentSlide.type === 'word_cloud' ? (
+                    <WordCloud
+                      question={currentSlide.question || "Question"}
+                      responses={slideResponses}
                     />
                   ) : (
                     <div className="text-center space-y-4">
