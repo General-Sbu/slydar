@@ -20,6 +20,13 @@ const EXPLORATION_GOAL_OPTIONS = [
   { value: "vibes", label: "I'm here for vibes", description: "Other activities like giving feedback or managing a workspace." },
 ];
 
+const EDUCATOR_FIRST_SLIDE_OPTIONS = [
+  { value: "word_cloud", label: "Kick-start discussions in class", description: "Use a Word Cloud to visualize students' thoughts in real-time." },
+  { value: "multiple_choice", label: "Get quick input from students", description: "Use a Poll to capture students' opinions instantly." },
+  { value: "multiple_choice_quiz", label: "Check student understanding", description: "Use a Quiz to test students' understanding of the material." },
+  { value: "open_ended", label: "Gather reflections in class", description: "Use Open Ended questions to collect and display student responses." },
+];
+
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -27,6 +34,7 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedUseCase, setSelectedUseCase] = useState<string | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [selectedSlideType, setSelectedSlideType] = useState<string | null>(null);
 
   const updateOnboardingMutation = useMutation({
     mutationFn: async (data: { useCase?: string; explorationGoal?: string; onboardingComplete: boolean }) => {
@@ -34,15 +42,32 @@ export default function Onboarding() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      if (currentStep === 2) {
-        setLocation("/dashboard");
-        showNotification("Welcome to Slidr! Your account is ready.", "success");
-      }
     },
     onError: (error: Error) => {
       showNotification(error.message || "Failed to save onboarding data", "error");
     },
   });
+
+  const createPresentationMutation = useMutation({
+    mutationFn: async (slideType: string) => {
+      const response = await apiRequest("POST", "/api/presentations", {
+        title: "My First Presentation",
+        firstSlideType: slideType,
+      });
+      return response.json();
+    },
+    onSuccess: async (presentation: any) => {
+      await updateOnboardingMutation.mutateAsync({ onboardingComplete: true });
+      setLocation(`/editor/${presentation.id}`);
+      showNotification("Your presentation is ready!", "success");
+    },
+    onError: (error: Error) => {
+      showNotification(error.message || "Failed to create presentation", "error");
+    },
+  });
+
+  const isEducator = selectedUseCase === "education";
+  const totalSteps = isEducator ? 4 : 2;
 
   const handleContinue = async () => {
     if (currentStep === 1 && selectedUseCase) {
@@ -52,10 +77,20 @@ export default function Onboarding() {
       });
       setCurrentStep(2);
     } else if (currentStep === 2 && selectedGoal) {
-      updateOnboardingMutation.mutate({
+      await updateOnboardingMutation.mutateAsync({
         explorationGoal: selectedGoal,
-        onboardingComplete: true,
+        onboardingComplete: false,
       });
+      
+      if (isEducator) {
+        setCurrentStep(4);
+      } else {
+        await updateOnboardingMutation.mutateAsync({ onboardingComplete: true });
+        setLocation("/dashboard");
+        showNotification("Welcome to Slidr! Your account is ready.", "success");
+      }
+    } else if (currentStep === 4 && selectedSlideType) {
+      createPresentationMutation.mutate(selectedSlideType);
     }
   };
 
@@ -93,6 +128,16 @@ export default function Onboarding() {
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   Tell us what you'd like to do.
+                </p>
+              </>
+            )}
+            {currentStep === 4 && (
+              <>
+                <h2 className="text-4xl font-bold text-foreground">
+                  What would you like to do first?
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Choose your first slide type to get started.
                 </p>
               </>
             )}
@@ -146,17 +191,43 @@ export default function Onboarding() {
               ))}
             </div>
           )}
+
+          {currentStep === 4 && (
+            <div className="space-y-4">
+              {EDUCATOR_FIRST_SLIDE_OPTIONS.map((option) => (
+                <Card
+                  key={option.value}
+                  className={`p-6 cursor-pointer transition-all hover-elevate active-elevate-2 ${
+                    selectedSlideType === option.value
+                      ? "border-primary border-2"
+                      : "border-border"
+                  }`}
+                  onClick={() => setSelectedSlideType(option.value)}
+                  data-testid={`slide-${option.value}`}
+                >
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {option.label}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {option.description}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Step {currentStep} of 4</span>
+            <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
             <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${(currentStep / 4) * 100}%` }}
+                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
             </div>
           </div>
@@ -164,13 +235,19 @@ export default function Onboarding() {
             onClick={handleContinue}
             disabled={
               updateOnboardingMutation.isPending ||
+              createPresentationMutation.isPending ||
               (currentStep === 1 && !selectedUseCase) ||
-              (currentStep === 2 && !selectedGoal)
+              (currentStep === 2 && !selectedGoal) ||
+              (currentStep === 4 && !selectedSlideType)
             }
             size="lg"
             data-testid="button-continue"
           >
-            {updateOnboardingMutation.isPending ? "Saving..." : "Continue"}
+            {updateOnboardingMutation.isPending || createPresentationMutation.isPending
+              ? "Saving..."
+              : currentStep === 4
+              ? "Create"
+              : "Continue"}
           </Button>
         </div>
       </footer>

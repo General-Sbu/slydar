@@ -174,14 +174,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const { firstSlideType, ...presentationData } = req.body;
       const data = insertPresentationSchema.parse({
-        ...req.body,
+        ...presentationData,
         userId
       });
       const presentation = await storage.createPresentation(data);
       
+      // If a specific first slide type was requested (from onboarding)
+      if (firstSlideType) {
+        const slideTypeMap: Record<string, { type: string; question: string; options?: string[] }> = {
+          word_cloud: { type: "word_cloud", question: "What's on your mind?" },
+          multiple_choice: { type: "multiple_choice", question: "What's your opinion?", options: ["Option 1", "Option 2", "Option 3"] },
+          multiple_choice_quiz: { type: "multiple_choice", question: "Test your knowledge", options: ["Answer A", "Answer B", "Answer C"] },
+          open_ended: { type: "open_ended", question: "Share your thoughts" },
+        };
+        
+        const slideConfig = slideTypeMap[firstSlideType];
+        if (slideConfig) {
+          await storage.createSlide({
+            presentationId: presentation.id,
+            type: slideConfig.type,
+            question: slideConfig.question,
+            options: slideConfig.options,
+            order: 0,
+          });
+        }
+      } 
       // If a template was selected, create an initial slide with template colors and text elements
-      if (data.templateId) {
+      else if (data.templateId) {
         const template = await storage.getTemplate(data.templateId);
         if (template) {
           const initialSlide = {
