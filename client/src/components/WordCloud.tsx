@@ -61,7 +61,7 @@ export default function WordCloud({ question, responses }: WordCloudProps) {
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         fontSize,
         x: Math.random() * 80 + 10, // 10-90% of width
-        y: Math.random() * 70 + 15, // 15-85% of height
+        y: Math.random() * 60 + 15, // 15-75% of height (leave bottom space for counter)
         rotation: (Math.random() - 0.5) * 30, // -15 to +15 degrees
       };
     });
@@ -71,37 +71,38 @@ export default function WordCloud({ question, responses }: WordCloudProps) {
 
   return (
     <div className="text-center space-y-6">
-      <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
-      
-      <div className="relative w-full min-h-[300px] md:min-h-[400px]">
-        {words.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-            Waiting for responses...
+      {responses.length === 0 ? (
+        <div className="space-y-4">
+          <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
+          <div className="text-muted-foreground">Waiting for responses...</div>
+        </div>
+      ) : (
+        <>
+          <div className="relative w-full min-h-[300px] md:min-h-[400px]">
+            {words.map((word, index) => (
+              <div
+                key={`${word.text}-${index}`}
+                className="absolute whitespace-nowrap font-bold transition-all duration-500 ease-out"
+                style={{
+                  left: `${word.x}%`,
+                  top: `${word.y}%`,
+                  transform: `translate(-50%, -50%) rotate(${word.rotation}deg)`,
+                  color: word.color,
+                  fontSize: `${word.fontSize}em`,
+                  animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`,
+                }}
+                data-testid={`word-${index}`}
+              >
+                {word.text}
+              </div>
+            ))}
           </div>
-        ) : (
-          words.map((word, index) => (
-            <div
-              key={`${word.text}-${index}`}
-              className="absolute whitespace-nowrap font-bold transition-all duration-500 ease-out"
-              style={{
-                left: `${word.x}%`,
-                top: `${word.y}%`,
-                transform: `translate(-50%, -50%) rotate(${word.rotation}deg)`,
-                color: word.color,
-                fontSize: `${word.fontSize}em`,
-                animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`,
-              }}
-              data-testid={`word-${index}`}
-            >
-              {word.text}
-            </div>
-          ))
-        )}
-      </div>
-      
-      <div className="text-sm text-muted-foreground">
-        {responses.length} {responses.length === 1 ? "response" : "responses"}
-      </div>
+          
+          <div className="text-sm text-muted-foreground">
+            {responses.length} {responses.length === 1 ? "response" : "responses"}
+          </div>
+        </>
+      )}
 
       <style>{`
         @keyframes fadeIn {

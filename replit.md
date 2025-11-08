@@ -37,7 +37,7 @@ Slidr is a full-stack TypeScript application with a React frontend and an Expres
 -   **Multi-Step Onboarding:** New users complete a personalized onboarding flow to customize their experience:
     -   **Step 1 (Use Case Selection):** Users select where they'll use Slidr (Company, Education, Student, or Other).
     -   **Step 2 (Exploration Goal):** Users indicate their primary purpose - creating slides with interactive features, exploring the platform, or other activities. The flow tracks progress (Step X of 4) and saves data incrementally.
--   **Enhanced Word Cloud:** Interactive word cloud slides display audience responses with visual engagement features including random positioning, random colors from a 10-color palette, random rotation (-15° to +15°), and frequency-based sizing (words appearing more often scale up to 3em). Default question is "Ask your question here" with real-time updates as responses arrive.
+-   **Enhanced Word Cloud:** Interactive word cloud slides display audience responses with visual engagement features including random positioning (15-75% height to prevent overlap with response counter), random colors from a 10-color palette, random rotation (-15° to +15°), and frequency-based sizing (words appearing more often scale up to 3em). Default question is "Ask your question here". The question displays as a title when waiting for responses, then disappears once the first audience member answers, showing only the randomly positioned words. Real-time updates occur as responses arrive.
 
 ### System Design Choices
 
