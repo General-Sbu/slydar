@@ -17,8 +17,7 @@ interface LivePollChartProps {
 export default function LivePollChart({ question, options, totalVotes }: LivePollChartProps) {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h3 className="text-2xl font-semibold">{question}</h3>
+      <div className="text-center">
         <p className="text-sm text-muted-foreground">{totalVotes} responses</p>
       </div>
 

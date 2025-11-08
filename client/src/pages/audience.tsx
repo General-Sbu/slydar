@@ -354,17 +354,16 @@ export default function Audience() {
         ) : (
           <Card className="p-8 relative overflow-visible" data-testid="card-slide">
             <div className="space-y-8 relative z-10">
-              <div className="text-center space-y-2">
-                <h1 className="text-3xl sm:text-4xl font-bold" data-testid="text-question">
-                  {currentSlide.question || "Question"}
-                </h1>
-                {currentSlide.type === 'multiple_choice' && (
+              {currentSlide.type === 'multiple_choice' && (
+                <div className="text-center">
                   <p className="text-muted-foreground">Select one option</p>
-                )}
-                {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
+                </div>
+              )}
+              {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
+                <div className="text-center">
                   <p className="text-muted-foreground">Type your answer below</p>
-                )}
-              </div>
+                </div>
+              )}
 
               {currentSlide.type === 'multiple_choice' && currentSlide.options && (
                 <div className="grid gap-3">

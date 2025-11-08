@@ -506,8 +506,7 @@ export default function Presenter() {
                       responses={slideResponses}
                     />
                   ) : (
-                    <div className="text-center space-y-4">
-                      <h2 className="text-2xl md:text-3xl font-bold">{currentSlide.question || "Question"}</h2>
+                    <div className="text-center">
                       <div className="text-muted-foreground">
                         {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
                       </div>
