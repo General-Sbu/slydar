@@ -69,11 +69,11 @@ export default function Onboarding() {
   const isEducator = selectedUseCase === "education";
   
   // Calculate step metadata for display
-  // Educators: "Step 1 of 4", "Step 2 of 4", "Step 4 of 4" (skip step 3)
+  // Educators: "Step 1 of 3", "Step 2 of 3", "Step 3 of 3"
   // Non-educators: "Step 1 of 2", "Step 2 of 2"
   const getStepMeta = (step: number, useCase: string | null) => {
-    const totalSteps = useCase === "education" ? 4 : 2;
-    const displayStep = step; // Show actual step number (1, 2, or 4)
+    const totalSteps = useCase === "education" ? 3 : 2;
+    const displayStep = step;
     const progressPercent = (displayStep / totalSteps) * 100;
     
     return { displayStep, totalSteps, progressPercent };
@@ -95,13 +95,13 @@ export default function Onboarding() {
       });
       
       if (isEducator) {
-        setCurrentStep(4);
+        setCurrentStep(3);
       } else {
         await updateOnboardingMutation.mutateAsync({ onboardingComplete: true });
         setLocation("/dashboard");
         showNotification("Welcome to Slidr! Your account is ready.", "success");
       }
-    } else if (currentStep === 4 && selectedSlideType) {
+    } else if (currentStep === 3 && selectedSlideType) {
       createPresentationMutation.mutate(selectedSlideType);
     }
   };
@@ -143,7 +143,7 @@ export default function Onboarding() {
                 </p>
               </>
             )}
-            {currentStep === 4 && (
+            {currentStep === 3 && (
               <>
                 <h2 className="text-4xl font-bold text-foreground">
                   What would you like to do first?
@@ -204,7 +204,7 @@ export default function Onboarding() {
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 3 && (
             <div className="space-y-4">
               {EDUCATOR_FIRST_SLIDE_OPTIONS.map((option) => (
                 <Card
@@ -250,14 +250,14 @@ export default function Onboarding() {
               createPresentationMutation.isPending ||
               (currentStep === 1 && !selectedUseCase) ||
               (currentStep === 2 && !selectedGoal) ||
-              (currentStep === 4 && !selectedSlideType)
+              (currentStep === 3 && !selectedSlideType)
             }
             size="lg"
             data-testid="button-continue"
           >
             {updateOnboardingMutation.isPending || createPresentationMutation.isPending
               ? "Saving..."
-              : currentStep === 4
+              : currentStep === 3
               ? "Create"
               : "Continue"}
           </Button>
