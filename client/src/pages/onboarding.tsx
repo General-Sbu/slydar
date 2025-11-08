@@ -67,7 +67,18 @@ export default function Onboarding() {
   });
 
   const isEducator = selectedUseCase === "education";
-  const totalSteps = isEducator ? 4 : 2;
+  
+  // Calculate display step number and total based on progress
+  // For educators: Step 1, 2, 3 (displayed as 4th actual step)
+  // For non-educators: Step 1, 2
+  const getStepDisplay = () => {
+    if (currentStep === 1) return { displayStep: 1, totalSteps: 1 };
+    if (currentStep === 2) return { displayStep: 2, totalSteps: 2 };
+    if (currentStep === 4) return { displayStep: 3, totalSteps: 3 };
+    return { displayStep: currentStep, totalSteps: currentStep };
+  };
+  
+  const { displayStep, totalSteps } = getStepDisplay();
 
   const handleContinue = async () => {
     if (currentStep === 1 && selectedUseCase) {
@@ -223,11 +234,11 @@ export default function Onboarding() {
       <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
+            <span className="text-sm text-muted-foreground">Step {displayStep} of {totalSteps}</span>
             <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                style={{ width: `${(displayStep / totalSteps) * 100}%` }}
               />
             </div>
           </div>
