@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If a specific first slide type was requested (from onboarding)
       if (firstSlideType) {
         const slideTypeMap: Record<string, { type: string; question: string; options?: string[] }> = {
-          word_cloud: { type: "word_cloud", question: "What's on your mind?" },
+          word_cloud: { type: "word_cloud", question: "Ask your question here" },
           multiple_choice: { type: "multiple_choice", question: "What's your opinion?", options: ["Option 1", "Option 2", "Option 3"] },
           multiple_choice_quiz: { type: "multiple_choice", question: "Test your knowledge", options: ["Answer A", "Answer B", "Answer C"] },
           open_ended: { type: "open_ended", question: "Share your thoughts" },
