@@ -245,7 +245,7 @@ export default function Editor() {
         question: "", 
         options: [],
         config: {
-          elements: [createTextElement("What words come to mind?", 40, 30, "bold", "center")]
+          elements: [createTextElement("Your Word Cloud question here", 40, 20, "bold", "center")]
         }
       },
       open_ended: { 
@@ -985,7 +985,15 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'word_cloud' && (
-                      <div className="text-muted-foreground pointer-events-none">Word cloud visualization will appear here</div>
+                      <div className="relative w-full h-48 pointer-events-none overflow-hidden opacity-20">
+                        <span className="absolute text-2xl font-bold" style={{ left: '15%', top: '20%', transform: 'rotate(-5deg)', color: '#3b82f6' }}>Innovation</span>
+                        <span className="absolute text-xl font-bold" style={{ left: '55%', top: '15%', transform: 'rotate(8deg)', color: '#8b5cf6' }}>Creative</span>
+                        <span className="absolute text-3xl font-bold" style={{ left: '35%', top: '45%', transform: 'rotate(-3deg)', color: '#ec4899' }}>Ideas</span>
+                        <span className="absolute text-lg font-bold" style={{ left: '70%', top: '50%', transform: 'rotate(12deg)', color: '#f59e0b' }}>Growth</span>
+                        <span className="absolute text-xl font-bold" style={{ left: '20%', top: '65%', transform: 'rotate(5deg)', color: '#10b981' }}>Success</span>
+                        <span className="absolute text-2xl font-bold" style={{ left: '50%', top: '70%', transform: 'rotate(-8deg)', color: '#06b6d4' }}>Future</span>
+                        <span className="absolute text-lg font-bold" style={{ left: '75%', top: '30%', transform: 'rotate(-10deg)', color: '#6366f1' }}>Vision</span>
+                      </div>
                     )}
                     {currentSlide?.type === 'open_ended' && (
                       <div className="text-muted-foreground pointer-events-none">Open text input will appear here</div>
