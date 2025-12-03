@@ -538,50 +538,54 @@ export default function Presenter() {
               </Card>
             )}
             
-            <PresentationTimer />
-            
-            {currentSlide && presentationId && (
-              <PresenterNotes 
-                slideId={currentSlide.id} 
-                presentationId={presentationId}
-              />
-            )}
-            
-            <UpcomingSlidePreview 
-              slide={currentSlideIndex < slides.length - 1 ? slides[currentSlideIndex + 1] : null}
-            />
-            
-            <div>
-              <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Slide Reactions</h3>
-              <Card className="p-3 sm:p-4">
-                <div className="flex items-center justify-around gap-2 sm:gap-3">
-                  <div className="flex flex-col items-center gap-1" data-testid="reaction-like">
-                    <div className="flex items-center gap-1">
-                      <ThumbsUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-base sm:text-lg font-semibold" data-testid="text-like-count">{reactionCounts.like}</span>
+            {currentSlide?.type !== 'word_cloud' && (
+              <>
+                <PresentationTimer />
+                
+                {currentSlide && presentationId && (
+                  <PresenterNotes 
+                    slideId={currentSlide.id} 
+                    presentationId={presentationId}
+                  />
+                )}
+                
+                <UpcomingSlidePreview 
+                  slide={currentSlideIndex < slides.length - 1 ? slides[currentSlideIndex + 1] : null}
+                />
+                
+                <div>
+                  <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Slide Reactions</h3>
+                  <Card className="p-3 sm:p-4">
+                    <div className="flex items-center justify-around gap-2 sm:gap-3">
+                      <div className="flex flex-col items-center gap-1" data-testid="reaction-like">
+                        <div className="flex items-center gap-1">
+                          <ThumbsUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-base sm:text-lg font-semibold" data-testid="text-like-count">{reactionCounts.like}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Like</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1" data-testid="reaction-heart">
+                        <div className="flex items-center gap-1">
+                          <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
+                          <span className="text-base sm:text-lg font-semibold" data-testid="text-heart-count">{reactionCounts.heart}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Love</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1" data-testid="reaction-thumbs_down">
+                        <div className="flex items-center gap-1">
+                          <ThumbsDown className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
+                          <span className="text-base sm:text-lg font-semibold" data-testid="text-thumbs_down-count">{reactionCounts.thumbs_down}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Dislike</span>
+                      </div>
                     </div>
-                    <span className="text-xs text-muted-foreground">Like</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1" data-testid="reaction-heart">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
-                      <span className="text-base sm:text-lg font-semibold" data-testid="text-heart-count">{reactionCounts.heart}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Love</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1" data-testid="reaction-thumbs_down">
-                    <div className="flex items-center gap-1">
-                      <ThumbsDown className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
-                      <span className="text-base sm:text-lg font-semibold" data-testid="text-thumbs_down-count">{reactionCounts.thumbs_down}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Dislike</span>
-                  </div>
+                  </Card>
                 </div>
-              </Card>
-            </div>
 
-            {session && (
-              <PresenterQA sessionId={session.id} />
+                {session && (
+                  <PresenterQA sessionId={session.id} />
+                )}
+              </>
             )}
 
             {currentSlide?.type === 'word_cloud' && (
