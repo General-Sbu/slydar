@@ -81,6 +81,12 @@ export default function Presenter() {
     enabled: !!currentSlide?.id && !!session?.id,
   });
 
+  const { data: allWordCloudResponses = [] } = useQuery<Response[]>({
+    queryKey: ['/api/slides', currentSlide?.id, 'all-responses'],
+    enabled: !!currentSlide?.id && currentSlide?.type === 'word_cloud',
+    refetchInterval: 3000,
+  });
+
   const createSessionMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/sessions', {
@@ -576,6 +582,37 @@ export default function Presenter() {
 
             {session && (
               <PresenterQA sessionId={session.id} />
+            )}
+
+            {currentSlide?.type === 'word_cloud' && (
+              <div>
+                <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Word Cloud Responses</h3>
+                <Card className="p-3 sm:p-4 max-h-[300px] overflow-y-auto">
+                  {allWordCloudResponses.length === 0 ? (
+                    <div className="text-center text-muted-foreground text-sm">
+                      No responses yet
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {allWordCloudResponses.length} total response{allWordCloudResponses.length !== 1 ? 's' : ''}
+                      </div>
+                      {allWordCloudResponses.map((response, index) => (
+                        <div 
+                          key={response.id || index} 
+                          className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0"
+                          data-testid={`wordcloud-response-${index}`}
+                        >
+                          <span className="text-sm font-medium truncate max-w-[200px]">{response.answer}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(response.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
             )}
 
             <div>
