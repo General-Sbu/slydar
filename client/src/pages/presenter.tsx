@@ -509,7 +509,7 @@ export default function Presenter() {
                   ) : currentSlide.type === 'word_cloud' ? (
                     <WordCloud
                       question={currentSlide.question || "Question"}
-                      responses={slideResponses}
+                      responses={allWordCloudResponses.length > 0 ? allWordCloudResponses : slideResponses}
                     />
                   ) : (
                     <div className="text-center">
