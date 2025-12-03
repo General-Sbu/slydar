@@ -988,6 +988,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/slides/:slideId/all-responses", async (req, res) => {
+    try {
+      const responses = await storage.getAllResponsesBySlide(req.params.slideId);
+      res.json(responses);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch responses" });
+    }
+  });
+
   app.post("/api/notes", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;

@@ -51,6 +51,7 @@ export interface IStorage {
   createResponse(response: InsertResponse): Promise<Response>;
   getResponsesBySession(sessionId: string): Promise<Response[]>;
   getResponsesBySlide(slideId: string, sessionId: string): Promise<Response[]>;
+  getAllResponsesBySlide(slideId: string): Promise<Response[]>;
 
   createNote(note: InsertNote): Promise<Note>;
   getNotesByUser(userId: string): Promise<Note[]>;
@@ -345,6 +346,12 @@ export class MemStorage implements IStorage {
   async getResponsesBySlide(slideId: string, sessionId: string): Promise<Response[]> {
     return Array.from(this.responses.values())
       .filter(r => r.slideId === slideId && r.sessionId === sessionId);
+  }
+
+  async getAllResponsesBySlide(slideId: string): Promise<Response[]> {
+    return Array.from(this.responses.values())
+      .filter(r => r.slideId === slideId)
+      .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
   }
 
   async createNote(insertNote: InsertNote): Promise<Note> {
@@ -685,6 +692,13 @@ export class DbStorage implements IStorage {
     return db.select()
       .from(responses)
       .where(and(eq(responses.slideId, slideId), eq(responses.sessionId, sessionId)));
+  }
+
+  async getAllResponsesBySlide(slideId: string): Promise<Response[]> {
+    return db.select()
+      .from(responses)
+      .where(eq(responses.slideId, slideId))
+      .orderBy(desc(responses.submittedAt));
   }
 
   async createNote(insertNote: InsertNote): Promise<Note> {
