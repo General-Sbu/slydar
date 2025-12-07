@@ -192,11 +192,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 {
                   id: crypto.randomUUID(),
                   type: "text" as const,
-                  x: 40,
+                  x: 10,
                   y: 20,
                   width: 80,
                   content: "Ask your question here",
-                  fontSize: 18,
+                  fontSize: 40,
                   fontWeight: "bold" as const,
                   textAlign: "center" as const,
                   rotation: 0,
