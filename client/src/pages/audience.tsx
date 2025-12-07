@@ -411,7 +411,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
           <div className="mt-6">
             <SlideReactions
               slideId={currentSlide.id}
@@ -423,7 +423,7 @@ export default function Audience() {
           </div>
         )}
 
-        {currentSlide && session && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && session && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">🎉</span>
@@ -436,7 +436,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Check className="h-5 w-5 text-primary" />
@@ -469,7 +469,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
           <div className="mt-6">
             <AudienceQA sessionId={session.id} participantId={participantId} />
           </div>
