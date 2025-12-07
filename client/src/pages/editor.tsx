@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { Presentation, Slide, SlideType, SlideElement } from "@shared/schema";
+import type { Presentation, Slide, SlideType, SlideElement, Response } from "@shared/schema";
 import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +55,13 @@ export default function Editor() {
 
   const { data: templates = [] } = useQuery<Template[]>({
     queryKey: ['/api/templates'],
+  });
+
+  const selectedSlide = slides[selectedSlideIndex];
+  
+  const { data: wordCloudResponses = [] } = useQuery<Response[]>({
+    queryKey: ['/api/slides', selectedSlide?.id, 'all-responses'],
+    enabled: !!selectedSlide?.id && selectedSlide?.type === 'word_cloud',
   });
 
   const createSlideMutation = useMutation({
@@ -985,14 +992,67 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'word_cloud' && (
-                      <div className="relative w-full h-48 pointer-events-none overflow-hidden opacity-20">
-                        <span className="absolute text-2xl font-bold" style={{ left: '15%', top: '20%', transform: 'rotate(-5deg)', color: '#3b82f6' }}>Innovation</span>
-                        <span className="absolute text-xl font-bold" style={{ left: '55%', top: '15%', transform: 'rotate(8deg)', color: '#8b5cf6' }}>Creative</span>
-                        <span className="absolute text-3xl font-bold" style={{ left: '35%', top: '45%', transform: 'rotate(-3deg)', color: '#ec4899' }}>Ideas</span>
-                        <span className="absolute text-lg font-bold" style={{ left: '70%', top: '50%', transform: 'rotate(12deg)', color: '#f59e0b' }}>Growth</span>
-                        <span className="absolute text-xl font-bold" style={{ left: '20%', top: '65%', transform: 'rotate(5deg)', color: '#10b981' }}>Success</span>
-                        <span className="absolute text-2xl font-bold" style={{ left: '50%', top: '70%', transform: 'rotate(-8deg)', color: '#06b6d4' }}>Future</span>
-                        <span className="absolute text-lg font-bold" style={{ left: '75%', top: '30%', transform: 'rotate(-10deg)', color: '#6366f1' }}>Vision</span>
+                      <div className="space-y-4">
+                        {wordCloudResponses.length > 0 ? (
+                          <div className="space-y-3">
+                            <div className="text-sm text-muted-foreground text-center">
+                              {wordCloudResponses.length} response{wordCloudResponses.length !== 1 ? 's' : ''} collected
+                            </div>
+                            <div className="relative w-full h-48 overflow-hidden">
+                              {(() => {
+                                const wordFrequency = wordCloudResponses.reduce((acc, r) => {
+                                  const text = r.answer.trim();
+                                  if (text) acc[text] = (acc[text] || 0) + 1;
+                                  return acc;
+                                }, {} as Record<string, number>);
+                                const sortedWords = Object.entries(wordFrequency)
+                                  .map(([text, count]) => ({ text, count }))
+                                  .sort((a, b) => b.count - a.count)
+                                  .slice(0, 15);
+                                const maxCount = sortedWords[0]?.count || 1;
+                                const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'];
+                                return sortedWords.map((word, index) => {
+                                  const fontSize = 14 + (word.count / maxCount) * 20;
+                                  const positions = [
+                                    { left: '15%', top: '20%' }, { left: '55%', top: '15%' }, { left: '35%', top: '45%' },
+                                    { left: '70%', top: '50%' }, { left: '20%', top: '65%' }, { left: '50%', top: '70%' },
+                                    { left: '75%', top: '30%' }, { left: '10%', top: '40%' }, { left: '80%', top: '60%' },
+                                    { left: '30%', top: '25%' }, { left: '60%', top: '75%' }, { left: '45%', top: '35%' },
+                                    { left: '25%', top: '55%' }, { left: '65%', top: '40%' }, { left: '40%', top: '80%' }
+                                  ];
+                                  const pos = positions[index % positions.length];
+                                  const rotation = (index % 5 - 2) * 5;
+                                  return (
+                                    <span
+                                      key={word.text}
+                                      className="absolute font-bold whitespace-nowrap"
+                                      style={{
+                                        left: pos.left,
+                                        top: pos.top,
+                                        transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                                        color: colors[index % colors.length],
+                                        fontSize: `${fontSize}px`
+                                      }}
+                                    >
+                                      {word.text}
+                                    </span>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative w-full h-48 pointer-events-none overflow-hidden opacity-20">
+                            <span className="absolute text-2xl font-bold" style={{ left: '15%', top: '20%', transform: 'rotate(-5deg)', color: '#3b82f6' }}>Innovation</span>
+                            <span className="absolute text-xl font-bold" style={{ left: '55%', top: '15%', transform: 'rotate(8deg)', color: '#8b5cf6' }}>Creative</span>
+                            <span className="absolute text-3xl font-bold" style={{ left: '35%', top: '45%', transform: 'rotate(-3deg)', color: '#ec4899' }}>Ideas</span>
+                            <span className="absolute text-lg font-bold" style={{ left: '70%', top: '50%', transform: 'rotate(12deg)', color: '#f59e0b' }}>Growth</span>
+                            <span className="absolute text-xl font-bold" style={{ left: '20%', top: '65%', transform: 'rotate(5deg)', color: '#10b981' }}>Success</span>
+                            <span className="absolute text-2xl font-bold" style={{ left: '50%', top: '70%', transform: 'rotate(-8deg)', color: '#06b6d4' }}>Future</span>
+                            <span className="absolute text-lg font-bold" style={{ left: '75%', top: '30%', transform: 'rotate(-10deg)', color: '#6366f1' }}>Vision</span>
+                            <p className="absolute bottom-2 left-0 right-0 text-center text-sm text-muted-foreground">No responses yet</p>
+                          </div>
+                        )}
                       </div>
                     )}
                     {currentSlide?.type === 'open_ended' && (
