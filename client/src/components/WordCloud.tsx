@@ -27,8 +27,18 @@ const COLORS = [
   "#14b8a6", // teal
 ];
 
+const DEFAULT_PLACEHOLDERS = [
+  "Ask your question here",
+  "Your Word Cloud question here",
+  "Question",
+  "",
+];
+
 export default function WordCloud({ question, responses }: WordCloudProps) {
   const [words, setWords] = useState<PositionedWord[]>([]);
+
+  // Only show heading if user has filled in a custom question (not a default placeholder)
+  const isUserFilledQuestion = question && !DEFAULT_PLACEHOLDERS.includes(question.trim());
 
   useEffect(() => {
     if (responses.length === 0) {
@@ -73,11 +83,16 @@ export default function WordCloud({ question, responses }: WordCloudProps) {
     <div className="text-center space-y-6">
       {responses.length === 0 ? (
         <div className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
+          {isUserFilledQuestion && (
+            <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
+          )}
           <div className="text-muted-foreground">Waiting for responses...</div>
         </div>
       ) : (
         <>
+          {isUserFilledQuestion && (
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">{question}</h2>
+          )}
           <div className="relative w-full min-h-[300px] md:min-h-[400px]">
             {words.map((word, index) => (
               <div
