@@ -183,8 +183,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If a specific first slide type was requested (from onboarding)
       if (firstSlideType) {
-        const slideTypeMap: Record<string, { type: string; question: string; options?: string[] }> = {
-          word_cloud: { type: "word_cloud", question: "Ask your question here" },
+        const slideTypeMap: Record<string, { type: string; question: string; options?: string[]; config?: any }> = {
+          word_cloud: { 
+            type: "word_cloud", 
+            question: "Ask your question here",
+            config: {
+              elements: [
+                {
+                  id: crypto.randomUUID(),
+                  type: "text" as const,
+                  x: 40,
+                  y: 20,
+                  width: 80,
+                  content: "Ask your question here",
+                  fontSize: 18,
+                  fontWeight: "bold" as const,
+                  textAlign: "center" as const,
+                  rotation: 0,
+                  zIndex: 1
+                }
+              ]
+            }
+          },
           multiple_choice: { type: "multiple_choice", question: "What's your opinion?", options: ["Option 1", "Option 2", "Option 3"] },
           multiple_choice_quiz: { type: "multiple_choice", question: "Test your knowledge", options: ["Answer A", "Answer B", "Answer C"] },
           open_ended: { type: "open_ended", question: "Share your thoughts" },
@@ -197,6 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: slideConfig.type,
             question: slideConfig.question,
             options: slideConfig.options,
+            config: slideConfig.config,
             order: 0,
           });
         }
