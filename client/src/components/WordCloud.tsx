@@ -81,19 +81,19 @@ export default function WordCloud({ question, responses }: WordCloudProps) {
 
   return (
     <div className="text-center space-y-6">
+      {isUserFilledQuestion && (
+        <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
+      )}
+      
       {responses.length === 0 ? (
-        <div className="space-y-4">
-          {isUserFilledQuestion && (
-            <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
-          )}
-          <div className="text-muted-foreground">Waiting for responses...</div>
+        <div className="relative w-full min-h-[30vh]">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-muted-foreground text-lg">Waiting for responses...</div>
+          </div>
         </div>
       ) : (
         <>
-          {isUserFilledQuestion && (
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">{question}</h2>
-          )}
-          <div className="relative w-full min-h-[300px] md:min-h-[400px]">
+          <div className="relative w-full min-h-[30vh] md:min-h-[40vh]">
             {words.map((word, index) => (
               <div
                 key={`${word.text}-${index}`}
