@@ -958,37 +958,67 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'multiple_choice' && currentSlide.options && (
-                      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto pointer-events-auto">
-                        {currentSlide.options.map((option, index) => (
-                          <Card 
-                            key={index} 
-                            className="p-6 hover-elevate cursor-pointer"
-                            onClick={() => startEditingOption(index)}
-                          >
-                            {inlineEditingOptions === index ? (
-                              <Input
-                                value={optionText}
-                                onChange={(e) => setOptionText(e.target.value)}
-                                onBlur={finishEditingOption}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') finishEditingOption();
-                                  if (e.key === 'Escape') {
-                                    setInlineEditingOptions(null);
-                                    setOptionText('');
-                                  }
-                                }}
-                                autoFocus
-                                className="font-medium text-lg text-center bg-transparent border-2 border-dashed border-primary/50"
-                                data-testid={`input-option-${index}`}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div className="font-medium text-lg" data-testid={`text-option-${index}`}>
-                                {option}
-                              </div>
-                            )}
-                          </Card>
-                        ))}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 pointer-events-auto max-h-[55%] overflow-y-auto">
+                        <div className="space-y-3">
+                          <div className="text-center text-sm text-muted-foreground">
+                            0 responses
+                          </div>
+                          {currentSlide.options.map((option, index) => {
+                            const colors = [
+                              "hsl(var(--chart-1))",
+                              "hsl(var(--chart-2))",
+                              "hsl(var(--chart-3))",
+                              "hsl(var(--chart-4))",
+                              "hsl(var(--chart-5))"
+                            ];
+                            return (
+                              <Card 
+                                key={index} 
+                                className="p-4 hover-elevate cursor-pointer space-y-2"
+                                onClick={() => inlineEditingOptions !== index && startEditingOption(index)}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    {inlineEditingOptions === index ? (
+                                      <Input
+                                        value={optionText}
+                                        onChange={(e) => setOptionText(e.target.value)}
+                                        onBlur={finishEditingOption}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') finishEditingOption();
+                                          if (e.key === 'Escape') {
+                                            setInlineEditingOptions(null);
+                                            setOptionText('');
+                                          }
+                                        }}
+                                        autoFocus
+                                        className="font-medium bg-transparent border-2 border-dashed border-primary/50 w-full"
+                                        data-testid={`input-option-${index}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    ) : (
+                                      <span className="font-medium block truncate" data-testid={`text-option-${index}`}>
+                                        {option}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-sm font-semibold shrink-0">0%</span>
+                                </div>
+                                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full rounded-full"
+                                    style={{ 
+                                      width: '2px',
+                                      minWidth: '2px',
+                                      backgroundColor: colors[index % colors.length]
+                                    }}
+                                  />
+                                </div>
+                                <div className="text-xs text-muted-foreground">0 votes</div>
+                              </Card>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                     {currentSlide?.type === 'word_cloud' && (
