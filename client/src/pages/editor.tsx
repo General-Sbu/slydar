@@ -352,16 +352,48 @@ export default function Editor() {
   };
 
   const handleAddOption = () => {
-    if (editingSlide) {
+    if (editingSlide && editingSlide.id) {
       const newOptions = [...(editingSlide.options || []), `Option ${(editingSlide.options?.length || 0) + 1}`];
       setEditingSlide({ ...editingSlide, options: newOptions });
+      
+      // Optimistic update for immediate UI feedback
+      queryClient.setQueryData<Slide[]>(
+        ['/api/presentations', presentationId, 'slides'],
+        (old) => old?.map(slide => 
+          slide.id === editingSlide.id 
+            ? { ...slide, options: newOptions }
+            : slide
+        ) || []
+      );
+      
+      // Persist to database
+      updateSlideMutation.mutate({
+        id: editingSlide.id,
+        data: { options: newOptions }
+      });
     }
   };
 
   const handleRemoveOption = (index: number) => {
-    if (editingSlide && editingSlide.options) {
+    if (editingSlide && editingSlide.options && editingSlide.id) {
       const newOptions = editingSlide.options.filter((_, i) => i !== index);
       setEditingSlide({ ...editingSlide, options: newOptions });
+      
+      // Optimistic update for immediate UI feedback
+      queryClient.setQueryData<Slide[]>(
+        ['/api/presentations', presentationId, 'slides'],
+        (old) => old?.map(slide => 
+          slide.id === editingSlide.id 
+            ? { ...slide, options: newOptions }
+            : slide
+        ) || []
+      );
+      
+      // Persist to database
+      updateSlideMutation.mutate({
+        id: editingSlide.id,
+        data: { options: newOptions }
+      });
     }
   };
 
