@@ -1002,7 +1002,19 @@ export default function Editor() {
                                       </span>
                                     )}
                                   </div>
-                                  <span className="text-sm font-semibold shrink-0">0%</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveOption(index);
+                                    }}
+                                    disabled={(currentSlide.options?.length ?? 0) <= 2}
+                                    data-testid={`button-remove-option-${index}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
                                 <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
                                   <div 
@@ -1018,6 +1030,18 @@ export default function Editor() {
                               </Card>
                             );
                           })}
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddOption();
+                            }}
+                            data-testid="button-add-option"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Option
+                          </Button>
                         </div>
                       </div>
                     )}
