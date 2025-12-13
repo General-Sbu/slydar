@@ -957,13 +957,13 @@ export default function Editor() {
                         />
                       </div>
                     )}
-                    {currentSlide?.type === 'multiple_choice' && currentSlide.options && (
+                    {currentSlide?.type === 'multiple_choice' && (editingSlide?.options || currentSlide.options) && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 pointer-events-auto max-h-[55%] overflow-y-auto">
                         <div className="space-y-3">
                           <div className="text-center text-sm text-muted-foreground">
                             0 responses
                           </div>
-                          {currentSlide.options.map((option, index) => {
+                          {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
                             const colors = [
                               "hsl(var(--chart-1))",
                               "hsl(var(--chart-2))",
@@ -1010,7 +1010,7 @@ export default function Editor() {
                                       e.stopPropagation();
                                       handleRemoveOption(index);
                                     }}
-                                    disabled={(currentSlide.options?.length ?? 0) <= 2}
+                                    disabled={((editingSlide?.options || currentSlide.options)?.length ?? 0) <= 2}
                                     data-testid={`button-remove-option-${index}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
