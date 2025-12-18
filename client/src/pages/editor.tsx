@@ -990,12 +990,9 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'multiple_choice' && (editingSlide?.options || currentSlide.options) && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 pointer-events-auto max-h-[55%] overflow-y-auto">
-                        <div className="space-y-3">
-                          <div className="text-center text-sm text-muted-foreground">
-                            0 responses
-                          </div>
-                          {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 pointer-events-none">
+                        <div className="grid grid-cols-2 gap-2">
+                          {(editingSlide?.options || currentSlide.options || []).slice(0, 4).map((option, index) => {
                             const colors = [
                               "hsl(var(--chart-1))",
                               "hsl(var(--chart-2))",
@@ -1004,77 +1001,21 @@ export default function Editor() {
                               "hsl(var(--chart-5))"
                             ];
                             return (
-                              <Card 
+                              <div 
                                 key={index} 
-                                className="p-4 hover-elevate cursor-pointer space-y-2"
-                                onClick={() => inlineEditingOptions !== index && startEditingOption(index)}
+                                className="bg-background/90 backdrop-blur rounded-lg px-4 py-3 text-center border"
+                                style={{ borderLeftColor: colors[index % colors.length], borderLeftWidth: '4px' }}
                               >
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    {inlineEditingOptions === index ? (
-                                      <Input
-                                        value={optionText}
-                                        onChange={(e) => setOptionText(e.target.value)}
-                                        onBlur={finishEditingOption}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') finishEditingOption();
-                                          if (e.key === 'Escape') {
-                                            setInlineEditingOptions(null);
-                                            setOptionText('');
-                                          }
-                                        }}
-                                        autoFocus
-                                        className="font-medium bg-transparent border-2 border-dashed border-primary/50 w-full"
-                                        data-testid={`input-option-${index}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    ) : (
-                                      <span className="font-medium block truncate" data-testid={`text-option-${index}`}>
-                                        {option}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveOption(index);
-                                    }}
-                                    disabled={((editingSlide?.options || currentSlide.options)?.length ?? 0) <= 2}
-                                    data-testid={`button-remove-option-${index}`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full rounded-full"
-                                    style={{ 
-                                      width: '2px',
-                                      minWidth: '2px',
-                                      backgroundColor: colors[index % colors.length]
-                                    }}
-                                  />
-                                </div>
-                                <div className="text-xs text-muted-foreground">0 votes</div>
-                              </Card>
+                                <span className="font-medium text-sm truncate block">{option}</span>
+                              </div>
                             );
                           })}
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddOption();
-                            }}
-                            data-testid="button-add-option"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Option
-                          </Button>
                         </div>
+                        {(editingSlide?.options || currentSlide.options || []).length > 4 && (
+                          <div className="text-center text-xs text-muted-foreground mt-2">
+                            +{(editingSlide?.options || currentSlide.options || []).length - 4} more options
+                          </div>
+                        )}
                       </div>
                     )}
                     {currentSlide?.type === 'word_cloud' && (
@@ -1146,6 +1087,102 @@ export default function Editor() {
                     )}
                   </div>
                   <SlideWatermark />
+                </Card>
+              )}
+
+              {/* Poll Creation Form - Wooclap Style */}
+              {currentSlide?.type === 'multiple_choice' && (
+                <Card className="p-6" data-testid="poll-editor-panel">
+                  <div className="space-y-6">
+                    {/* Question Section */}
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-lg font-semibold">Create a Poll</h3>
+                        <p className="text-sm text-muted-foreground">Enter the question you want to ask your audience</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Input
+                          placeholder="Question title"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) {
+                              setEditingSlide({ ...editingSlide, question: e.target.value });
+                            }
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({
+                                id: editingSlide.id,
+                                data: { question: editingSlide.question }
+                              });
+                            }
+                          }}
+                          className="text-base"
+                          data-testid="input-poll-question"
+                        />
+                        <p className="text-xs text-muted-foreground">e.g.: Do you think we need to do more to fight climate change?</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Answers Section */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Answers</h3>
+                        <p className="text-sm text-muted-foreground">Enter the answers your audience can vote for</p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {(editingSlide?.options || currentSlide?.options || []).map((option, index) => (
+                          <div key={index} className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <Input
+                                  placeholder={`Choice ${index + 1}`}
+                                  value={option}
+                                  onChange={(e) => handleUpdateOption(index, e.target.value)}
+                                  onBlur={() => {
+                                    if (editingSlide?.id) {
+                                      updateSlideMutation.mutate({
+                                        id: editingSlide.id,
+                                        data: { options: editingSlide.options }
+                                      });
+                                    }
+                                  }}
+                                  className="text-base"
+                                  data-testid={`input-choice-${index}`}
+                                />
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveOption(index)}
+                                disabled={((editingSlide?.options || currentSlide?.options)?.length ?? 0) <= 2}
+                                className="text-muted-foreground hover:text-destructive shrink-0"
+                                data-testid={`button-delete-choice-${index}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground pl-1">
+                              {index === 0 ? 'e.g.: Yes' : index === 1 ? 'e.g.: No' : `e.g.: Option ${index + 1}`}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={handleAddOption}
+                        className="gap-2"
+                        data-testid="button-new-choice"
+                      >
+                        <Plus className="h-4 w-4" />
+                        New choice
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
               )}
             </div>
