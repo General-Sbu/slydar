@@ -241,10 +241,10 @@ export default function Editor() {
     const defaultData: Record<SlideType, { type: SlideType; question: string; options?: string[]; config?: any }> = {
       multiple_choice: { 
         type: 'multiple_choice', 
-        question: "", 
+        question: "Your question here", 
         options: ["Option 1", "Option 2", "Option 3", "Option 4"],
         config: {
-          elements: [createTextElement("New multiple choice question?", 40, 20, "bold", "center")]
+          elements: []
         }
       },
       word_cloud: { 
