@@ -538,7 +538,7 @@ export default function Presenter() {
               </Card>
             )}
             
-            {currentSlide?.type !== 'word_cloud' && (
+            {currentSlide?.type !== 'word_cloud' && currentSlide?.type !== 'multiple_choice' && (
               <>
                 <PresentationTimer />
                 
