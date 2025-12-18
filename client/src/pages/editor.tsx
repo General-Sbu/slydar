@@ -989,33 +989,46 @@ export default function Editor() {
                         />
                       </div>
                     )}
-                    {currentSlide?.type === 'multiple_choice' && (editingSlide?.options || currentSlide.options) && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 pointer-events-none">
-                        <div className="grid grid-cols-2 gap-2">
-                          {(editingSlide?.options || currentSlide.options || []).slice(0, 4).map((option, index) => {
-                            const colors = [
-                              "hsl(var(--chart-1))",
-                              "hsl(var(--chart-2))",
-                              "hsl(var(--chart-3))",
-                              "hsl(var(--chart-4))",
-                              "hsl(var(--chart-5))"
-                            ];
-                            return (
-                              <div 
-                                key={index} 
-                                className="bg-background/90 backdrop-blur rounded-lg px-4 py-3 text-center border"
-                                style={{ borderLeftColor: colors[index % colors.length], borderLeftWidth: '4px' }}
-                              >
-                                <span className="font-medium text-sm truncate block">{option}</span>
-                              </div>
-                            );
-                          })}
+                    {currentSlide?.type === 'multiple_choice' && (
+                      <div className="absolute inset-0 flex flex-col pointer-events-none p-6">
+                        {/* Question at top */}
+                        <div className="text-center pt-4">
+                          <h2 className="text-xl font-semibold px-4">
+                            {editingSlide?.question || currentSlide.question || 'Your question here'}
+                          </h2>
                         </div>
-                        {(editingSlide?.options || currentSlide.options || []).length > 4 && (
-                          <div className="text-center text-xs text-muted-foreground mt-2">
-                            +{(editingSlide?.options || currentSlide.options || []).length - 4} more options
+                        
+                        {/* Spacer */}
+                        <div className="flex-1" />
+                        
+                        {/* Options at bottom */}
+                        <div className="w-full max-w-xl mx-auto px-4 pb-4">
+                          <div className="grid grid-cols-2 gap-2">
+                            {(editingSlide?.options || currentSlide.options || []).slice(0, 4).map((option, index) => {
+                              const colors = [
+                                "hsl(var(--chart-1))",
+                                "hsl(var(--chart-2))",
+                                "hsl(var(--chart-3))",
+                                "hsl(var(--chart-4))",
+                                "hsl(var(--chart-5))"
+                              ];
+                              return (
+                                <div 
+                                  key={index} 
+                                  className="bg-background/90 backdrop-blur rounded-lg px-4 py-3 text-center border"
+                                  style={{ borderLeftColor: colors[index % colors.length], borderLeftWidth: '4px' }}
+                                >
+                                  <span className="font-medium text-sm truncate block">{option}</span>
+                                </div>
+                              );
+                            })}
                           </div>
-                        )}
+                          {(editingSlide?.options || currentSlide.options || []).length > 4 && (
+                            <div className="text-center text-xs text-muted-foreground mt-2">
+                              +{(editingSlide?.options || currentSlide.options || []).length - 4} more options
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     {currentSlide?.type === 'word_cloud' && (
