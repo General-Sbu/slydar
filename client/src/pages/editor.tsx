@@ -990,20 +990,17 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'multiple_choice' && (
-                      <div className="absolute inset-0 flex flex-col pointer-events-none p-6">
-                        {/* Question at top */}
-                        <div className="text-center pt-4">
-                          <h2 className="text-xl font-semibold px-4">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        {/* Question at top - bigger and centered */}
+                        <div className="text-center mb-8">
+                          <h2 className="text-3xl font-bold px-4">
                             {editingSlide?.question || currentSlide.question || 'Your question here'}
                           </h2>
                         </div>
                         
-                        {/* Spacer */}
-                        <div className="flex-1" />
-                        
-                        {/* Options at bottom */}
-                        <div className="w-full max-w-xl mx-auto px-4 pb-4">
-                          <div className="grid grid-cols-2 gap-2">
+                        {/* Options centered in middle */}
+                        <div className="w-full max-w-xl mx-auto px-4">
+                          <div className="grid grid-cols-2 gap-3">
                             {(editingSlide?.options || currentSlide.options || []).slice(0, 4).map((option, index) => {
                               const colors = [
                                 "hsl(var(--chart-1))",
