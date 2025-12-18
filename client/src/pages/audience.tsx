@@ -355,7 +355,8 @@ export default function Audience() {
           <Card className="p-8 relative overflow-visible" data-testid="card-slide">
             <div className="space-y-8 relative z-10">
               {currentSlide.type === 'multiple_choice' && (
-                <div className="text-center">
+                <div className="text-center mb-4">
+                  <h2 className="text-2xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
                   <p className="text-muted-foreground">Select one option</p>
                 </div>
               )}

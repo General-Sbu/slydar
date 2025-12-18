@@ -16,12 +16,15 @@ interface LivePollChartProps {
 
 export default function LivePollChart({ question, options, totalVotes }: LivePollChartProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">{totalVotes} responses</p>
+    <div className="flex flex-col items-center h-full">
+      {/* Question at top center - bigger */}
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold">{question}</h2>
+        <p className="text-sm text-muted-foreground mt-2">{totalVotes} responses</p>
       </div>
 
-      <div className="space-y-4">
+      {/* Options in center */}
+      <div className="space-y-4 w-full max-w-2xl">
         {options.map((option, index) => (
           <Card key={index} className="p-4 space-y-2">
             <div className="flex items-center justify-between">
