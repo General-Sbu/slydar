@@ -511,11 +511,30 @@ export default function Presenter() {
                       question={currentSlide.question || "Question"}
                       responses={allWordCloudResponses.length > 0 ? allWordCloudResponses : slideResponses}
                     />
+                  ) : currentSlide.type === 'open_ended' ? (
+                    <div className="flex flex-col h-full">
+                      <div className="text-center mb-6">
+                        <h2 className="text-3xl font-bold">{currentSlide.question || 'Your question here'}</h2>
+                      </div>
+                      <div className="flex-1 overflow-y-auto max-h-[50vh]">
+                        {slideResponses.length === 0 ? (
+                          <div className="text-center text-muted-foreground">
+                            Waiting for responses...
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {slideResponses.map((response, index) => (
+                              <Card key={response.id || index} className="p-4">
+                                <p className="text-base">{response.answer}</p>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className="text-center">
-                      <div className="text-muted-foreground">
-                        {slideResponses.length} {slideResponses.length === 1 ? 'response' : 'responses'}
-                      </div>
+                      <h2 className="text-3xl font-bold">{currentSlide.question || 'Slide'}</h2>
                     </div>
                   )}
                 </div>
