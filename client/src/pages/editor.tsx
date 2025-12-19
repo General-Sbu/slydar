@@ -996,13 +996,13 @@ export default function Editor() {
                       isEditable={true}
                     />
                   </div>
-                  <div className="w-full text-center space-y-6 relative z-10 pointer-events-none">
+                  <div className="w-full h-full text-center space-y-6 relative z-10 pointer-events-none">
                     {currentSlide?.type === 'image' && currentSlide.question && (
-                      <div className="pointer-events-none">
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
                         <img 
                           src={currentSlide.question || ''} 
                           alt={`Slide ${selectedSlideIndex + 1}`} 
-                          className="w-full h-full object-contain"
+                          className="max-w-full max-h-full object-contain"
                           data-testid="img-slide"
                         />
                       </div>

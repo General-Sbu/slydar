@@ -492,11 +492,11 @@ export default function Presenter() {
                       <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
                     </div>
                   ) : currentSlide.type === 'image' ? (
-                    <div className="flex items-center justify-center min-h-[200px]">
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
                       <img 
                         src={currentSlide.question || ''} 
                         alt={`Slide ${currentSlideIndex + 1}`} 
-                        className="max-w-full max-h-[40vh] sm:max-h-[50vh] md:max-h-[70vh] object-contain"
+                        className="max-w-full max-h-full object-contain"
                         data-testid="img-slide"
                       />
                     </div>
