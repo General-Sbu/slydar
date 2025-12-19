@@ -17,6 +17,7 @@ import {
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -85,6 +86,8 @@ export default function Editor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
       showNotification("New slide created", "success");
+      // Auto-select the newly created slide (will be at the end)
+      setTimeout(() => setSelectedSlideIndex(slides.length), 100);
     }
   });
 
@@ -618,20 +621,35 @@ export default function Editor() {
       <div>
         <h3 className="font-semibold mb-3">Slides</h3>
         <div className="space-y-2">
-          {slides.map((slide, index) => (
-            <Card 
-              key={slide.id}
-              className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
-              onClick={() => {
-                setSelectedSlideIndex(index);
-                setSlidesSheetOpen(false);
-              }}
-              data-testid={`card-slide-${index}`}
-            >
-              <div className="text-sm font-medium mb-2">Slide {index + 1}</div>
-              {getSlidePreview(slide)}
-            </Card>
-          ))}
+          <AnimatePresence mode="popLayout">
+            {slides.map((slide, index) => (
+              <motion.div
+                key={slide.id}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -100, scale: 0.9 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 500, 
+                  damping: 30,
+                  mass: 0.8
+                }}
+                layout
+              >
+                <Card 
+                  className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
+                  onClick={() => {
+                    setSelectedSlideIndex(index);
+                    setSlidesSheetOpen(false);
+                  }}
+                  data-testid={`card-slide-${index}`}
+                >
+                  <div className="text-sm font-medium mb-2">Slide {index + 1}</div>
+                  {getSlidePreview(slide)}
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
       
