@@ -454,7 +454,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className="p-4 sm:p-6 md:p-12 cursor-grab active:cursor-grabbing relative overflow-visible w-full"
+                className={`cursor-grab active:cursor-grabbing relative overflow-visible w-full ${currentSlide.type === 'image' ? 'aspect-video p-0' : 'p-4 sm:p-6 md:p-12'}`}
                 style={{
                   backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                   color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined)
@@ -468,76 +468,80 @@ export default function Presenter() {
                 onMouseLeave={onMouseLeave}
                 data-testid="card-slide"
               >
-                <div className="absolute inset-0">
-                  <SlideCanvas
-                    elements={currentSlide?.config?.elements || []}
-                    isEditable={false}
-                  />
-                </div>
-                {/* Drawing Canvas Overlay */}
-                <DrawingCanvas
-                  annotations={annotations}
-                  activeTool={activeTool}
-                  activeColor={activeColor}
-                  isDrawingMode={isDrawingMode}
-                  onAnnotationAdd={(annotation) => {
-                    // Only emit via Socket.IO - don't add locally to avoid duplication
-                    // The socket broadcast will add it for all clients including presenter
-                    addAnnotation(annotation);
-                  }}
-                />
-                <div className="relative z-10">
-                  {currentSlide.type === 'heading' ? (
-                    <div className="text-center">
-                      <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
-                    </div>
-                  ) : currentSlide.type === 'image' ? (
-                    <div className="absolute inset-0 flex items-center justify-center p-4">
-                      <img 
-                        src={currentSlide.question || ''} 
-                        alt={`Slide ${currentSlideIndex + 1}`} 
-                        className="max-w-full max-h-full object-contain"
-                        data-testid="img-slide"
+                {currentSlide.type === 'image' ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img 
+                      src={currentSlide.question || ''} 
+                      alt={`Slide ${currentSlideIndex + 1}`} 
+                      className="max-w-full max-h-full object-contain"
+                      data-testid="img-slide"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="absolute inset-0">
+                      <SlideCanvas
+                        elements={currentSlide?.config?.elements || []}
+                        isEditable={false}
                       />
                     </div>
-                  ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
-                    <LivePollChart
-                      question={currentSlide.question || "Question"}
-                      options={chartOptions}
-                      totalVotes={slideResponses.length}
+                    {/* Drawing Canvas Overlay */}
+                    <DrawingCanvas
+                      annotations={annotations}
+                      activeTool={activeTool}
+                      activeColor={activeColor}
+                      isDrawingMode={isDrawingMode}
+                      onAnnotationAdd={(annotation) => {
+                        // Only emit via Socket.IO - don't add locally to avoid duplication
+                        // The socket broadcast will add it for all clients including presenter
+                        addAnnotation(annotation);
+                      }}
                     />
-                  ) : currentSlide.type === 'word_cloud' ? (
-                    <WordCloud
-                      question={currentSlide.question || "Question"}
-                      responses={allWordCloudResponses.length > 0 ? allWordCloudResponses : slideResponses}
-                    />
-                  ) : currentSlide.type === 'open_ended' ? (
-                    <div className="flex flex-col items-center min-h-[50vh]">
-                      <div className="text-center mb-4">
-                        <h2 className="text-3xl font-bold">{currentSlide.question || ''}</h2>
-                        {slideResponses.length === 0 && (
-                          <p className="text-muted-foreground mt-4">Waiting for responses...</p>
-                        )}
-                      </div>
-                      {slideResponses.length > 0 && (
-                        <div className="w-full max-w-4xl overflow-y-auto max-h-[40vh]">
-                          <div className="columns-1 md:columns-2 gap-4 space-y-4">
-                            {slideResponses.map((response, index) => (
-                              <Card key={response.id || index} className="p-4 break-inside-avoid">
-                                <p className="text-base leading-relaxed">{response.answer}</p>
-                              </Card>
-                            ))}
+                    <div className="relative z-10">
+                      {currentSlide.type === 'heading' ? (
+                        <div className="text-center">
+                          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                        </div>
+                      ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
+                        <LivePollChart
+                          question={currentSlide.question || "Question"}
+                          options={chartOptions}
+                          totalVotes={slideResponses.length}
+                        />
+                      ) : currentSlide.type === 'word_cloud' ? (
+                        <WordCloud
+                          question={currentSlide.question || "Question"}
+                          responses={allWordCloudResponses.length > 0 ? allWordCloudResponses : slideResponses}
+                        />
+                      ) : currentSlide.type === 'open_ended' ? (
+                        <div className="flex flex-col items-center min-h-[50vh]">
+                          <div className="text-center mb-4">
+                            <h2 className="text-3xl font-bold">{currentSlide.question || ''}</h2>
+                            {slideResponses.length === 0 && (
+                              <p className="text-muted-foreground mt-4">Waiting for responses...</p>
+                            )}
                           </div>
+                          {slideResponses.length > 0 && (
+                            <div className="w-full max-w-4xl overflow-y-auto max-h-[40vh]">
+                              <div className="columns-1 md:columns-2 gap-4 space-y-4">
+                                {slideResponses.map((response, index) => (
+                                  <Card key={response.id || index} className="p-4 break-inside-avoid">
+                                    <p className="text-base leading-relaxed">{response.answer}</p>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <h2 className="text-3xl font-bold">{currentSlide.question || 'Slide'}</h2>
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <h2 className="text-3xl font-bold">{currentSlide.question || 'Slide'}</h2>
-                    </div>
-                  )}
-                </div>
-                <SlideWatermark />
+                    <SlideWatermark />
+                  </>
+                )}
               </Card>
             )}
           </div>
