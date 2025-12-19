@@ -13,7 +13,7 @@ import CastButton, { CastButtonRef } from "@/components/CastButton";
 import DrawingToolbar from "@/components/DrawingToolbar";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import WordCloud from "@/components/WordCloud";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -369,14 +369,15 @@ export default function Presenter() {
         <div className="px-2 sm:px-4 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                data-testid="button-exit-presentation"
-                onClick={handleEndPresentation}
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              <Link href={`/editor/${presentationId}`}>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  data-testid="button-back-to-editor"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
               <div className="font-semibold truncate hidden sm:block">{presentation?.title || 'Untitled'}</div>
               <div className="flex items-center gap-1.5 text-sm">
                 <Users className="h-4 w-4" />
