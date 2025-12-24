@@ -31,7 +31,7 @@ export default function SessionAnalytics() {
   const { id } = useParams<{ id: string }>();
 
   const { data: session, isLoading } = useQuery<SessionDetails>({
-    queryKey: ['/api/sessions', id, 'details'],
+    queryKey: [`/api/sessions/${id}/details`],
     enabled: !!id,
   });
 
