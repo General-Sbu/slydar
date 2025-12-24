@@ -14,7 +14,7 @@ import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,7 @@ import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, SlideType, SlideElement, Response } from "@shared/schema";
+import { defaultSpinnerEntries } from "@shared/schema";
 import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -283,6 +284,15 @@ export default function Editor() {
         options: [],
         config: {
           elements: []
+        }
+      },
+      spinner: {
+        type: 'spinner',
+        question: "",
+        options: [],
+        config: {
+          elements: [],
+          spinnerEntries: defaultSpinnerEntries
         }
       }
     };
@@ -684,6 +694,13 @@ export default function Editor() {
               icon={Type}
               title="Heading"
               description="Title slide"
+            />
+          </div>
+          <div onClick={() => { handleAddSlide('spinner'); setSlidesSheetOpen(false); }}>
+            <SlideTypeCard
+              icon={CircleDot}
+              title="Spinner Wheel"
+              description="Random picker"
             />
           </div>
         </div>

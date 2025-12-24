@@ -61,8 +61,26 @@ export const presentations = pgTable("presentations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image"]);
+export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image", "spinner"]);
 export type SlideType = z.infer<typeof slideTypeEnum>;
+
+export const spinnerEntrySchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  color: z.string(),
+});
+export type SpinnerEntry = z.infer<typeof spinnerEntrySchema>;
+
+export const defaultSpinnerEntries: SpinnerEntry[] = [
+  { id: "1", label: "Entry 1", color: "#9333EA" },
+  { id: "2", label: "Entry 2", color: "#DC2626" },
+  { id: "3", label: "Entry 3", color: "#EA580C" },
+  { id: "4", label: "Entry 4", color: "#EAB308" },
+  { id: "5", label: "Entry 5", color: "#22C55E" },
+  { id: "6", label: "Entry 6", color: "#14B8A6" },
+  { id: "7", label: "Entry 7", color: "#3B82F6" },
+  { id: "8", label: "Entry 8", color: "#1E3A8A" },
+];
 
 export const imageElementSchema = z.object({
   type: z.literal("image"),
