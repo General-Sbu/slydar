@@ -12,6 +12,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
+import SpinnerWheel from "@/components/SpinnerWheel";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot 
@@ -1130,6 +1131,14 @@ export default function Editor() {
                     {currentSlide?.type === 'open_ended' && (
                       <div className="text-muted-foreground pointer-events-none">Open text input will appear here</div>
                     )}
+                    {currentSlide?.type === 'spinner' && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <SpinnerWheel 
+                          entries={editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || defaultSpinnerEntries}
+                          isInteractive={false}
+                        />
+                      </div>
+                    )}
                   </div>
                   <SlideWatermark />
                 </Card>
@@ -1225,6 +1234,128 @@ export default function Editor() {
                       >
                         <Plus className="h-4 w-4" />
                         New choice
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Spinner Wheel Settings Panel */}
+              {currentSlide?.type === 'spinner' && (
+                <Card className="p-6" data-testid="spinner-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Spinner Wheel</h3>
+                      <p className="text-sm text-muted-foreground">Customize the entries on your spinner wheel</p>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Entries</h3>
+                        <p className="text-sm text-muted-foreground">Edit the labels for each wheel segment</p>
+                      </div>
+                      
+                      <div className="space-y-3 max-h-80 overflow-y-auto">
+                        {(editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || defaultSpinnerEntries).map((entry: { id: string; label: string; color: string }, index: number) => (
+                          <div key={entry.id} className="flex items-center gap-2">
+                            <div 
+                              className="w-4 h-4 rounded-full shrink-0"
+                              style={{ backgroundColor: entry.color }}
+                            />
+                            <Input
+                              value={entry.label}
+                              onChange={(e) => {
+                                const entries = [...(editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || defaultSpinnerEntries)];
+                                entries[index] = { ...entries[index], label: e.target.value };
+                                setEditingSlide({
+                                  ...editingSlide,
+                                  config: {
+                                    elements: editingSlide?.config?.elements || [],
+                                    ...editingSlide?.config,
+                                    spinnerEntries: entries
+                                  }
+                                });
+                              }}
+                              onBlur={() => {
+                                if (editingSlide?.id) {
+                                  updateSlideMutation.mutate({
+                                    id: editingSlide.id,
+                                    data: { config: editingSlide.config }
+                                  });
+                                }
+                              }}
+                              placeholder={`Entry ${index + 1}`}
+                              className="flex-1"
+                              data-testid={`input-spinner-entry-${index}`}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const entries = [...(editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || defaultSpinnerEntries)];
+                                if (entries.length > 2) {
+                                  entries.splice(index, 1);
+                                  const newConfig = {
+                                    elements: editingSlide?.config?.elements || [],
+                                    ...editingSlide?.config,
+                                    spinnerEntries: entries
+                                  };
+                                  setEditingSlide({
+                                    ...editingSlide,
+                                    config: newConfig
+                                  });
+                                  if (editingSlide?.id) {
+                                    updateSlideMutation.mutate({
+                                      id: editingSlide.id,
+                                      data: { config: newConfig }
+                                    });
+                                  }
+                                }
+                              }}
+                              disabled={(editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || []).length <= 2}
+                              className="text-muted-foreground hover:text-destructive shrink-0"
+                              data-testid={`button-delete-spinner-entry-${index}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const entries = [...(editingSlide?.config?.spinnerEntries || currentSlide?.config?.spinnerEntries || defaultSpinnerEntries)];
+                          const colors = ["#9333EA", "#DC2626", "#EA580C", "#EAB308", "#22C55E", "#14B8A6", "#3B82F6", "#1E3A8A"];
+                          const newEntry = {
+                            id: crypto.randomUUID(),
+                            label: `Entry ${entries.length + 1}`,
+                            color: colors[entries.length % colors.length]
+                          };
+                          entries.push(newEntry);
+                          const newConfig = {
+                            elements: editingSlide?.config?.elements || [],
+                            ...editingSlide?.config,
+                            spinnerEntries: entries
+                          };
+                          setEditingSlide({
+                            ...editingSlide,
+                            config: newConfig
+                          });
+                          if (editingSlide?.id) {
+                            updateSlideMutation.mutate({
+                              id: editingSlide.id,
+                              data: { config: newConfig }
+                            });
+                          }
+                        }}
+                        className="gap-2"
+                        data-testid="button-add-spinner-entry"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add entry
                       </Button>
                     </div>
                   </div>

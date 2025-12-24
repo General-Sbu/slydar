@@ -13,12 +13,14 @@ import CastButton, { CastButtonRef } from "@/components/CastButton";
 import DrawingToolbar from "@/components/DrawingToolbar";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import WordCloud from "@/components/WordCloud";
+import SpinnerWheel from "@/components/SpinnerWheel";
 import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { Presentation, Slide, PresentationSession, Response, Feedback, Reaction, AnnotationData, AnnotationToolType } from "@shared/schema";
+import { defaultSpinnerEntries } from "@shared/schema";
 import { useWebSocket } from "@/lib/useWebSocket";
 import { useNotification } from "@/hooks/useNotification";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -534,6 +536,13 @@ export default function Presenter() {
                             </div>
                           )}
                         </div>
+                      ) : currentSlide.type === 'spinner' ? (
+                        <div className="flex items-center justify-center">
+                          <SpinnerWheel
+                            entries={currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
+                            isInteractive={true}
+                          />
+                        </div>
                       ) : (
                         <div className="text-center">
                           <h2 className="text-3xl font-bold">{currentSlide.question || 'Slide'}</h2>
@@ -561,7 +570,7 @@ export default function Presenter() {
               </Card>
             )}
             
-            {currentSlide?.type !== 'word_cloud' && currentSlide?.type !== 'multiple_choice' && currentSlide?.type !== 'open_ended' && (
+            {currentSlide?.type !== 'word_cloud' && currentSlide?.type !== 'multiple_choice' && currentSlide?.type !== 'open_ended' && currentSlide?.type !== 'spinner' && (
               <>
                 <PresentationTimer />
                 

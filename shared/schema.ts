@@ -120,6 +120,7 @@ export type TextElement = z.infer<typeof textElementSchema>;
 export const slideConfigSchema = z.object({
   elements: z.array(slideElementSchema).default([]),
   background: z.string().optional(),
+  spinnerEntries: z.array(spinnerEntrySchema).optional(),
 }).passthrough();
 
 export type SlideConfig = z.infer<typeof slideConfigSchema>;

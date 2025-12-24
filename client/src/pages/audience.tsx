@@ -15,6 +15,8 @@ import { useRoute } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
+import { defaultSpinnerEntries } from "@shared/schema";
+import SpinnerWheel from "@/components/SpinnerWheel";
 import { useNotification } from "@/hooks/useNotification";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -401,6 +403,18 @@ export default function Audience() {
                   </Button>
                 </div>
               )}
+
+              {currentSlide.type === 'spinner' && (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <SpinnerWheel
+                    entries={currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
+                    isInteractive={false}
+                  />
+                  <p className="text-muted-foreground mt-4 text-center">
+                    The presenter will spin the wheel
+                  </p>
+                </div>
+              )}
             </div>
             <DrawingCanvas
               annotations={annotations}
@@ -412,7 +426,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && participantId && (
           <div className="mt-6">
             <SlideReactions
               slideId={currentSlide.id}
@@ -424,7 +438,7 @@ export default function Audience() {
           </div>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && session && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">🎉</span>
@@ -437,7 +451,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Check className="h-5 w-5 text-primary" />
