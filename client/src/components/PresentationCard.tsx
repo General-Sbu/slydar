@@ -1,9 +1,11 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Play, Users, Calendar, Trash2, Edit2, BarChart3 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MoreVertical, Play, Users, Calendar, Trash2, Edit2, BarChart3, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 
 interface PresentationCardProps {
@@ -17,6 +19,7 @@ interface PresentationCardProps {
   onDelete?: () => void;
   onPresent?: () => void;
   onAnalytics?: () => void;
+  onRename?: (newName: string) => void;
 }
 
 export default function PresentationCard({
@@ -28,9 +31,19 @@ export default function PresentationCard({
   onEdit,
   onDelete,
   onPresent,
-  onAnalytics
+  onAnalytics,
+  onRename
 }: PresentationCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [newName, setNewName] = useState(title);
+
+  const handleRename = () => {
+    if (newName.trim() && newName !== title) {
+      onRename?.(newName.trim());
+    }
+    setShowRenameDialog(false);
+  };
 
   const handleDelete = () => {
     onDelete?.();
@@ -66,6 +79,10 @@ export default function PresentationCard({
                 <DropdownMenuItem onClick={onEdit} data-testid="menu-item-edit">
                   <Edit2 className="mr-2 h-4 w-4" />
                   <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowRenameDialog(true)} data-testid="menu-item-rename">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  <span>Rename</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onAnalytics} data-testid="menu-item-analytics">
                   <BarChart3 className="mr-2 h-4 w-4" />
@@ -139,6 +156,41 @@ export default function PresentationCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showRenameDialog} onOpenChange={(open) => {
+        setShowRenameDialog(open);
+        if (!open) setNewName(title);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Presentation</DialogTitle>
+            <DialogDescription>
+              Enter a new name for your presentation.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Presentation name"
+            data-testid="input-rename-presentation"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRename();
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)} data-testid="button-cancel-rename">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRename}
+              disabled={!newName.trim() || newName === title}
+              data-testid="button-confirm-rename"
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

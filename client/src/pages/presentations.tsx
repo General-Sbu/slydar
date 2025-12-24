@@ -59,6 +59,25 @@ export default function Presentations() {
     }
   });
 
+  const renameMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const res = await fetch(`/api/presentations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      if (!res.ok) throw new Error('Failed to rename');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations'] });
+      showNotification("Presentation renamed", "success");
+    },
+    onError: () => {
+      showNotification("Failed to rename presentation", "error");
+    }
+  });
+
   const filteredPresentations = presentations.filter(p =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -128,6 +147,7 @@ export default function Presentations() {
                 onDelete={() => deleteMutation.mutate(presentation.id)}
                 onPresent={() => setLocation(`/presenter/${presentation.id}`)}
                 onAnalytics={() => setLocation(`/analytics/${presentation.id}`)}
+                onRename={(newName) => renameMutation.mutate({ id: presentation.id, title: newName })}
               />
             ))}
           </div>
