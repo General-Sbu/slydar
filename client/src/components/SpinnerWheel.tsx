@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
-import { Play } from "lucide-react";
+import { Play, UserMinus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { SpinnerEntry } from "@shared/schema";
 
 interface SpinnerWheelProps {
   entries: SpinnerEntry[];
   isInteractive?: boolean;
   onSpinComplete?: (winner: SpinnerEntry) => void;
+  onRemoveWinner?: (winner: SpinnerEntry) => void;
   isSpinning?: boolean;
   winningIndex?: number | null;
 }
@@ -65,6 +67,7 @@ export default function SpinnerWheel({
   entries, 
   isInteractive = false,
   onSpinComplete,
+  onRemoveWinner,
   isSpinning: externalSpinning,
   winningIndex: externalWinningIndex
 }: SpinnerWheelProps) {
@@ -222,14 +225,30 @@ export default function SpinnerWheel({
 
       {winner && !isSpinning && (
         <div 
-          className="text-center p-6 rounded-lg bg-card border-2 animate-pulse"
+          className="text-center p-6 rounded-lg bg-card border-2"
           style={{ borderColor: winner.color }}
           data-testid="spinner-result"
         >
           <p className="text-sm text-muted-foreground mb-1">Winner:</p>
-          <p className="text-3xl font-bold" style={{ color: winner.color }}>
+          <p className="text-3xl font-bold mb-4" style={{ color: winner.color }}>
             {winner.label}
           </p>
+          {isInteractive && onRemoveWinner && entries.length > 2 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onRemoveWinner(winner);
+                setWinner(null);
+                setRotation(0);
+              }}
+              className="gap-2"
+              data-testid="button-remove-winner"
+            >
+              <UserMinus className="h-4 w-4" />
+              Remove & Spin Again
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -46,6 +46,7 @@ export default function Presenter() {
   const [activeTool, setActiveTool] = useState<AnnotationToolType | null>(null);
   const [activeColor, setActiveColor] = useState("#ef4444");
   const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
+  const [activeSpinnerEntries, setActiveSpinnerEntries] = useState<typeof defaultSpinnerEntries | null>(null);
   
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
@@ -136,6 +137,7 @@ export default function Presenter() {
       setCurrentSlideIndex(data.slideIndex);
       setCurrentSlide(data.slide);
       setAnnotations([]);
+      setActiveSpinnerEntries(null);
     },
     onNewResponse: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/sessions', session?.id, 'responses'] });
@@ -204,6 +206,7 @@ export default function Presenter() {
       const newIndex = currentSlideIndex - 1;
       setCurrentSlideIndex(newIndex);
       navigateSlide(newIndex);
+      setActiveSpinnerEntries(null);
     }
   };
 
@@ -212,6 +215,7 @@ export default function Presenter() {
       const newIndex = currentSlideIndex + 1;
       setCurrentSlideIndex(newIndex);
       navigateSlide(newIndex);
+      setActiveSpinnerEntries(null);
     }
   };
 
@@ -539,8 +543,13 @@ export default function Presenter() {
                       ) : currentSlide.type === 'spinner' ? (
                         <div className="flex items-center justify-center">
                           <SpinnerWheel
-                            entries={currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
+                            entries={activeSpinnerEntries || currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
                             isInteractive={true}
+                            onRemoveWinner={(winner) => {
+                              const currentEntries = activeSpinnerEntries || currentSlide.config?.spinnerEntries || defaultSpinnerEntries;
+                              const filteredEntries = currentEntries.filter(e => e.id !== winner.id);
+                              setActiveSpinnerEntries(filteredEntries);
+                            }}
                           />
                         </div>
                       ) : (
