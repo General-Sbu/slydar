@@ -130,6 +130,7 @@ export const slides = pgTable("slides", {
   presentationId: varchar("presentation_id").notNull().references(() => presentations.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
   order: integer("order").notNull(),
+  title: text("title"),
   question: text("question"),
   options: text("options").array(),
   config: jsonb("config").$type<SlideConfig>().default({ elements: [] }),

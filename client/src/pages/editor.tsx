@@ -7,6 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
@@ -15,7 +17,7 @@ import { SlideCanvas } from "@/components/SlideCanvas";
 import SpinnerWheel from "@/components/SpinnerWheel";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,6 +44,8 @@ export default function Editor() {
   const [headingText, setHeadingText] = useState<string>('');
   const [inlineEditingOptions, setInlineEditingOptions] = useState<number | null>(null);
   const [optionText, setOptionText] = useState<string>('');
+  const [renameSlideId, setRenameSlideId] = useState<string | null>(null);
+  const [renameSlideTitle, setRenameSlideTitle] = useState('');
   
   // Debounce ref must be declared before any conditional returns
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -608,6 +612,19 @@ export default function Editor() {
     setInlineEditingOptions(null);
   };
 
+  const getSlideLabel = (slide: Slide, index: number) => {
+    if (slide.title) return slide.title;
+    const typeLabels: Record<string, string> = {
+      'multiple_choice': 'Poll',
+      'word_cloud': 'Word Cloud',
+      'open_ended': 'Q&A',
+      'heading': 'Heading',
+      'image': 'Image',
+      'spinner': 'Spinner'
+    };
+    return `${typeLabels[slide.type] || slide.type} ${index + 1}`;
+  };
+
   const getSlidePreview = (slide: Slide) => {
     if (slide.type === 'image' && slide.question) {
       return (
@@ -655,7 +672,44 @@ export default function Editor() {
                   }}
                   data-testid={`card-slide-${index}`}
                 >
-                  <div className="text-sm font-medium mb-2">Slide {index + 1}</div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="text-sm font-medium truncate">{getSlideLabel(slide, index)}</div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" data-testid={`button-slide-menu-${index}`}>
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setRenameSlideId(slide.id);
+                          setRenameSlideTitle(slide.title || '');
+                        }} data-testid={`menu-item-rename-slide-${index}`}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateSlideMutation.mutate(slide);
+                        }} data-testid={`menu-item-duplicate-slide-${index}`}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSlideMutation.mutate(slide.id);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                          data-testid={`menu-item-delete-slide-${index}`}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   {getSlidePreview(slide)}
                 </Card>
               </motion.div>
@@ -1365,6 +1419,61 @@ export default function Editor() {
           </div>
         </main>
       </div>
+
+      <Dialog open={!!renameSlideId} onOpenChange={(open) => {
+        if (!open) {
+          setRenameSlideId(null);
+          setRenameSlideTitle('');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Slide</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this slide.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameSlideTitle}
+            onChange={(e) => setRenameSlideTitle(e.target.value)}
+            placeholder="Slide name"
+            data-testid="input-rename-slide"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && renameSlideId) {
+                updateSlideMutation.mutate({
+                  id: renameSlideId,
+                  data: { title: renameSlideTitle.trim() || null }
+                });
+                setRenameSlideId(null);
+                setRenameSlideTitle('');
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setRenameSlideId(null);
+              setRenameSlideTitle('');
+            }} data-testid="button-cancel-rename-slide">
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (renameSlideId) {
+                  updateSlideMutation.mutate({
+                    id: renameSlideId,
+                    data: { title: renameSlideTitle.trim() || null }
+                  });
+                  setRenameSlideId(null);
+                  setRenameSlideTitle('');
+                }
+              }}
+              data-testid="button-confirm-rename-slide"
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
