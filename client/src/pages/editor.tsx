@@ -673,7 +673,50 @@ export default function Editor() {
                   data-testid={`card-slide-${index}`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="text-sm font-medium truncate">{getSlideLabel(slide, index)}</div>
+                    {renameSlideId === slide.id ? (
+                      <Input
+                        value={renameSlideTitle}
+                        onChange={(e) => setRenameSlideTitle(e.target.value)}
+                        onBlur={() => {
+                          updateSlideMutation.mutate({
+                            id: slide.id,
+                            data: { title: renameSlideTitle.trim() || null }
+                          });
+                          setRenameSlideId(null);
+                          setRenameSlideTitle('');
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            updateSlideMutation.mutate({
+                              id: slide.id,
+                              data: { title: renameSlideTitle.trim() || null }
+                            });
+                            setRenameSlideId(null);
+                            setRenameSlideTitle('');
+                          } else if (e.key === 'Escape') {
+                            setRenameSlideId(null);
+                            setRenameSlideTitle('');
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-6 text-sm"
+                        placeholder="Slide name"
+                        autoFocus
+                        data-testid={`input-inline-rename-slide-${index}`}
+                      />
+                    ) : (
+                      <div 
+                        className="text-sm font-medium truncate cursor-text hover:text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRenameSlideId(slide.id);
+                          setRenameSlideTitle(slide.title || '');
+                        }}
+                        data-testid={`text-slide-name-${index}`}
+                      >
+                        {getSlideLabel(slide, index)}
+                      </div>
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" data-testid={`button-slide-menu-${index}`}>
