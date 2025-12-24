@@ -11,7 +11,10 @@ import {
   insertFeedbackSchema,
   insertReactionSchema,
   insertQuestionSchema,
-  presentationSessions
+  presentationSessions,
+  presentations,
+  responses,
+  slides
 } from "@shared/schema";
 import { randomBytes } from "crypto";
 import multer from "multer";
@@ -20,7 +23,7 @@ import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema, updateOnboardingSchema } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 
 interface SocketClient {
   sessionId?: string;
@@ -459,6 +462,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Analytics fetch error:", error);
       res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/user/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      const userPresentations = await db
+        .select()
+        .from(presentations)
+        .where(eq(presentations.userId, userId));
+      
+      const presentationIds = userPresentations.map(p => p.id);
+      
+      if (presentationIds.length === 0) {
+        return res.json([]);
+      }
+      
+      const allSessions = await db
+        .select()
+        .from(presentationSessions)
+        .where(inArray(presentationSessions.presentationId, presentationIds));
+      
+      const sessionsWithDetails = await Promise.all(
+        allSessions.map(async (session) => {
+          const presentation = userPresentations.find(p => p.id === session.presentationId);
+          
+          const sessionResponses = await storage.getResponsesBySession(session.id);
+          const uniqueParticipants = new Set(sessionResponses.map(r => r.participantId));
+          
+          return {
+            id: session.id,
+            presentationId: session.presentationId,
+            presentationTitle: presentation?.title || 'Unknown',
+            code: session.code,
+            startedAt: session.startedAt,
+            isActive: session.isActive,
+            participantCount: uniqueParticipants.size,
+            responseCount: sessionResponses.length
+          };
+        })
+      );
+      
+      sessionsWithDetails.sort((a, b) => 
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+      );
+      
+      res.json(sessionsWithDetails);
+    } catch (error) {
+      console.error("User sessions fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch user sessions" });
+    }
+  });
+
+  app.get("/api/sessions/:id/details", isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = req.params.id;
+      const userId = req.user.id;
+      
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      
+      if (presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const presentationSlides = await storage.getSlidesByPresentation(presentation.id);
+      const sessionResponses = await storage.getResponsesBySession(session.id);
+      const uniqueParticipants = new Set(sessionResponses.map(r => r.participantId));
+      
+      const slideAnalytics = await Promise.all(
+        presentationSlides.map(async (slide) => {
+          const slideResponses = await storage.getResponsesBySlide(slide.id, session.id);
+          const slideParticipants = new Set(slideResponses.map(r => r.participantId));
+          
+          return {
+            slideId: slide.id,
+            slideType: slide.type,
+            slideOrder: slide.order,
+            question: slide.question,
+            responseCount: slideResponses.length,
+            uniqueParticipants: slideParticipants.size
+          };
+        })
+      );
+      
+      res.json({
+        id: session.id,
+        presentationId: session.presentationId,
+        presentationTitle: presentation.title,
+        code: session.code,
+        startedAt: session.startedAt,
+        isActive: session.isActive,
+        currentSlideIndex: session.currentSlideIndex,
+        participantCount: uniqueParticipants.size,
+        responseCount: sessionResponses.length,
+        slideAnalytics
+      });
+    } catch (error) {
+      console.error("Session details fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch session details" });
     }
   });
 

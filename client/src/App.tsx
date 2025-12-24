@@ -5,8 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationProvider } from "@/hooks/useNotification";
 import { NotificationContainer } from "@/components/NotificationContainer";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import Presentations from "@/pages/presentations";
+import Report from "@/pages/report";
+import SessionAnalytics from "@/pages/session-analytics";
 import Editor from "@/pages/editor";
 import Presenter from "@/pages/presenter";
 import Audience from "@/pages/audience";
@@ -38,6 +42,28 @@ function ProtectedRoute({ component: Component, path }: { component: any; path?:
   return <Component />;
 }
 
+function ProtectedRouteWithSidebar({ component: Component }: { component: any }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/" />;
+  }
+
+  return (
+    <AuthenticatedLayout>
+      <Component />
+    </AuthenticatedLayout>
+  );
+}
+
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -58,7 +84,19 @@ function Router() {
         <ProtectedRoute component={Onboarding} />
       </Route>
       <Route path="/dashboard">
-        <ProtectedRoute component={Dashboard} />
+        <ProtectedRouteWithSidebar component={Dashboard} />
+      </Route>
+      <Route path="/presentations">
+        <ProtectedRouteWithSidebar component={Presentations} />
+      </Route>
+      <Route path="/report">
+        <ProtectedRouteWithSidebar component={Report} />
+      </Route>
+      <Route path="/session/:id">
+        <ProtectedRouteWithSidebar component={SessionAnalytics} />
+      </Route>
+      <Route path="/pricing">
+        <ProtectedRouteWithSidebar component={Pricing} />
       </Route>
       <Route path="/editor/:id?">
         <ProtectedRoute component={Editor} />
@@ -77,7 +115,6 @@ function Router() {
       </Route>
       <Route path="/join" component={JoinPresentation} />
       <Route path="/audience/:code" component={Audience} />
-      <Route path="/pricing" component={Pricing} />
       <Route path="/library" component={Library} />
       <Route path="/view/:id" component={View} />
       <Route component={NotFound} />
