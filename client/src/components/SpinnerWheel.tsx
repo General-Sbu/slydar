@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Play } from "lucide-react";
 import type { SpinnerEntry } from "@shared/schema";
 
@@ -8,6 +8,57 @@ interface SpinnerWheelProps {
   onSpinComplete?: (winner: SpinnerEntry) => void;
   isSpinning?: boolean;
   winningIndex?: number | null;
+}
+
+function Confetti({ isActive }: { isActive: boolean }) {
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    x: number;
+    color: string;
+    delay: number;
+    duration: number;
+    size: number;
+  }>>([]);
+
+  useEffect(() => {
+    if (isActive) {
+      const colors = ["#9333EA", "#DC2626", "#EA580C", "#EAB308", "#22C55E", "#14B8A6", "#3B82F6", "#F472B6"];
+      const newParticles = Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 0.5,
+        duration: 2 + Math.random() * 2,
+        size: 8 + Math.random() * 8,
+      }));
+      setParticles(newParticles);
+    } else {
+      setParticles([]);
+    }
+  }, [isActive]);
+
+  if (!isActive) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {particles.map((particle) => (
+        <div
+          key={particle.id}
+          className="absolute animate-confetti-fall"
+          style={{
+            left: `${particle.x}%`,
+            top: "-20px",
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            backgroundColor: particle.color,
+            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default function SpinnerWheel({ 
@@ -20,6 +71,7 @@ export default function SpinnerWheel({
   const [internalSpinning, setInternalSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<SpinnerEntry | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const isSpinning = externalSpinning !== undefined ? externalSpinning : internalSpinning;
 
@@ -55,24 +107,37 @@ export default function SpinnerWheel({
 
     setInternalSpinning(true);
     setWinner(null);
+    setShowConfetti(false);
 
-    const spins = 5 + Math.random() * 5;
+    const spins = 5 + Math.floor(Math.random() * 5);
     const winnerIdx = Math.floor(Math.random() * segmentCount);
+    
     const winnerAngle = winnerIdx * segmentAngle + segmentAngle / 2;
-    const finalRotation = spins * 360 + (360 - winnerAngle);
+    const targetMod = 360 - winnerAngle;
+    const currentMod = rotation % 360;
+    let additionalRotation = targetMod - currentMod;
+    if (additionalRotation <= 0) additionalRotation += 360;
+    const totalRotation = spins * 360 + additionalRotation;
 
-    setRotation((prev) => prev + finalRotation);
+    setRotation(rotation + totalRotation);
 
     setTimeout(() => {
       setInternalSpinning(false);
       const selectedEntry = entries[winnerIdx];
       setWinner(selectedEntry);
+      setShowConfetti(true);
       onSpinComplete?.(selectedEntry);
+      
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
     }, 4000);
-  }, [isSpinning, isInteractive, segmentCount, segmentAngle, entries, onSpinComplete]);
+  }, [isSpinning, isInteractive, segmentCount, segmentAngle, entries, onSpinComplete, rotation]);
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <Confetti isActive={showConfetti} />
+      
       <div className="relative">
         <div 
           className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 w-0 h-0"
@@ -157,11 +222,12 @@ export default function SpinnerWheel({
 
       {winner && !isSpinning && (
         <div 
-          className="text-center p-4 rounded-lg bg-card border"
+          className="text-center p-6 rounded-lg bg-card border-2 animate-pulse"
+          style={{ borderColor: winner.color }}
           data-testid="spinner-result"
         >
-          <p className="text-sm text-muted-foreground">Winner:</p>
-          <p className="text-2xl font-bold" style={{ color: winner.color }}>
+          <p className="text-sm text-muted-foreground mb-1">Winner:</p>
+          <p className="text-3xl font-bold" style={{ color: winner.color }}>
             {winner.label}
           </p>
         </div>
