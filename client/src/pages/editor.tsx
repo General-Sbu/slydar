@@ -1120,29 +1120,24 @@ export default function Editor() {
                   }}
                   data-testid="slide-canvas"
                 >
-                  {/* Background image layer - behind elements */}
-                  {currentSlide?.type === 'image' && currentSlide.question && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 z-0">
-                      <img 
-                        src={currentSlide.question || ''} 
-                        alt={`Slide ${selectedSlideIndex + 1}`} 
-                        className="max-w-full max-h-full object-contain"
-                        data-testid="img-slide"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Editable elements layer - on top of image */}
-                  <div className="absolute inset-0 z-10">
+                  <div className="absolute inset-0">
                     <SlideCanvas
                       elements={editingSlide?.config?.elements || []}
                       onElementUpdate={handleElementUpdate}
                       isEditable={true}
                     />
                   </div>
-                  
-                  {/* Non-image slide content */}
-                  <div className="w-full h-full text-center space-y-6 relative z-5 pointer-events-none">
+                  <div className="w-full h-full text-center space-y-6 relative z-10 pointer-events-none">
+                    {currentSlide?.type === 'image' && currentSlide.question && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
+                        <img 
+                          src={currentSlide.question || ''} 
+                          alt={`Slide ${selectedSlideIndex + 1}`} 
+                          className="max-w-full max-h-full object-contain"
+                          data-testid="img-slide"
+                        />
+                      </div>
+                    )}
                     {currentSlide?.type === 'multiple_choice' && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
                         {/* Question at top - bigger and centered */}
