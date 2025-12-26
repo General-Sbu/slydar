@@ -137,6 +137,18 @@ app.use((req, res, next) => {
       END $$;
     `);
     
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='slides' AND column_name='title'
+        ) THEN
+          ALTER TABLE slides ADD COLUMN title TEXT;
+        END IF;
+      END $$;
+    `);
+    
     log('✅ Database tables initialized');
     
     await seedTemplates();

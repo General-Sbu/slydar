@@ -836,62 +836,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const path = await import('path');
         const fs = await import('fs');
         const os = await import('os');
-        const ConvertAPI = (await import('convertapi')).default;
-        const convertapi = new ConvertAPI(process.env.CONVERTAPI_SECRET || '');
         
         const fileType = req.file.mimetype === 'application/vnd.ms-powerpoint' ? 'ppt' : 'pptx';
-        console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using ConvertAPI...`);
+        console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using Spire.Presentation...`);
         
         const timestamp = Date.now();
         
-        // Save buffer to temporary file
+        // Save buffer to temporary file for Spire.Presentation
         const tempFilePath = path.join(os.tmpdir(), `upload-${presentationId}-${timestamp}.${fileType}`);
         await fs.promises.writeFile(tempFilePath, req.file.buffer);
-        
-        let result;
-        try {
-          result = await convertapi.convert('png', { 
-            File: tempFilePath 
-          }, fileType);
-          
-          console.log(`✅ ${fileType.toUpperCase()} converted. Files received:`, result.files.length);
-        } finally {
-          // Clean up temporary file
-          await fs.promises.unlink(tempFilePath);
-        }
         
         const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
         await fs.promises.mkdir(publicOutputFolder, { recursive: true });
         
-        for (let i = 0; i < result.files.length; i++) {
-          const pngFilename = `slide_${i + 1}.png`;
-          const destPath = path.join(publicOutputFolder, pngFilename);
-          await result.files[i].save(destPath);
-        }
+        // Use Spire.Presentation for conversion
+        const spirepresentation = await import('spire.presentation');
         
-        const slides = await storage.getSlidesByPresentation(presentationId);
-        const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
-        
-        const createdSlides = [];
-        for (let i = 0; i < result.files.length; i++) {
-          const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
-          const slideData = insertSlideSchema.parse({
-            presentationId,
-            type: 'image',
-            order: maxOrder + i + 1,
-            question: imagePath,
-            options: [],
-            config: {}
-          });
-          const slide = await storage.createSlide(slideData);
-          createdSlides.push(slide);
-        }
-        
-        res.json({ 
-          success: true, 
-          slidesCreated: createdSlides.length,
-          slides: createdSlides
+        // Wait for WASM module to initialize
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('WASM module initialization timeout')), 30000);
+          
+          if (spirepresentation.Module && spirepresentation.Module.calledRun) {
+            clearTimeout(timeout);
+            resolve();
+          } else {
+            spirepresentation.Module.onRuntimeInitialized = () => {
+              clearTimeout(timeout);
+              resolve();
+            };
+          }
         });
+        
+        const presentation = new spirepresentation.Presentation();
+        
+        try {
+          // Load the presentation file
+          presentation.LoadFromFile(tempFilePath);
+          
+          const slideCount = presentation.Slides.Count;
+          console.log(`📊 Presentation has ${slideCount} slides`);
+          
+          // Convert each slide to PNG
+          for (let i = 0; i < slideCount; i++) {
+            const slide = presentation.Slides.get(i);
+            const image = slide.SaveAsImage();
+            const pngFilename = `slide_${i + 1}.png`;
+            const destPath = path.join(publicOutputFolder, pngFilename);
+            image.Save(destPath);
+            image.Dispose();
+          }
+          
+          console.log(`✅ ${fileType.toUpperCase()} converted. ${slideCount} slides written.`);
+          
+          // Create slides in database
+          const slides = await storage.getSlidesByPresentation(presentationId);
+          const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+          
+          const createdSlides = [];
+          for (let i = 0; i < slideCount; i++) {
+            const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
+            const slideData = insertSlideSchema.parse({
+              presentationId,
+              type: 'image',
+              order: maxOrder + i + 1,
+              question: imagePath,
+              options: [],
+              config: {}
+            });
+            const slide = await storage.createSlide(slideData);
+            createdSlides.push(slide);
+          }
+          
+          res.json({ 
+            success: true, 
+            slidesCreated: createdSlides.length,
+            slides: createdSlides
+          });
+        } finally {
+          // Cleanup
+          presentation.Dispose();
+          await fs.promises.unlink(tempFilePath);
+        }
       }
     } catch (error: any) {
       console.error('File import error:', error);
