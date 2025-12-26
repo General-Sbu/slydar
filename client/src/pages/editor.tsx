@@ -17,7 +17,7 @@ import { SlideCanvas } from "@/components/SlideCanvas";
 import SpinnerWheel from "@/components/SpinnerWheel";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -827,11 +827,6 @@ export default function Editor() {
             </div>
           </Card>
         </label>
-        {importMutation.isPending && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Importing slides...
-          </div>
-        )}
       </div>
 
     </div>
@@ -839,7 +834,28 @@ export default function Editor() {
 
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col relative">
+      {/* Import Loading Overlay */}
+      <AnimatePresence>
+        {importMutation.isPending && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            data-testid="import-loading-overlay"
+          >
+            <div className="flex flex-col items-center gap-4 p-8 rounded-lg bg-card border shadow-lg">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <div className="text-center">
+                <div className="font-semibold">Importing slides...</div>
+                <div className="text-sm text-muted-foreground">This may take a moment for large files</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-2">
