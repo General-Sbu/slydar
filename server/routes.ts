@@ -836,64 +836,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const path = await import('path');
         const fs = await import('fs');
         const os = await import('os');
+        const { exec } = await import('child_process');
+        const { promisify } = await import('util');
+        const execAsync = promisify(exec);
         
         const fileType = req.file.mimetype === 'application/vnd.ms-powerpoint' ? 'ppt' : 'pptx';
-        console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using Spire.Presentation...`);
+        console.log(`📊 Converting ${fileType.toUpperCase()} to PNG using LibreOffice...`);
         
         const timestamp = Date.now();
         
-        // Save buffer to temporary file for Spire.Presentation
-        const tempFilePath = path.join(os.tmpdir(), `upload-${presentationId}-${timestamp}.${fileType}`);
+        // Save buffer to temporary file
+        const tempDir = path.join(os.tmpdir(), `ppt-convert-${presentationId}-${timestamp}`);
+        await fs.promises.mkdir(tempDir, { recursive: true });
+        const tempFilePath = path.join(tempDir, `upload.${fileType}`);
         await fs.promises.writeFile(tempFilePath, req.file.buffer);
         
         const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentationId}-${timestamp}`);
         await fs.promises.mkdir(publicOutputFolder, { recursive: true });
         
-        // Use Spire.Presentation for conversion
-        const spirepresentation = await import('spire.presentation');
-        
-        // Wait for WASM module to initialize
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('WASM module initialization timeout')), 30000);
-          
-          if (spirepresentation.Module && spirepresentation.Module.calledRun) {
-            clearTimeout(timeout);
-            resolve();
-          } else {
-            spirepresentation.Module.onRuntimeInitialized = () => {
-              clearTimeout(timeout);
-              resolve();
-            };
-          }
-        });
-        
-        const presentation = new spirepresentation.Presentation();
-        
         try {
-          // Load the presentation file
-          presentation.LoadFromFile(tempFilePath);
+          // Step 1: Convert PPT/PPTX to PDF using LibreOffice
+          const pdfOutputDir = path.join(tempDir, 'pdf');
+          await fs.promises.mkdir(pdfOutputDir, { recursive: true });
           
-          const slideCount = presentation.Slides.Count;
-          console.log(`📊 Presentation has ${slideCount} slides`);
+          await execAsync(`libreoffice --headless --convert-to pdf --outdir "${pdfOutputDir}" "${tempFilePath}"`, {
+            timeout: 120000
+          });
           
-          // Convert each slide to PNG
-          for (let i = 0; i < slideCount; i++) {
-            const slide = presentation.Slides.get(i);
-            const image = slide.SaveAsImage();
+          // Find the generated PDF
+          const pdfFiles = await fs.promises.readdir(pdfOutputDir);
+          const pdfFile = pdfFiles.find(f => f.endsWith('.pdf'));
+          if (!pdfFile) {
+            throw new Error('PDF conversion failed - no PDF file generated');
+          }
+          const pdfPath = path.join(pdfOutputDir, pdfFile);
+          console.log(`✅ Converted to PDF: ${pdfFile}`);
+          
+          // Step 2: Convert PDF to PNG images
+          const { pdfToPng } = await import('pdf-to-png-converter');
+          const pdfBuffer = await fs.promises.readFile(pdfPath);
+          
+          const pngPages = await pdfToPng(pdfBuffer, {
+            disableFontFace: true,
+            useSystemFonts: true,
+            viewportScale: 2.0
+          });
+          
+          // Save PNG files to public folder
+          for (let i = 0; i < pngPages.length; i++) {
             const pngFilename = `slide_${i + 1}.png`;
             const destPath = path.join(publicOutputFolder, pngFilename);
-            image.Save(destPath);
-            image.Dispose();
+            await fs.promises.writeFile(destPath, pngPages[i].content);
           }
           
-          console.log(`✅ ${fileType.toUpperCase()} converted. ${slideCount} slides written.`);
+          console.log(`✅ ${fileType.toUpperCase()} converted. ${pngPages.length} slides written.`);
           
           // Create slides in database
           const slides = await storage.getSlidesByPresentation(presentationId);
           const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
           
           const createdSlides = [];
-          for (let i = 0; i < slideCount; i++) {
+          for (let i = 0; i < pngPages.length; i++) {
             const imagePath = `/uploads/presentation-${presentationId}-${timestamp}/slide_${i + 1}.png`;
             const slideData = insertSlideSchema.parse({
               presentationId,
@@ -913,9 +916,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             slides: createdSlides
           });
         } finally {
-          // Cleanup
-          presentation.Dispose();
-          await fs.promises.unlink(tempFilePath);
+          // Cleanup temp directory
+          await fs.promises.rm(tempDir, { recursive: true, force: true });
         }
       }
     } catch (error: any) {
