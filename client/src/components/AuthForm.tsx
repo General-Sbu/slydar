@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@/hooks/useNotification";
 import { queryClient } from "@/lib/queryClient";
 import { SiGoogle } from "react-icons/si";
+import { AlertCircle } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -16,10 +17,12 @@ export default function AuthForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { showNotification } = useNotification();
 
   const authMutation = useMutation({
     mutationFn: async (data: { username: string; password: string; email?: string }) => {
+      setErrorMessage(null);
       const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
       const res = await fetch(endpoint, {
         method: "POST",
@@ -36,6 +39,7 @@ export default function AuthForm() {
       return res.json();
     },
     onSuccess: () => {
+      setErrorMessage(null);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       showNotification(
         mode === "login" ? "Logged in successfully" : "Account created successfully",
@@ -43,7 +47,7 @@ export default function AuthForm() {
       );
     },
     onError: (error: Error) => {
-      showNotification(error.message, "error");
+      setErrorMessage(error.message);
     },
   });
 
@@ -126,6 +130,13 @@ export default function AuthForm() {
               : "Create Account"}
           </Button>
           
+          {errorMessage && (
+            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md" data-testid="error-message">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+          
           <div className="relative w-full">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
@@ -154,6 +165,7 @@ export default function AuthForm() {
             onClick={() => {
               setMode(mode === "login" ? "register" : "login");
               setEmail("");
+              setErrorMessage(null);
             }}
             data-testid="button-toggle-mode"
           >
