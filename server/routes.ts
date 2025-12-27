@@ -19,6 +19,7 @@ import {
 import { randomBytes } from "crypto";
 import multer from "multer";
 import { setupAuth, isAuthenticated, getSession } from "./auth";
+import { setupAuth as setupReplitAuth, registerAuthRoutes as registerReplitAuthRoutes } from "./replit_integrations/auth";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema, updateOnboardingSchema } from "@shared/schema";
@@ -42,6 +43,11 @@ function generateRoomCode(): string {
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up Replit OAuth auth (for Google Sign-In via /api/login)
+  await setupReplitAuth(app);
+  registerReplitAuthRoutes(app);
+  
+  // Set up local auth (for username/password)
   await setupAuth(app);
 
   app.post('/api/auth/register', async (req, res) => {
