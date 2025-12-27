@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@/hooks/useNotification";
 import { queryClient } from "@/lib/queryClient";
+import { SiGoogle } from "react-icons/si";
 
 type AuthMode = "login" | "register";
 
@@ -123,6 +125,29 @@ export default function AuthForm() {
               ? "Sign In"
               : "Create Account"}
           </Button>
+          
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => {
+              window.location.href = "/api/login";
+            }}
+            data-testid="button-google-signin"
+          >
+            <SiGoogle className="h-4 w-4" />
+            Sign in with Google
+          </Button>
+          
           <Button
             type="button"
             variant="ghost"
