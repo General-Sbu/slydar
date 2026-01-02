@@ -336,6 +336,12 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 height: `${element.height}%`,
                 zIndex: imageZIndex,
               }}
+              onClick={(e) => {
+                if (isEditable) {
+                  e.stopPropagation();
+                  setSelectedElementId(element.id);
+                }
+              }}
               onMouseDown={(e) => handleMouseDown(e, element.id)}
               onTouchStart={(e) => handleTouchStart(e, element.id)}
               data-testid={`element-${element.id}`}
