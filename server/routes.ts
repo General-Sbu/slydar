@@ -997,6 +997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const config = slide.config || { elements: [] };
       const elements = config.elements || [];
       
+      // High z-index ensures images render in foreground above other slide content
+      const imageElements = elements.filter((el: any) => el.type === 'image');
       const newElement = {
         type: 'image' as const,
         id: elementId,
@@ -1005,7 +1007,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         y: 25,
         width: 50,
         height: 50,
-        zIndex: elements.length + 1,
+        zIndex: 500 + imageElements.length,  // High z-index for images (below text at 1000+)
       };
       
       elements.push(newElement);

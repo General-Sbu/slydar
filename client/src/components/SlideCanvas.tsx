@@ -322,6 +322,9 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
         const isSelected = selectedElementId === element.id && isEditable;
         
         if (element.type === 'image') {
+          // Ensure image elements render in foreground with high z-index
+          const imageZIndex = Math.max(element.zIndex || 0, 500);
+          
           return (
             <div
               key={element.id}
@@ -331,7 +334,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 top: `${element.y}%`,
                 width: `${element.width}%`,
                 height: `${element.height}%`,
-                zIndex: element.zIndex,
+                zIndex: imageZIndex,
               }}
               onMouseDown={(e) => handleMouseDown(e, element.id)}
               onTouchStart={(e) => handleTouchStart(e, element.id)}
