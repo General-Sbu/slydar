@@ -441,14 +441,14 @@ export default function Editor() {
     const config = editingSlide.config || { elements: [] };
     const elements = config.elements || [];
     
-    // Create a new text element
+    // Create a new text element centered on the slide
     const textColor = currentSlide?.config?.textColor;
     const newTextElement = {
       type: 'text' as const,
       id: `text-${Date.now()}`,
       content: 'Double-click to edit',
-      x: 25,
-      y: 25,
+      x: 25,  // 25% from left with 50% width = centered horizontally
+      y: 45,  // 45% from top = vertically centered
       width: 50,
       fontSize: 32,
       fontWeight: 'bold' as const,
