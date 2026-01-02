@@ -378,6 +378,8 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
         
         if (element.type === 'text') {
           const isEditingThis = editingTextId === element.id;
+          // Ensure text elements always render in foreground with high z-index
+          const textZIndex = Math.max(element.zIndex || 0, 1000);
           
           return (
             <div
@@ -387,7 +389,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 left: `${element.x}%`,
                 top: `${element.y}%`,
                 width: `${element.width}%`,
-                zIndex: element.zIndex,
+                zIndex: textZIndex,
                 fontSize: `${element.fontSize}px`,
                 fontWeight: element.fontWeight,
                 textAlign: element.textAlign,

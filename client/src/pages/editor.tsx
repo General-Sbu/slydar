@@ -441,8 +441,9 @@ export default function Editor() {
     const config = editingSlide.config || { elements: [] };
     const elements = config.elements || [];
     
-    // Create a new text element centered on the slide
+    // Create a new text element centered on the slide with high z-index to stay on top
     const textColor = currentSlide?.config?.textColor;
+    const textElements = elements.filter(el => el.type === 'text');
     const newTextElement = {
       type: 'text' as const,
       id: `text-${Date.now()}`,
@@ -455,7 +456,7 @@ export default function Editor() {
       textAlign: 'center' as const,
       color: typeof textColor === 'string' ? textColor : undefined,
       rotation: 0,
-      zIndex: elements.length + 1,
+      zIndex: 1000 + textElements.length,  // High z-index ensures text is always on top
     };
     
     const updatedElements = [...elements, newTextElement];
