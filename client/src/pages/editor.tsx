@@ -942,13 +942,10 @@ export default function Editor() {
         <main className="flex-1 overflow-auto bg-muted/20">
           <div className="p-8">
             <div className="max-w-4xl mx-auto space-y-4">
-              {/* Slide Canvas Container with Floating Toolbar */}
-              <div className="relative">
-                {/* Floating Toolbar on top of slide */}
-                {slides.length > 0 && currentSlide && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-                    <Card className="p-2 shadow-lg bg-background/95 backdrop-blur">
-                      <div className="flex items-center gap-2 flex-wrap">
+              {/* Toolbar above slide canvas */}
+              {slides.length > 0 && currentSlide && (
+                <Card className="p-2 shadow-sm bg-background">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1103,21 +1100,20 @@ export default function Editor() {
                       <Trash2 className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">Delete</span>
                     </Button>
-                      </div>
-                    </Card>
                   </div>
-                )}
+                </Card>
+              )}
 
-                {/* Slide Canvas */}
-                {slides.length === 0 ? (
-                  <Card className="aspect-video flex items-center justify-center p-12">
-                    <div className="text-center text-muted-foreground">
-                      <p>No slides yet. Add a slide to get started.</p>
-                    </div>
-                  </Card>
-                ) : (
-                  <Card 
-                    className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
+              {/* Slide Canvas */}
+              {slides.length === 0 ? (
+                <Card className="aspect-video flex items-center justify-center p-12">
+                  <div className="text-center text-muted-foreground">
+                    <p>No slides yet. Add a slide to get started.</p>
+                  </div>
+                </Card>
+              ) : (
+                <Card 
+                  className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
                   style={{
                     backgroundColor: typeof editingSlide?.config?.background === 'string' ? editingSlide.config.background : (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                     color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined
@@ -1260,7 +1256,6 @@ export default function Editor() {
                   <SlideWatermark />
                 </Card>
               )}
-              </div>
 
               {/* Poll Creation Form - Wooclap Style */}
               {currentSlide?.type === 'multiple_choice' && (
