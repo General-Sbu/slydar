@@ -15,6 +15,7 @@ import SlideTypeCard from "@/components/SlideTypeCard";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import SpinnerWheel from "@/components/SpinnerWheel";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2 
@@ -46,9 +47,12 @@ export default function Editor() {
   const [optionText, setOptionText] = useState<string>('');
   const [renameSlideId, setRenameSlideId] = useState<string | null>(null);
   const [renameSlideTitle, setRenameSlideTitle] = useState('');
+  const [presentationTitle, setPresentationTitle] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   // Debounce ref must be declared before any conditional returns
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -230,6 +234,41 @@ export default function Editor() {
       setEditingSlide({ ...slides[selectedSlideIndex] });
     }
   }, [selectedSlideIndex, slides]);
+
+  // Sync presentation title when data loads
+  useEffect(() => {
+    if (presentation) {
+      setPresentationTitle(presentation.title || '');
+    }
+  }, [presentation]);
+
+  const updatePresentationTitleMutation = useMutation({
+    mutationFn: async (title: string) => {
+      const res = await fetch(`/api/presentations/${presentationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      if (!res.ok) throw new Error('Failed to update title');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId] });
+    }
+  });
+
+  const handleTitleChange = (value: string) => {
+    setPresentationTitle(value);
+    
+    // Debounce the save
+    if (titleDebounceRef.current) {
+      clearTimeout(titleDebounceRef.current);
+    }
+    
+    titleDebounceRef.current = setTimeout(() => {
+      updatePresentationTitleMutation.mutate(value);
+    }, 500);
+  };
 
   const handleAddSlide = (type: SlideType) => {
     // Helper function to create a default text element
@@ -887,9 +926,25 @@ export default function Editor() {
               </Sheet>
 
               <Logo showText={false} className="hidden sm:block" />
-              <div className="hidden sm:block">
-                <div className="font-semibold text-sm">{presentation?.title || 'Untitled'}</div>
-                <div className="text-xs text-muted-foreground">{slides.length} slides</div>
+              <div className="hidden sm:flex flex-col">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Input
+                      value={presentationTitle}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      placeholder="My Untitled Presentation"
+                      className="h-7 text-sm font-semibold rounded-full border-muted-foreground/30 px-3 w-48 focus-visible:ring-1"
+                      data-testid="input-presentation-title"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="bottom" 
+                    className="bg-gray-900 text-white text-xs px-2 py-1"
+                  >
+                    Change presentation name
+                  </TooltipContent>
+                </Tooltip>
+                <div className="text-xs text-muted-foreground pl-3">{slides.length} slides</div>
               </div>
             </div>
             
