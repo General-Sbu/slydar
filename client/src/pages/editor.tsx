@@ -254,6 +254,7 @@ export default function Editor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations'] });
     }
   });
 
