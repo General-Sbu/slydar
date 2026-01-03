@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Note, Presentation, Slide } from "@shared/schema";
-import { StickyNote, Trash2, Calendar } from "lucide-react";
+import { StickyNote, Trash2, Calendar, ArrowLeft } from "lucide-react";
 import { useNotification } from "@/hooks/useNotification";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -135,7 +135,23 @@ export default function Notes() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setLocation('/dashboard')}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="font-semibold">Notes</h1>
+          </div>
+        </div>
+      </header>
+      
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-8" data-testid="text-page-title">My Notes</h1>
         
         <div className="space-y-8">

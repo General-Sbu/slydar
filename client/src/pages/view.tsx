@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
-import { ChevronLeft, ChevronRight, X, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -112,9 +112,9 @@ export default function View() {
                 variant="ghost" 
                 size="icon"
                 onClick={() => setLocation('/library')}
-                data-testid="button-close"
+                data-testid="button-back"
               >
-                <X className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function View() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-12 items-center justify-center">
             <p className="text-sm text-muted-foreground">
-              Read-only view • Press ESC or click <X className="inline h-3 w-3" /> to return to library
+              Read-only view • Press ESC or click the back button to return to library
             </p>
           </div>
         </div>
