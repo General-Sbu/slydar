@@ -133,26 +133,40 @@ export default function Editor() {
   });
 
   const duplicateSlideMutation = useMutation({
-    mutationFn: async (slide: Slide) => {
-      const maxOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order)) : -1;
+    mutationFn: async ({ slide, insertAfterIndex }: { slide: Slide; insertAfterIndex: number }) => {
+      const insertOrder = slide.order + 1;
+      
+      // Shift all slides after the insertion point
+      const slidesToShift = slides.filter(s => s.order >= insertOrder);
+      for (const s of slidesToShift) {
+        await fetch(`/api/slides/${s.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: s.order + 1 })
+        });
+      }
+      
+      // Create the new slide at the insertion point
       const res = await fetch('/api/slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           presentationId,
           type: slide.type,
-          order: maxOrder + 1,
+          order: insertOrder,
           question: slide.question,
           options: slide.options || [],
           config: slide.config || {}
         })
       });
       if (!res.ok) throw new Error('Failed to duplicate');
-      return res.json();
+      return { newSlide: await res.json(), insertAfterIndex };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
       showNotification("Slide duplicated", "success");
+      // Select the newly duplicated slide
+      setSelectedSlideIndex(data.insertAfterIndex + 1);
     }
   });
 
@@ -366,7 +380,7 @@ export default function Editor() {
 
   const handleDuplicateSlide = () => {
     if (currentSlide) {
-      duplicateSlideMutation.mutate(currentSlide);
+      duplicateSlideMutation.mutate({ slide: currentSlide, insertAfterIndex: selectedSlideIndex });
     }
   };
 
@@ -775,7 +789,7 @@ export default function Editor() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
-                          duplicateSlideMutation.mutate(slide);
+                          duplicateSlideMutation.mutate({ slide, insertAfterIndex: index });
                         }} data-testid={`menu-item-duplicate-slide-${index}`}>
                           <Copy className="mr-2 h-4 w-4" />
                           Duplicate
