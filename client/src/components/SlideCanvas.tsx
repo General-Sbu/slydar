@@ -36,9 +36,6 @@ interface RotateState {
   centerY: number;
 }
 
-// Placeholder text that should be hidden in audience/presenter views
-const PLACEHOLDER_TEXT = 'Double-click to edit';
-
 export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false }: SlideCanvasProps) {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -47,16 +44,6 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextContent, setEditingTextContent] = useState<string>('');
   const canvasRef = useRef<HTMLDivElement>(null);
-  
-  // Filter out placeholder text elements when not in edit mode
-  const visibleElements = isEditable 
-    ? elements 
-    : elements.filter(el => {
-        if (el.type === 'text') {
-          return el.content !== PLACEHOLDER_TEXT && el.content?.trim() !== '';
-        }
-        return true;
-      });
 
   const handlePointerDown = (clientX: number, clientY: number, elementId: string) => {
     if (!isEditable || !canvasRef.current) return;
@@ -331,7 +318,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
       onClick={handleCanvasClick}
       data-testid="slide-canvas"
     >
-      {visibleElements.map((element) => {
+      {elements.map((element) => {
         const isSelected = selectedElementId === element.id && isEditable;
         
         if (element.type === 'image') {
