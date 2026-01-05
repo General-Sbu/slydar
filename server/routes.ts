@@ -20,7 +20,9 @@ import { randomBytes } from "crypto";
 import multer from "multer";
 import { setupAuth as setupOIDCAuth, isAuthenticated, registerAuthRoutes, getSession } from "./replit_integrations/auth";
 import passport from "passport";
-import { updateOnboardingSchema } from "@shared/schema";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcrypt";
+import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 
@@ -43,6 +45,93 @@ function generateRoomCode(): string {
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupOIDCAuth(app);
   registerAuthRoutes(app);
+
+  // Setup local strategy for username/password auth
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user || !user.password) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    })
+  );
+
+  // Local auth register endpoint
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const data = registerSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const user = await storage.createUser({
+        username: data.username,
+        password: hashedPassword,
+        email: data.email && data.email !== '' ? data.email : undefined,
+      });
+
+      // Create session for local auth user
+      const userSession = {
+        claims: { sub: user.id },
+        id: user.id,
+      };
+
+      req.login(userSession, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        res.json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ message: "Invalid registration data" });
+    }
+  });
+
+  // Local auth login endpoint
+  app.post('/api/auth/login', (req, res, next) => {
+    try {
+      loginSchema.parse(req.body);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid login data" });
+    }
+
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Authentication error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      
+      // Create session for local auth user
+      const userSession = {
+        claims: { sub: user.id },
+        id: user.id,
+      };
+
+      req.login(userSession, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json(user);
+      });
+    })(req, res, next);
+  });
 
   app.patch('/api/onboarding', isAuthenticated, async (req: any, res) => {
     try {
