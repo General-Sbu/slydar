@@ -137,7 +137,18 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Check if this is a local auth session (has claims.sub but no expires_at)
+  if (user.claims?.sub && !user.expires_at) {
+    // Local auth user - no token refresh needed
+    return next();
+  }
+
+  // OIDC auth user - check token expiration
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
