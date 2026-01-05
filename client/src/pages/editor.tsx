@@ -10,7 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
 import SlideTypeCard from "@/components/SlideTypeCard";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
@@ -996,10 +995,6 @@ export default function Editor() {
                 <Play className="h-4 w-4" />
                 <span className="hidden sm:inline">Present</span>
               </Button>
-
-              <div className="hidden sm:flex">
-                <ThemeToggle />
-              </div>
             </div>
           </div>
         </div>

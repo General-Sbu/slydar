@@ -6,7 +6,6 @@ import { ArrowRight, ArrowLeft, Menu, BookOpen, DollarSign } from "lucide-react"
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import Logo from "./Logo";
-import ThemeToggle from "./ThemeToggle";
 import { useNotification } from "@/hooks/useNotification";
 
 export default function JoinPresentation() {
@@ -68,12 +67,10 @@ export default function JoinPresentation() {
                   Pricing
                 </Button>
               </Link>
-              <ThemeToggle />
             </div>
 
             {/* Mobile Navigation */}
             <div className="flex lg:hidden items-center gap-2">
-              <ThemeToggle />
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" data-testid="button-mobile-menu">

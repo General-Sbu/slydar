@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
 import LibraryCard from "@/components/LibraryCard";
 import { Search, BookOpen, ArrowLeft } from "lucide-react";
 import { useState } from "react";
@@ -56,10 +55,6 @@ export default function Library() {
               </Button>
               <Logo showText={false} className="sm:hidden" />
               <Logo showText={true} className="hidden sm:block" />
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
 import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
@@ -61,12 +60,10 @@ export default function Landing() {
               <Button onClick={() => setShowAuth(true)} data-testid="button-get-started-nav">
                 Get Started
               </Button>
-              <ThemeToggle />
             </div>
 
             {/* Mobile Navigation */}
             <div className="flex lg:hidden items-center gap-2">
-              <ThemeToggle />
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
