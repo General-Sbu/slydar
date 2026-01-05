@@ -18,7 +18,7 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
-type UserWithPassword = User & { password: string };
+type UserWithPassword = User & { password: string | null };
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;

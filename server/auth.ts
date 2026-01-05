@@ -47,6 +47,11 @@ export async function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
 
+        // Check if user has a password (OAuth-only users won't have one)
+        if (!user.password) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
           return done(null, false, { message: "Invalid username or password" });
