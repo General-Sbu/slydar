@@ -40,11 +40,14 @@ export default function AuthForm() {
     },
     onSuccess: () => {
       setErrorMessage(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      showNotification(
-        mode === "login" ? "Logged in successfully" : "Account created successfully",
-        "success"
-      );
+      if (mode === "register") {
+        showNotification("Account created successfully! Please sign in.", "success");
+        setMode("login");
+        setPassword("");
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        showNotification("Logged in successfully", "success");
+      }
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);

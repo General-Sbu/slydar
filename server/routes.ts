@@ -84,18 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: data.email && data.email !== '' ? data.email : undefined,
       });
 
-      // Create session for local auth user
-      const userSession = {
-        claims: { sub: user.id },
-        id: user.id,
-      };
-
-      req.login(userSession, (err: any) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed after registration" });
-        }
-        res.json(user);
-      });
+      // Return success without auto-login - user will be redirected to sign in
+      res.json({ id: user.id, username: user.username, email: user.email });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(400).json({ message: "Invalid registration data" });
