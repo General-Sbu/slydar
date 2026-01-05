@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
-import { useNotification } from "@/hooks/useNotification";
 import { queryClient } from "@/lib/queryClient";
 import { SiGoogle } from "react-icons/si";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -18,11 +17,12 @@ export default function AuthForm() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { showNotification } = useNotification();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const authMutation = useMutation({
     mutationFn: async (data: { username: string; password: string; email?: string }) => {
       setErrorMessage(null);
+      setSuccessMessage(null);
       const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
       const res = await fetch(endpoint, {
         method: "POST",
@@ -41,15 +41,15 @@ export default function AuthForm() {
     onSuccess: () => {
       setErrorMessage(null);
       if (mode === "register") {
-        showNotification("Account created successfully! Please sign in.", "success");
+        setSuccessMessage("Account created successfully! Please sign in.");
         setMode("login");
         setPassword("");
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        showNotification("Logged in successfully", "success");
       }
     },
     onError: (error: Error) => {
+      setSuccessMessage(null);
       setErrorMessage(error.message);
     },
   });
@@ -137,6 +137,13 @@ export default function AuthForm() {
               : "Create Account"}
           </Button>
           
+          {successMessage && (
+            <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-500/10 rounded-md w-full" data-testid="success-message">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+          
           {errorMessage && (
             <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md w-full" data-testid="error-message">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -171,6 +178,7 @@ export default function AuthForm() {
               setMode(mode === "login" ? "register" : "login");
               setEmail("");
               setErrorMessage(null);
+              setSuccessMessage(null);
             }}
             data-testid="button-toggle-mode"
           >
