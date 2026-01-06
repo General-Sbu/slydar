@@ -123,6 +123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
+  // Local auth logout endpoint
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout((err: any) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
+      req.session?.destroy((err: any) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+        }
+        res.json({ success: true });
+      });
+    });
+  });
+
   app.patch('/api/onboarding', isAuthenticated, async (req: any, res) => {
     try {
       const data = updateOnboardingSchema.parse(req.body);
