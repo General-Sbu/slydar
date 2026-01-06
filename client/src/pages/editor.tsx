@@ -679,47 +679,78 @@ export default function Editor() {
     return `${typeLabels[slide.type] || slide.type} ${index + 1}`;
   };
 
-  const getSlidePreview = (slide: Slide) => {
+  const getSlidePreview = (slide: Slide, index: number) => {
+    const bgConfig = slide.config?.background;
+    const bgColor = typeof bgConfig === 'string' ? bgConfig : undefined;
+    
     if (slide.type === 'image' && slide.question) {
       return (
-        <div className="w-full h-16 rounded overflow-hidden bg-muted flex items-center justify-center">
+        <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted flex items-center justify-center relative group">
           <img 
             src={slide.question} 
             alt="Slide preview" 
             className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <span className="absolute bottom-1 left-1.5 text-[10px] font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+            {index + 1}
+          </span>
         </div>
       );
     }
+    
+    const typeLabels: Record<string, string> = {
+      'multiple_choice': 'Poll',
+      'word_cloud': 'Cloud',
+      'open_ended': 'Q&A',
+      'heading': 'Title',
+      'image': 'Image',
+      'spinner': 'Spin'
+    };
+    const label = typeLabels[slide.type] || slide.type.replace('_', ' ');
+    
     return (
-      <div className="text-xs text-muted-foreground truncate">
-        {slide.question || slide.type}
+      <div 
+        className="w-full aspect-video rounded-lg overflow-hidden flex items-center justify-center relative group ring-1 ring-black/5 dark:ring-white/10"
+        style={{ backgroundColor: bgColor || 'hsl(var(--muted))' }}
+      >
+        <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider font-medium">
+          {label}
+        </span>
+        <span className="absolute bottom-1 left-1.5 text-[10px] font-bold text-foreground/50">
+          {index + 1}
+        </span>
       </div>
     );
   };
 
   const SlidesPanel = () => (
-    <div className="p-4 space-y-4 h-full overflow-auto">
+    <div className="p-4 space-y-5 h-full overflow-auto">
       <div>
-        <h3 className="font-semibold mb-3">Slides</h3>
+        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Slides</h3>
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {slides.map((slide, index) => (
               <motion.div
                 key={slide.id}
-                initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -100, scale: 0.9 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50, scale: 0.9 }}
                 transition={{ 
                   type: "spring", 
-                  stiffness: 500, 
-                  damping: 30,
-                  mass: 0.8
+                  stiffness: 400, 
+                  damping: 25,
+                  delay: index * 0.03
                 }}
                 layout
+                whileHover={{ x: 4 }}
               >
                 <Card 
-                  className={`p-3 cursor-pointer hover-elevate ${selectedSlideIndex === index ? 'border-primary' : ''}`}
+                  className={`p-3 cursor-pointer transition-smooth border-0 ${
+                    selectedSlideIndex === index 
+                      ? 'bg-primary/10 ring-2 ring-primary/50 shadow-md' 
+                      : 'bg-muted/40 hover:bg-muted/60'
+                  }`}
                   onClick={() => {
                     setSelectedSlideIndex(index);
                     setSlidesSheetOpen(false);
@@ -807,7 +838,7 @@ export default function Editor() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  {getSlidePreview(slide)}
+                  {getSlidePreview(slide, index)}
                 </Card>
               </motion.div>
             ))}
@@ -815,53 +846,78 @@ export default function Editor() {
         </div>
       </div>
       
-      <Separator />
+      <Separator className="opacity-50" />
       
       <div>
-        <h3 className="font-semibold mb-3">Add Slide</h3>
+        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Add Slide</h3>
         <div className="space-y-2">
-          <div onClick={() => { handleAddSlide('multiple_choice'); setSlidesSheetOpen(false); }}>
+          <motion.div 
+            onClick={() => { handleAddSlide('multiple_choice'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
             <SlideTypeCard
               icon={BarChart3}
               title="Multiple Choice"
               description="Poll with options"
             />
-          </div>
-          <div onClick={() => { handleAddSlide('word_cloud'); setSlidesSheetOpen(false); }}>
+          </motion.div>
+          <motion.div 
+            onClick={() => { handleAddSlide('word_cloud'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
             <SlideTypeCard
               icon={Cloud}
               title="Word Cloud"
               description="Collect ideas"
             />
-          </div>
-          <div onClick={() => { handleAddSlide('open_ended'); setSlidesSheetOpen(false); }}>
+          </motion.div>
+          <motion.div 
+            onClick={() => { handleAddSlide('open_ended'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
             <SlideTypeCard
               icon={MessageSquare}
               title="Open Ended"
               description="Free text responses"
             />
-          </div>
-          <div onClick={() => { handleAddSlide('heading'); setSlidesSheetOpen(false); }}>
+          </motion.div>
+          <motion.div 
+            onClick={() => { handleAddSlide('heading'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
             <SlideTypeCard
               icon={Type}
               title="Heading"
               description="Title slide"
             />
-          </div>
-          <div onClick={() => { handleAddSlide('spinner'); setSlidesSheetOpen(false); }}>
+          </motion.div>
+          <motion.div 
+            onClick={() => { handleAddSlide('spinner'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
             <SlideTypeCard
               icon={CircleDot}
               title="Spinner Wheel"
               description="Random picker"
             />
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      <Separator />
+      <Separator className="opacity-50" />
 
       <div>
-        <h3 className="font-semibold mb-3">Import Slides</h3>
+        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Import Slides</h3>
         <input
           type="file"
           id="file-upload"
@@ -870,17 +926,25 @@ export default function Editor() {
           onChange={handleFileImport}
           data-testid="input-file-upload"
         />
-        <label htmlFor="file-upload">
-          <Card className="p-4 cursor-pointer hover-elevate" data-testid="button-import-slides">
+        <motion.label 
+          htmlFor="file-upload"
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="block"
+        >
+          <Card className="p-4 cursor-pointer bg-gradient-to-br from-primary/5 to-primary/10 border-dashed border-primary/30 hover:border-primary/50 transition-all" data-testid="button-import-slides">
             <div className="flex items-center gap-3">
-              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Upload className="h-5 w-5 text-primary" />
+              </div>
               <div>
                 <div className="text-sm font-medium">Import File</div>
                 <div className="text-xs text-muted-foreground">PPT, PPTX, or PDF</div>
               </div>
             </div>
           </Card>
-        </label>
+        </motion.label>
       </div>
 
     </div>
@@ -910,25 +974,28 @@ export default function Editor() {
         )}
       </AnimatePresence>
 
-      <header className="border-b bg-background/95 backdrop-blur">
+      <header className="border-b glass sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                data-testid="button-back"
-                onClick={() => setLocation('/dashboard')}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
+            <div className="flex items-center gap-3">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  data-testid="button-back"
+                  onClick={() => setLocation('/dashboard')}
+                  className="transition-smooth"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </motion.div>
               
               <Sheet open={slidesSheetOpen} onOpenChange={setSlidesSheetOpen}>
                 <SheetTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="lg:hidden"
+                    className="lg:hidden transition-smooth"
                     data-testid="button-open-slides"
                   >
                     <Menu className="h-5 w-5" />
@@ -947,114 +1014,137 @@ export default function Editor() {
                       value={presentationTitle}
                       onChange={(e) => handleTitleChange(e.target.value)}
                       placeholder="My Untitled Presentation"
-                      className="h-7 text-sm font-semibold rounded-full border-muted-foreground/30 px-3 w-48 focus-visible:ring-1"
+                      className="h-8 text-sm font-semibold rounded-full bg-muted/50 border-0 px-4 w-52 focus-visible:ring-1 focus:bg-muted transition-smooth"
                       data-testid="input-presentation-title"
                     />
                   </TooltipTrigger>
                   <TooltipContent 
                     side="bottom" 
-                    className="bg-gray-900 text-white text-xs px-2 py-1"
+                    className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg"
                   >
                     Change presentation name
                   </TooltipContent>
                 </Tooltip>
-                <div className="text-xs text-muted-foreground pl-3">{slides.length} slides</div>
+                <motion.div 
+                  className="text-xs text-muted-foreground pl-4 flex items-center gap-1"
+                  key={slides.length}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <span className="font-medium text-primary">{slides.length}</span> slides
+                </motion.div>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2" 
-                data-testid="button-save"
-                onClick={handleSaveSlide}
-                disabled={updateSlideMutation.isPending}
-              >
-                <Save className="h-4 w-4" />
-                <span className="hidden sm:inline">Save</span>
-              </Button>
-              <Button 
-                variant={presentation?.published ? "secondary" : "default"}
-                size="sm" 
-                className="gap-2" 
-                data-testid="button-publish"
-                onClick={() => publishMutation.mutate()}
-                disabled={publishMutation.isPending}
-              >
-                <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline">{presentation?.published ? "Unpublish" : "Publish"}</span>
-              </Button>
-              <Button 
-                size="sm" 
-                className="gap-2" 
-                data-testid="button-present-editor"
-                onClick={handlePresent}
-                disabled={slides.length === 0}
-              >
-                <Play className="h-4 w-4" />
-                <span className="hidden sm:inline">Present</span>
-              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2 transition-smooth" 
+                  data-testid="button-save"
+                  onClick={handleSaveSlide}
+                  disabled={updateSlideMutation.isPending}
+                >
+                  <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline">Save</span>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  variant={presentation?.published ? "secondary" : "default"}
+                  size="sm" 
+                  className="gap-2 transition-smooth" 
+                  data-testid="button-publish"
+                  onClick={() => publishMutation.mutate()}
+                  disabled={publishMutation.isPending}
+                >
+                  <Globe className="h-4 w-4" />
+                  <span className="hidden sm:inline">{presentation?.published ? "Unpublish" : "Publish"}</span>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  size="sm" 
+                  className="gap-2 hover-glow transition-smooth" 
+                  data-testid="button-present-editor"
+                  onClick={handlePresent}
+                  disabled={slides.length === 0}
+                >
+                  <Play className="h-4 w-4" />
+                  <span className="hidden sm:inline">Present</span>
+                </Button>
+              </motion.div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="hidden lg:block w-64 border-r bg-muted/30 overflow-auto">
+        <aside className="hidden lg:block w-72 border-r bg-gradient-to-b from-muted/50 to-muted/20 overflow-auto">
           <SlidesPanel />
         </aside>
 
-        <main className="flex-1 overflow-auto bg-muted/20">
-          <div className="p-8">
-            <div className="max-w-4xl mx-auto space-y-4">
-              {/* Toolbar above slide canvas */}
+        <main className="flex-1 overflow-auto gradient-mesh">
+          <div className="p-6 lg:p-10">
+            <div className="max-w-5xl mx-auto space-y-6">
+              {/* Floating Toolbar */}
               {slides.length > 0 && currentSlide && (
-                <Card className="p-2 shadow-sm bg-background">
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddText}
-                      data-testid="toolbar-add-text"
-                    >
-                      <Type className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Add Text</span>
-                    </Button>
-
-                    <input
-                      type="file"
-                      id="toolbar-image-upload"
-                      className="hidden"
-                      accept="image/jpeg,image/png,image/gif,image/webp"
-                      onChange={handleImageUpload}
-                    />
-                    <label htmlFor="toolbar-image-upload">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        data-testid="toolbar-upload-image"
-                      >
-                        <span>
-                          <ImageIcon className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Add Image</span>
-                        </span>
-                      </Button>
-                    </label>
-
-                    <Popover>
-                      <PopoverTrigger asChild>
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="p-3 glass border-0 shadow-lg">
+                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Button
                           variant="outline"
                           size="sm"
-                          data-testid="toolbar-background-color"
+                          onClick={handleAddText}
+                          className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
+                          data-testid="toolbar-add-text"
                         >
-                          <Palette className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Colors</span>
+                          <Type className="h-4 w-4" />
+                          <span className="hidden sm:inline">Add Text</span>
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
+                      </motion.div>
+
+                      <input
+                        type="file"
+                        id="toolbar-image-upload"
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={handleImageUpload}
+                      />
+                      <motion.label htmlFor="toolbar-image-upload" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted cursor-pointer"
+                          data-testid="toolbar-upload-image"
+                        >
+                          <span>
+                            <ImageIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">Add Image</span>
+                          </span>
+                        </Button>
+                      </motion.label>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
+                            data-testid="toolbar-background-color"
+                          >
+                            <Palette className="h-4 w-4" />
+                            <span className="hidden sm:inline">Colors</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
                         <Tabs defaultValue="slide" className="w-full">
                           <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="slide" data-testid="tab-slide-background">Slide</TabsTrigger>
@@ -1143,49 +1233,72 @@ export default function Editor() {
                       </PopoverContent>
                     </Popover>
 
-                    <Separator orientation="vertical" className="h-8" />
+                      <Separator orientation="vertical" className="h-6 mx-1" />
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDuplicateSlide}
-                      disabled={duplicateSlideMutation.isPending}
-                      data-testid="toolbar-duplicate-slide"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Duplicate</span>
-                    </Button>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDuplicateSlide}
+                          disabled={duplicateSlideMutation.isPending}
+                          className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
+                          data-testid="toolbar-duplicate-slide"
+                        >
+                          <Copy className="h-4 w-4" />
+                          <span className="hidden sm:inline">Duplicate</span>
+                        </Button>
+                      </motion.div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDeleteSlide}
-                      disabled={deleteSlideMutation.isPending || slides.length <= 1}
-                      data-testid="toolbar-delete-slide"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Delete</span>
-                    </Button>
-                  </div>
-                </Card>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDeleteSlide}
+                          disabled={deleteSlideMutation.isPending || slides.length <= 1}
+                          className="gap-2 transition-smooth border-0 bg-destructive/10 hover:bg-destructive/20 text-destructive"
+                          data-testid="toolbar-delete-slide"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="hidden sm:inline">Delete</span>
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </Card>
+                </motion.div>
               )}
 
-              {/* Slide Canvas */}
+              {/* Slide Canvas - Modern Canvas Style */}
               {slides.length === 0 ? (
-                <Card className="aspect-video flex items-center justify-center p-12">
-                  <div className="text-center text-muted-foreground">
-                    <p>No slides yet. Add a slide to get started.</p>
-                  </div>
-                </Card>
-              ) : (
-                <Card 
-                  className="aspect-video flex items-center justify-center p-12 relative overflow-hidden"
-                  style={{
-                    backgroundColor: typeof editingSlide?.config?.background === 'string' ? editingSlide.config.background : (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
-                    color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined
-                  }}
-                  data-testid="slide-canvas"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
                 >
+                  <Card className="aspect-video flex items-center justify-center p-12 border-dashed border-2 bg-muted/20">
+                    <div className="text-center text-muted-foreground space-y-3">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                        <Plus className="w-8 h-8 text-primary" />
+                      </div>
+                      <p className="text-lg font-medium">No slides yet</p>
+                      <p className="text-sm">Add a slide from the sidebar to get started</p>
+                    </div>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`slide-${selectedSlideIndex}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  <Card 
+                    className="aspect-video flex items-center justify-center p-12 relative overflow-hidden shadow-2xl border-0 ring-1 ring-black/5 dark:ring-white/10"
+                    style={{
+                      backgroundColor: typeof editingSlide?.config?.background === 'string' ? editingSlide.config.background : (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
+                      color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined
+                    }}
+                    data-testid="slide-canvas"
+                  >
                   <div className="absolute inset-0">
                     <SlideCanvas
                       elements={editingSlide?.config?.elements || []}
@@ -1321,6 +1434,7 @@ export default function Editor() {
                   </div>
                   <SlideWatermark />
                 </Card>
+                </motion.div>
               )}
 
               {/* Poll Creation Form - Wooclap Style */}
