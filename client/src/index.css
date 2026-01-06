@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE */
+/* LIGHT MODE - Modern Artistic Palette */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -16,67 +16,67 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 0 0% 98%;
+  --background: 240 20% 99%;
 
-  --foreground: 222 15% 15%;
+  --foreground: 240 10% 10%;
 
-  --border: 220 13% 88%;
+  --border: 240 10% 90%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 222 15% 15%;
+  --card-foreground: 240 10% 10%;
 
-  --card-border: 220 13% 91%;
+  --card-border: 240 10% 92%;
 
-  --sidebar: 220 13% 96%;
+  --sidebar: 240 15% 97%;
 
-  --sidebar-foreground: 222 15% 15%;
+  --sidebar-foreground: 240 10% 10%;
 
-  --sidebar-border: 220 13% 89%;
+  --sidebar-border: 240 10% 90%;
 
-  --sidebar-primary: 262 80% 50%;
+  --sidebar-primary: 258 90% 58%;
 
-  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 13% 91%;
+  --sidebar-accent: 240 10% 92%;
 
-  --sidebar-accent-foreground: 222 15% 20%;
+  --sidebar-accent-foreground: 240 10% 20%;
 
-  --sidebar-ring: 262 80% 50%;
+  --sidebar-ring: 258 90% 58%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 222 15% 15%;
+  --popover-foreground: 240 10% 10%;
 
-  --popover-border: 220 13% 88%;
+  --popover-border: 240 10% 90%;
 
-  --primary: 262 80% 50%;
+  --primary: 258 90% 58%;
 
-  --primary-foreground: 0 0% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 13% 93%;
+  --secondary: 240 10% 94%;
 
-  --secondary-foreground: 222 15% 20%;
+  --secondary-foreground: 240 10% 20%;
 
-  --muted: 220 13% 94%;
+  --muted: 240 10% 95%;
 
-  --muted-foreground: 222 15% 35%;
+  --muted-foreground: 240 5% 45%;
 
-  --accent: 190 75% 92%;
+  --accent: 174 80% 90%;
 
-  --accent-foreground: 190 75% 25%;
+  --accent-foreground: 174 80% 25%;
 
   --destructive: 0 72% 51%;
 
   --destructive-foreground: 0 0% 98%;
 
-  --input: 220 13% 75%;
-  --ring: 262 80% 50%;
-  --chart-1: 262 80% 50%;
-  --chart-2: 190 75% 45%;
+  --input: 240 10% 80%;
+  --ring: 258 90% 58%;
+  --chart-1: 258 90% 58%;
+  --chart-2: 174 80% 45%;
   --chart-3: 142 70% 45%;
-  --chart-4: 28 80% 52%;
-  --chart-5: 340 75% 55%;
+  --chart-4: 32 95% 55%;
+  --chart-5: 340 82% 55%;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: Georgia, serif;
@@ -248,6 +248,19 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    @apply tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl lg:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl font-bold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
   }
 }
 
@@ -335,8 +348,152 @@
     -webkit-text-fill-color: transparent;
   }
 
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 40% 20%, hsla(258, 90%, 58%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(174, 80%, 45%, 0.12) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(340, 82%, 55%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(258, 90%, 58%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(174, 80%, 45%, 0.10) 0px, transparent 50%);
+  }
+
+  .gradient-hero {
+    background: linear-gradient(135deg, 
+      hsla(258, 90%, 58%, 0.08) 0%, 
+      hsla(174, 80%, 45%, 0.05) 50%, 
+      hsla(340, 82%, 55%, 0.03) 100%
+    );
+  }
+
+  .gradient-glow {
+    box-shadow: 
+      0 0 60px 30px hsla(258, 90%, 58%, 0.08),
+      0 0 100px 60px hsla(174, 80%, 45%, 0.05);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 6s ease-in-out infinite 2s;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 4s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .transition-bounce {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px hsla(258, 90%, 58%, 0.15);
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 30px hsla(258, 90%, 58%, 0.25);
+  }
+
+  .glass {
+    background: hsla(0, 0%, 100%, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsla(0, 0%, 100%, 0.5);
+  }
+
+  .dark .glass {
+    background: hsla(240, 15%, 12%, 0.7);
+    border: 1px solid hsla(240, 10%, 20%, 0.5);
+  }
+
   .animate-confetti-fall {
     animation: confetti-fall 3s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

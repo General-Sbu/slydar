@@ -68,10 +68,10 @@ export default function AuthForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{mode === "login" ? "Sign In" : "Create Account"}</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md border-0 bg-card/80 backdrop-blur shadow-xl">
+      <CardHeader className="space-y-2 pb-4">
+        <CardTitle className="text-2xl font-bold tracking-tight">{mode === "login" ? "Sign In" : "Create Account"}</CardTitle>
+        <CardDescription className="text-muted-foreground">
           {mode === "login"
             ? "Enter your credentials to access your account"
             : "Create a new account to get started"}
@@ -80,53 +80,56 @@ export default function AuthForm() {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username" data-testid="label-username">Username</Label>
+            <Label htmlFor="username" className="text-sm font-medium" data-testid="label-username">Username</Label>
             <Input
               id="username"
               type="text"
               placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className="h-11 bg-muted/50 border-0 focus:bg-muted transition-smooth"
               required
               data-testid="input-username"
             />
           </div>
           {mode === "register" && (
             <div className="space-y-2">
-              <Label htmlFor="email" data-testid="label-email">Email (optional)</Label>
+              <Label htmlFor="email" className="text-sm font-medium" data-testid="label-email">Email (optional)</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11 bg-muted/50 border-0 focus:bg-muted transition-smooth"
                 data-testid="input-email"
               />
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="password" data-testid="label-password">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium" data-testid="label-password">Password</Label>
             <Input
               id="password"
               type="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="h-11 bg-muted/50 border-0 focus:bg-muted transition-smooth"
               required
               minLength={mode === "register" ? 6 : 1}
               data-testid="input-password"
             />
             {mode === "register" && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Password must be at least 6 characters
               </p>
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 pt-2">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-11 text-base transition-smooth hover-glow"
             disabled={authMutation.isPending}
             data-testid="button-submit"
           >
@@ -138,32 +141,32 @@ export default function AuthForm() {
           </Button>
           
           {successMessage && (
-            <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-500/10 rounded-md w-full" data-testid="success-message">
+            <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-500/10 rounded-xl w-full animate-fade-in" data-testid="success-message">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
           
           {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md w-full" data-testid="error-message">
+            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-xl w-full animate-fade-in" data-testid="error-message">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
           
-          <div className="relative w-full">
+          <div className="relative w-full my-2">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-card/80 px-3 text-muted-foreground">Or continue with</span>
             </div>
           </div>
           
           <Button
             type="button"
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 h-11 transition-smooth"
             onClick={handleGoogleSignIn}
             data-testid="button-google-signin"
           >
@@ -174,6 +177,7 @@ export default function AuthForm() {
           <Button
             type="button"
             variant="ghost"
+            className="w-full transition-smooth"
             onClick={() => {
               setMode(mode === "login" ? "register" : "login");
               setEmail("");

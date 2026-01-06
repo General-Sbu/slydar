@@ -52,17 +52,17 @@ export default function PresentationCard({
 
   return (
     <>
-      <Card className="hover-elevate transition-all duration-200 group">
-        <CardHeader className="space-y-3">
+      <Card className="border-0 bg-card/50 hover:bg-card transition-smooth hover-lift group overflow-hidden">
+        <CardHeader className="space-y-3 pb-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl truncate">{title}</CardTitle>
+              <CardTitle className="text-xl font-semibold tracking-tight truncate">{title}</CardTitle>
               <CardDescription className="flex items-center gap-4 mt-2">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
+                <span className="flex items-center gap-1.5 text-xs">
+                  <Calendar className="h-3.5 w-3.5" />
                   {lastEdited}
                 </span>
-                <span>{slideCount} slides</span>
+                <span className="text-xs">{slideCount} slides</span>
               </CardDescription>
             </div>
             <DropdownMenu>
@@ -70,12 +70,13 @@ export default function PresentationCard({
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-smooth"
                   data-testid="button-more-options"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="min-w-[160px]">
                 <DropdownMenuItem onClick={onEdit} data-testid="menu-item-edit">
                   <Edit2 className="mr-2 h-4 w-4" />
                   <span>Edit</span>
@@ -101,18 +102,18 @@ export default function PresentationCard({
           </div>
           
           {isLive && (
-            <Badge variant="default" className="w-fit gap-1">
+            <Badge variant="default" className="w-fit gap-1.5">
               <span className="h-2 w-2 bg-green-400 rounded-full animate-pulse" />
               Live
             </Badge>
           )}
         </CardHeader>
 
-        <CardFooter className="flex flex-wrap items-center gap-3">
+        <CardFooter className="flex flex-wrap items-center gap-3 pt-0">
           <Button 
             variant="default" 
             size="sm"
-            className="gap-2"
+            className="gap-2 transition-smooth"
             data-testid="button-present"
             onClick={onPresent}
           >
@@ -122,6 +123,7 @@ export default function PresentationCard({
           <Button 
             variant="outline" 
             size="sm"
+            className="transition-smooth"
             data-testid="button-edit"
             onClick={onEdit}
           >

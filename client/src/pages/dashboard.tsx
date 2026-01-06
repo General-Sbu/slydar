@@ -83,60 +83,67 @@ export default function Dashboard() {
   const firstName = user?.firstName || user?.username || 'there';
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="space-y-8">
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="space-y-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold" data-testid="page-title">
+          <div className="space-y-1">
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight" data-testid="page-title">
               Welcome back, {firstName}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground text-lg">
               Here's what's happening with your presentations
             </p>
           </div>
           <Button 
-            className="gap-2"
+            className="gap-2 transition-smooth hover-glow"
+            size="lg"
             data-testid="button-new-presentation"
             onClick={() => createMutation.mutate()}
             disabled={createMutation.isPending}
           >
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="h-5 w-5" />
             {createMutation.isPending ? "Creating..." : "New Presentation"}
           </Button>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-              <CardTitle className="text-sm font-medium">Total Presentations</CardTitle>
-              <Presentation className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Presentations</CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Presentation className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-total-presentations">
+              <div className="text-4xl font-bold tracking-tight" data-testid="stat-total-presentations">
                 {presentations.length}
               </div>
             </CardContent>
           </Card>
           
-          <Card className="hover-elevate cursor-pointer" onClick={() => setLocation('/presentations')}>
+          <Card className="border-0 bg-card/50 transition-smooth hover-lift cursor-pointer" onClick={() => setLocation('/presentations')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-              <CardTitle className="text-sm font-medium">My Presentations</CardTitle>
-              <Presentation className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">My Presentations</CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-chart-2/10 flex items-center justify-center">
+                <Presentation className="h-5 w-5 text-chart-2" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-base font-medium">
                 View and manage all your presentations
               </div>
             </CardContent>
           </Card>
           
-          <Card className="hover-elevate cursor-pointer" onClick={() => setLocation('/report')}>
+          <Card className="border-0 bg-card/50 transition-smooth hover-lift cursor-pointer" onClick={() => setLocation('/report')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-              <CardTitle className="text-sm font-medium">Session Reports</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Session Reports</CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-chart-3/10 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-chart-3" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-base font-medium">
                 View analytics from past sessions
               </div>
             </CardContent>
@@ -144,11 +151,12 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Recent Presentations</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold tracking-tight">Recent Presentations</h2>
             {presentations.length > 6 && (
               <Button 
                 variant="ghost" 
+                className="transition-smooth"
                 onClick={() => setLocation('/presentations')}
                 data-testid="button-view-all"
               >
@@ -158,13 +166,13 @@ export default function Dashboard() {
           </div>
 
           {recentPresentations.length > 3 && (
-            <div className="relative max-w-md mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative max-w-md mb-6">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search recent presentations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-11 h-11 bg-card/50 border-0 transition-smooth focus:bg-card"
                 data-testid="input-search-presentations"
               />
             </div>
@@ -173,30 +181,31 @@ export default function Dashboard() {
           {isLoading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
+                <div key={i} className="h-52 bg-muted/50 animate-pulse rounded-xl" />
               ))}
             </div>
           ) : filteredPresentations.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPresentations.map((presentation) => (
-                <PresentationCard 
-                  key={presentation.id} 
-                  id={presentation.id}
-                  title={presentation.title}
-                  slideCount={presentation.slideCount}
-                  lastEdited={formatDate(presentation.updatedAt)}
-                  onEdit={() => setLocation(`/editor/${presentation.id}`)}
-                  onDelete={() => deleteMutation.mutate(presentation.id)}
-                  onPresent={() => setLocation(`/presenter/${presentation.id}`)}
-                  onAnalytics={() => setLocation(`/analytics/${presentation.id}`)}
-                />
+              {filteredPresentations.map((presentation, index) => (
+                <div key={presentation.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                  <PresentationCard 
+                    id={presentation.id}
+                    title={presentation.title}
+                    slideCount={presentation.slideCount}
+                    lastEdited={formatDate(presentation.updatedAt)}
+                    onEdit={() => setLocation(`/editor/${presentation.id}`)}
+                    onDelete={() => deleteMutation.mutate(presentation.id)}
+                    onPresent={() => setLocation(`/presenter/${presentation.id}`)}
+                    onAnalytics={() => setLocation(`/analytics/${presentation.id}`)}
+                  />
+                </div>
               ))}
             </div>
           ) : presentations.length === 0 ? (
             <EmptyState onCreate={() => createMutation.mutate()} />
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No presentations found matching "{searchQuery}"</p>
+            <div className="text-center py-16">
+              <p className="text-muted-foreground text-lg">No presentations found matching "{searchQuery}"</p>
             </div>
           )}
         </div>

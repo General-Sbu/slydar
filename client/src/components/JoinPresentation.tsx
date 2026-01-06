@@ -39,14 +39,15 @@ export default function JoinPresentation() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen flex flex-col overflow-hidden">
+      <header className="sticky top-0 z-50 w-full glass border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
+                className="transition-smooth"
                 onClick={() => setLocation('/')}
                 data-testid="button-back"
               >
@@ -55,21 +56,19 @@ export default function JoinPresentation() {
               <Logo />
             </div>
             
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2">
               <Link href="/library">
-                <Button variant="ghost" data-testid="button-library">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-library">
                   Library
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="ghost" data-testid="button-pricing">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-pricing">
                   Pricing
                 </Button>
               </Link>
             </div>
 
-            {/* Mobile Navigation */}
             <div className="flex lg:hidden items-center gap-2">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -109,27 +108,31 @@ export default function JoinPresentation() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-4 text-center">
-            <CardTitle className="text-3xl">Join Presentation</CardTitle>
-            <CardDescription className="text-base">
+      <main className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="absolute inset-0 gradient-mesh pointer-events-none" />
+        <div className="absolute w-96 h-96 bg-primary/10 rounded-full blur-3xl -top-20 -left-20 animate-float" />
+        <div className="absolute w-80 h-80 bg-accent/20 rounded-full blur-3xl bottom-10 right-0 animate-float-delayed" />
+        
+        <Card className="w-full max-w-md border-0 bg-card/80 backdrop-blur animate-scale-in relative z-10">
+          <CardHeader className="space-y-4 text-center pb-2">
+            <CardTitle className="text-4xl font-bold tracking-tight">Join Presentation</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Enter the code provided by your presenter
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 pt-4">
             <Input
-              placeholder="Enter code (e.g., ABC123)"
+              placeholder="ABC123"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="text-center text-2xl font-mono tracking-wider h-14"
+              className="text-center text-3xl font-mono tracking-widest h-16 bg-muted/50 border-0 focus:bg-muted transition-smooth"
               maxLength={6}
               data-testid="input-room-code"
               onKeyDown={(e) => e.key === "Enter" && handleJoin()}
             />
             <Button 
               size="lg" 
-              className="w-full gap-2"
+              className="w-full gap-2 h-12 text-base transition-smooth hover-glow"
               onClick={handleJoin}
               disabled={code.length < 3 || isChecking}
               data-testid="button-join"
