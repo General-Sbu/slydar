@@ -1010,19 +1010,22 @@ export default function Editor() {
               <div className="hidden sm:flex flex-col">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Input
-                      value={presentationTitle}
-                      onChange={(e) => handleTitleChange(e.target.value)}
-                      placeholder="My Untitled Presentation"
-                      className="h-8 text-sm font-semibold rounded-full bg-muted/50 border-0 px-4 w-52 focus-visible:ring-1 focus:bg-muted transition-smooth"
-                      data-testid="input-presentation-title"
-                    />
+                    <div className="relative flex items-center">
+                      <Input
+                        value={presentationTitle}
+                        onChange={(e) => handleTitleChange(e.target.value)}
+                        placeholder="My Untitled Presentation"
+                        className="h-8 text-sm font-semibold rounded-full bg-muted/50 border-0 pl-4 pr-9 w-56 focus-visible:ring-1 focus:bg-muted transition-smooth"
+                        data-testid="input-presentation-title"
+                      />
+                      <Pencil className="absolute right-3 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" />
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent 
                     side="bottom" 
                     className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg"
                   >
-                    Change presentation name
+                    Click to edit name
                   </TooltipContent>
                 </Tooltip>
                 <motion.div 
