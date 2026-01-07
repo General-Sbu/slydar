@@ -163,7 +163,7 @@ export default function Pricing() {
             </CardContent>
             <CardFooter>
               <Button className="w-full" asChild data-testid="button-select-basic">
-                <Link href="/dashboard">Upgrade to Basic</Link>
+                <Link href="/checkout">Upgrade to Basic</Link>
               </Button>
             </CardFooter>
           </Card>

@@ -69,3 +69,8 @@ The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO serv
 
 -   **Vite:** Frontend build tool.
 -   **TypeScript:** For type-safe development.
+
+## Notes
+
+### Payment Integration
+The checkout page (`/checkout`) is currently a placeholder. Payment processing with Stripe was not set up. When ready to implement payments, connect the Stripe integration to enable real payment processing. The checkout form includes card input fields but currently shows a "coming soon" message on submission.
