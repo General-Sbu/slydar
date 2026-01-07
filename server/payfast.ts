@@ -20,30 +20,52 @@ interface PayFastPaymentData {
   custom_int2?: number;
 }
 
+const PARAM_ORDER = [
+  'merchant_id',
+  'merchant_key',
+  'return_url',
+  'cancel_url',
+  'notify_url',
+  'name_first',
+  'name_last',
+  'email_address',
+  'cell_number',
+  'm_payment_id',
+  'amount',
+  'item_name',
+  'item_description',
+  'custom_int1',
+  'custom_int2',
+  'custom_int3',
+  'custom_int4',
+  'custom_int5',
+  'custom_str1',
+  'custom_str2',
+  'custom_str3',
+  'custom_str4',
+  'custom_str5',
+  'email_confirmation',
+  'confirmation_address',
+  'payment_method',
+];
+
 export function generatePayFastSignature(data: Record<string, string | number | undefined>, passphrase: string = ''): string {
-  const filteredData: Record<string, string> = {};
+  let pfOutput = '';
   
-  for (const key of Object.keys(data)) {
-    if (data[key] !== undefined && data[key] !== null && data[key] !== '' && key !== 'signature') {
-      filteredData[key] = String(data[key]).trim();
+  for (const key of PARAM_ORDER) {
+    const value = data[key];
+    if (value !== undefined && value !== null && value !== '') {
+      pfOutput += `${key}=${encodeURIComponent(String(value).trim()).replace(/%20/g, '+')}&`;
     }
   }
   
-  const sortedKeys = Object.keys(filteredData).sort();
-  
-  let paramString = '';
-  for (const key of sortedKeys) {
-    const encodedValue = encodeURIComponent(filteredData[key]).replace(/%20/g, '+');
-    paramString += `${key}=${encodedValue}&`;
-  }
-  
-  paramString = paramString.slice(0, -1);
+  pfOutput = pfOutput.slice(0, -1);
   
   if (passphrase && passphrase.trim() !== '') {
-    paramString += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
+    pfOutput += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
   }
   
-  return crypto.createHash('md5').update(paramString).digest('hex');
+  return crypto.createHash('md5').update(pfOutput).digest('hex');
 }
 
 export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: string, sandbox: boolean = false): string {
@@ -71,24 +93,16 @@ export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: st
   
   const baseUrl = sandbox ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process';
   
-  const params = new URLSearchParams();
-  
-  const orderedKeys = [
-    'merchant_id', 'merchant_key', 'return_url', 'cancel_url', 'notify_url',
-    'name_first', 'name_last', 'email_address', 'm_payment_id', 'amount',
-    'item_name', 'item_description', 'custom_str1', 'custom_str2', 'custom_str3',
-    'custom_int1', 'custom_int2'
-  ];
-  
-  for (const key of orderedKeys) {
+  let htmlParams = '';
+  for (const key of PARAM_ORDER) {
     const value = paymentData[key];
     if (value !== undefined && value !== null && value !== '') {
-      params.append(key, String(value).trim());
+      htmlParams += `${key}=${encodeURIComponent(String(value).trim())}&`;
     }
   }
-  params.append('signature', signature);
+  htmlParams += `signature=${signature}`;
   
-  return `${baseUrl}?${params.toString()}`;
+  return `${baseUrl}?${htmlParams}`;
 }
 
 export function verifyPayFastITN(data: Record<string, string>, passphrase: string): boolean {
