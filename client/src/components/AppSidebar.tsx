@@ -1,4 +1,4 @@
-import { Home, Presentation, BarChart3, CreditCard, LogOut, Settings } from "lucide-react";
+import { Home, Presentation, BarChart3, LogOut, Settings } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/authUtils";
@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/sidebar";
 import Logo from "@/components/Logo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+const RandIcon = ({ className }: { className?: string }) => (
+  <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
+);
 
 const menuItems = [
   {
@@ -36,7 +40,7 @@ const menuItems = [
   {
     title: "My Plan",
     url: "/pricing",
-    icon: CreditCard,
+    icon: RandIcon,
   },
 ];
 

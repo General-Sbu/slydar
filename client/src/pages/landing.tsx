@@ -5,7 +5,11 @@ import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { Menu, BookOpen, DollarSign, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle } from "lucide-react";
+import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle } from "lucide-react";
+
+const RandIcon = ({ className }: { className?: string }) => (
+  <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
+);
 import { useQuery } from "@tanstack/react-query";
 
 interface FeaturedPresentation {
@@ -97,7 +101,7 @@ export default function Landing() {
                         data-testid="button-pricing-mobile"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <DollarSign className="h-4 w-4" />
+                        <RandIcon className="h-4 w-4" />
                         Pricing
                       </Button>
                     </Link>

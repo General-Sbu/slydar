@@ -2,7 +2,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowRight, ArrowLeft, Menu, BookOpen, DollarSign } from "lucide-react";
+import { ArrowRight, ArrowLeft, Menu, BookOpen } from "lucide-react";
+
+const RandIcon = ({ className }: { className?: string }) => (
+  <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
+);
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import Logo from "./Logo";
@@ -96,7 +100,7 @@ export default function JoinPresentation() {
                         data-testid="button-pricing-mobile"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <DollarSign className="h-4 w-4" />
+                        <RandIcon className="h-4 w-4" />
                         Pricing
                       </Button>
                     </Link>
