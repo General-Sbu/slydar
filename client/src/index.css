@@ -337,12 +337,13 @@
     inset: -1px;
   }
 
-  .gradient-purple-blue {
+  .gradient-purple-blue,
+  .gradient-red {
     background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(var(--chart-2)) 100%);
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(var(--chart-2)) 100%);
+    background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(30, 90%, 55%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -350,25 +351,25 @@
 
   .gradient-mesh {
     background: 
-      radial-gradient(at 40% 20%, hsla(258, 90%, 58%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(174, 80%, 45%, 0.12) 0px, transparent 50%),
+      radial-gradient(at 40% 20%, hsla(0, 85%, 55%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(30, 90%, 55%, 0.12) 0px, transparent 50%),
       radial-gradient(at 0% 50%, hsla(340, 82%, 55%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsla(258, 90%, 58%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(174, 80%, 45%, 0.10) 0px, transparent 50%);
+      radial-gradient(at 80% 50%, hsla(0, 85%, 55%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(30, 90%, 55%, 0.10) 0px, transparent 50%);
   }
 
   .gradient-hero {
     background: linear-gradient(135deg, 
-      hsla(258, 90%, 58%, 0.08) 0%, 
-      hsla(174, 80%, 45%, 0.05) 50%, 
+      hsla(0, 85%, 55%, 0.08) 0%, 
+      hsla(30, 90%, 55%, 0.05) 50%, 
       hsla(340, 82%, 55%, 0.03) 100%
     );
   }
 
   .gradient-glow {
     box-shadow: 
-      0 0 60px 30px hsla(258, 90%, 58%, 0.08),
-      0 0 100px 60px hsla(174, 80%, 45%, 0.05);
+      0 0 60px 30px hsla(0, 85%, 55%, 0.08),
+      0 0 100px 60px hsla(30, 90%, 55%, 0.05);
   }
 
   .animate-float {
