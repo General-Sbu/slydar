@@ -97,9 +97,7 @@ function Router() {
       <Route path="/session/:id">
         <ProtectedRouteWithSidebar component={SessionAnalytics} />
       </Route>
-      <Route path="/pricing">
-        <ProtectedRouteWithSidebar component={Pricing} />
-      </Route>
+      <Route path="/pricing" component={Pricing} />
       <Route path="/editor/:id?">
         <ProtectedRoute component={Editor} />
       </Route>
