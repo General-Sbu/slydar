@@ -339,11 +339,19 @@
 
   .gradient-purple-blue,
   .gradient-red {
-    background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(var(--chart-2)) 100%);
+    background: linear-gradient(135deg, 
+      hsl(355, 85%, 52%) 0%, 
+      hsl(15, 90%, 55%) 50%, 
+      hsl(35, 95%, 58%) 100%
+    );
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(30, 90%, 55%) 100%);
+    background: linear-gradient(135deg, 
+      hsl(355, 90%, 58%) 0%, 
+      hsl(15, 95%, 55%) 40%,
+      hsl(40, 100%, 55%) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -351,25 +359,29 @@
 
   .gradient-mesh {
     background: 
-      radial-gradient(at 40% 20%, hsla(0, 85%, 55%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(30, 90%, 55%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(340, 82%, 55%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsla(0, 85%, 55%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(30, 90%, 55%, 0.10) 0px, transparent 50%);
+      radial-gradient(ellipse 80% 50% at 20% 30%, hsla(355, 85%, 55%, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 10%, hsla(25, 95%, 55%, 0.15) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 60% at 10% 80%, hsla(340, 80%, 60%, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 40% at 90% 70%, hsla(15, 90%, 55%, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, hsla(0, 85%, 55%, 0.05) 0%, transparent 70%);
   }
 
   .gradient-hero {
-    background: linear-gradient(135deg, 
-      hsla(0, 85%, 55%, 0.08) 0%, 
-      hsla(30, 90%, 55%, 0.05) 50%, 
-      hsla(340, 82%, 55%, 0.03) 100%
-    );
+    background: 
+      linear-gradient(160deg, 
+        hsla(355, 85%, 55%, 0.12) 0%, 
+        hsla(15, 90%, 55%, 0.08) 30%,
+        hsla(35, 95%, 58%, 0.05) 60%,
+        transparent 100%
+      ),
+      radial-gradient(ellipse 80% 60% at 70% 20%, hsla(355, 85%, 55%, 0.08) 0%, transparent 50%);
   }
 
   .gradient-glow {
     box-shadow: 
-      0 0 60px 30px hsla(0, 85%, 55%, 0.08),
-      0 0 100px 60px hsla(30, 90%, 55%, 0.05);
+      0 0 40px 15px hsla(355, 85%, 55%, 0.12),
+      0 0 80px 40px hsla(15, 90%, 55%, 0.08),
+      0 0 120px 60px hsla(35, 95%, 58%, 0.04);
   }
 
   .animate-float {
