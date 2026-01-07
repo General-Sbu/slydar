@@ -22,6 +22,8 @@ import Pricing from "@/pages/pricing";
 import Library from "@/pages/library";
 import View from "@/pages/view";
 import Onboarding from "@/pages/onboarding";
+import Education from "@/pages/education";
+import Business from "@/pages/business";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -117,6 +119,8 @@ function Router() {
       <Route path="/audience/:code" component={Audience} />
       <Route path="/library" component={Library} />
       <Route path="/view/:id" component={View} />
+      <Route path="/education" component={Education} />
+      <Route path="/business" component={Business} />
       <Route component={NotFound} />
     </Switch>
   );

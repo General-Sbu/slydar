@@ -5,7 +5,7 @@ import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle } from "lucide-react";
+import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle, GraduationCap, Briefcase } from "lucide-react";
 
 const RandIcon = ({ className }: { className?: string }) => (
   <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
@@ -51,6 +51,16 @@ export default function Landing() {
             <Logo />
             
             <div className="hidden lg:flex items-center gap-2">
+              <Link href="/education">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-education">
+                  Education
+                </Button>
+              </Link>
+              <Link href="/business">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-business">
+                  Business
+                </Button>
+              </Link>
               <Link href="/library">
                 <Button variant="ghost" className="transition-smooth" data-testid="button-library">
                   Library
@@ -83,6 +93,28 @@ export default function Landing() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px]">
                   <nav className="flex flex-col gap-4 mt-8">
+                    <Link href="/education">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-education-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <GraduationCap className="h-4 w-4" />
+                        Education
+                      </Button>
+                    </Link>
+                    <Link href="/business">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-business-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        Business
+                      </Button>
+                    </Link>
                     <Link href="/library">
                       <Button 
                         variant="ghost" 
@@ -424,6 +456,16 @@ export default function Landing() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <Logo />
             <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/education">
+                <Button variant="ghost" size="sm" className="transition-smooth" data-testid="link-footer-education">
+                  Education
+                </Button>
+              </Link>
+              <Link href="/business">
+                <Button variant="ghost" size="sm" className="transition-smooth" data-testid="link-footer-business">
+                  Business
+                </Button>
+              </Link>
               <Link href="/library">
                 <Button variant="ghost" size="sm" className="transition-smooth" data-testid="link-footer-library">
                   Library
