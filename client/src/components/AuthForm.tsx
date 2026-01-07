@@ -171,7 +171,7 @@ export default function AuthForm() {
             data-testid="button-google-signin"
           >
             <SiGoogle className="h-4 w-4" />
-            Sign in with Google
+            {mode === "login" ? "Sign in with Google" : "Sign up with Google"}
           </Button>
           
           <Button
