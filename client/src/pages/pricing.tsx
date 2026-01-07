@@ -85,7 +85,7 @@ export default function Pricing() {
               <CardTitle className="text-2xl" data-testid="text-tier-name-free">Free</CardTitle>
               <CardDescription>Perfect for getting started</CardDescription>
               <div className="mt-4">
-                <span className="text-5xl font-bold" data-testid="text-price-free">$0</span>
+                <span className="text-5xl font-bold" data-testid="text-price-free">R0</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
@@ -129,7 +129,7 @@ export default function Pricing() {
               <CardTitle className="text-2xl" data-testid="text-tier-name-basic">Basic</CardTitle>
               <CardDescription>For professionals and teams</CardDescription>
               <div className="mt-4">
-                <span className="text-5xl font-bold" data-testid="text-price-basic">$12</span>
+                <span className="text-5xl font-bold" data-testid="text-price-basic">R199</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
