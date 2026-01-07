@@ -25,6 +25,7 @@ import bcrypt from "bcrypt";
 import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
+import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
 
 interface SocketClient {
   sessionId?: string;
@@ -136,6 +137,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ success: true });
       });
     });
+  });
+
+  // PayFast Payment Routes
+  app.post('/api/payments/initiate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { plan, email, firstName, lastName } = req.body;
+      
+      if (!plan || plan !== 'basic') {
+        return res.status(400).json({ error: 'Invalid plan' });
+      }
+
+      const merchantId = process.env.PAYFAST_MERCHANT_ID;
+      const merchantKey = process.env.PAYFAST_MERCHANT_KEY;
+      const passphrase = process.env.PAYFAST_PASSPHRASE || '';
+
+      if (!merchantId || !merchantKey) {
+        return res.status(500).json({ error: 'Payment configuration not available' });
+      }
+
+      const paymentId = `SLIDR-${userId}-${Date.now()}`;
+      const amount = '199.00';
+
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+
+      const paymentUrl = createPayFastPaymentUrl({
+        merchant_id: merchantId,
+        merchant_key: merchantKey,
+        return_url: `${baseUrl}/checkout?status=success`,
+        cancel_url: `${baseUrl}/checkout?status=cancelled`,
+        notify_url: `${baseUrl}/api/payments/notify`,
+        name_first: firstName,
+        name_last: lastName,
+        email_address: email,
+        m_payment_id: paymentId,
+        amount: amount,
+        item_name: 'Slidr Basic Plan - Monthly',
+        item_description: 'Monthly subscription to Slidr Basic plan',
+        custom_str1: userId,
+        custom_str2: 'basic',
+      }, passphrase, true);
+
+      res.json({ paymentUrl, paymentId });
+    } catch (error) {
+      console.error('Payment initiation error:', error);
+      res.status(500).json({ error: 'Failed to initiate payment' });
+    }
+  });
+
+  // PayFast ITN (Instant Transaction Notification) endpoint
+  app.post('/api/payments/notify', async (req, res) => {
+    try {
+      const passphrase = process.env.PAYFAST_PASSPHRASE || '';
+      
+      const isValid = verifyPayFastITN(req.body, passphrase);
+      
+      if (!isValid) {
+        console.error('Invalid PayFast ITN signature');
+        return res.status(400).send('Invalid signature');
+      }
+
+      const { payment_status, m_payment_id, amount_gross, custom_str1, custom_str2 } = req.body;
+      const userId = custom_str1;
+      const plan = custom_str2;
+
+      if (payment_status === 'COMPLETE') {
+        if (!validatePayFastAmount(amount_gross, '199.00')) {
+          console.error('Amount mismatch:', amount_gross);
+          return res.status(400).send('Amount mismatch');
+        }
+
+        console.log(`Payment successful for user ${userId}, plan: ${plan}, payment_id: ${m_payment_id}`);
+      }
+
+      res.status(200).send('OK');
+    } catch (error) {
+      console.error('ITN processing error:', error);
+      res.status(500).send('Error processing notification');
+    }
   });
 
   app.patch('/api/onboarding', isAuthenticated, async (req: any, res) => {

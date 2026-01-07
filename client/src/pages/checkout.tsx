@@ -1,53 +1,94 @@
-import { useState } from "react";
-import { ArrowLeft, CreditCard, Lock, Check, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Lock, Check, Sparkles, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "@/components/Logo";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'cancelled' | 'error'>('idle');
   const [formData, setFormData] = useState({
-    cardName: "",
-    cardNumber: "",
-    expiry: "",
-    cvv: "",
+    firstName: "",
+    lastName: "",
+    email: "",
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const status = params.get('status');
+    
+    if (status === 'success') {
+      setPaymentStatus('success');
+    } else if (status === 'cancelled') {
+      setPaymentStatus('cancelled');
+    }
+  }, [searchString]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+      }));
+    }
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    if (name === "cardNumber") {
-      const formatted = value.replace(/\s/g, "").replace(/(\d{4})/g, "$1 ").trim();
-      setFormData(prev => ({ ...prev, [name]: formatted.slice(0, 19) }));
-    } else if (name === "expiry") {
-      const cleaned = value.replace(/\D/g, "");
-      const formatted = cleaned.length > 2 ? `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}` : cleaned;
-      setFormData(prev => ({ ...prev, [name]: formatted }));
-    } else if (name === "cvv") {
-      setFormData(prev => ({ ...prev, [name]: value.slice(0, 3) }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to upgrade your plan.",
+        variant: "destructive",
+      });
+      setLocation('/');
+      return;
+    }
+
     setIsProcessing(true);
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Payment functionality coming soon",
-      description: "We're still setting up our payment system. Please check back later!",
-    });
-    
-    setIsProcessing(false);
+    try {
+      const response = await apiRequest('POST', '/api/payments/initiate', {
+        plan: 'basic',
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+
+      const data = await response.json();
+
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error('No payment URL received');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: "Payment failed",
+        description: "There was an error initiating payment. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
   };
 
   const planDetails = {
@@ -62,6 +103,65 @@ export default function Checkout() {
       "Priority support",
     ]
   };
+
+  if (paymentStatus === 'success') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4" data-testid="card-success">
+          <CardContent className="pt-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto">
+              <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Payment Successful!</h2>
+              <p className="text-muted-foreground">
+                Thank you for upgrading to Slidr Basic. Your account has been upgraded and you now have access to all Basic features.
+              </p>
+            </div>
+            <Button asChild className="w-full" data-testid="button-go-dashboard">
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (paymentStatus === 'cancelled') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4" data-testid="card-cancelled">
+          <CardContent className="pt-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto">
+              <XCircle className="w-10 h-10 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Payment Cancelled</h2>
+              <p className="text-muted-foreground">
+                Your payment was cancelled. No charges were made to your account. You can try again when you're ready.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => setPaymentStatus('idle')} className="w-full" data-testid="button-try-again">
+                Try Again
+              </Button>
+              <Button variant="outline" asChild className="w-full" data-testid="button-back-pricing">
+                <Link href="/pricing">Back to Pricing</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,107 +229,111 @@ export default function Checkout() {
                 </div>
 
                 <div className="pt-4 border-t space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span>R199.00</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>VAT (15%)</span>
-                    <span>R29.85</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-lg pt-2 border-t">
+                  <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span data-testid="text-total">R228.85</span>
+                    <span data-testid="text-total">R199.00</span>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Secure payment processed by PayFast
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Payment Form */}
+            {/* Customer Details Form */}
             <Card data-testid="card-payment-form">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Details
-                </CardTitle>
-                <CardDescription>Enter your card information to complete the purchase</CardDescription>
+                <CardTitle>Your Details</CardTitle>
+                <CardDescription>
+                  {isAuthenticated 
+                    ? "Confirm your details to proceed to payment"
+                    : "Please sign in to upgrade your plan"
+                  }
+                </CardDescription>
               </CardHeader>
-              <form onSubmit={handleSubmit}>
+              {isAuthenticated ? (
+                <form onSubmit={handleSubmit}>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First name</Label>
+                        <Input
+                          id="firstName"
+                          name="firstName"
+                          placeholder="John"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          required
+                          data-testid="input-first-name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last name</Label>
+                        <Input
+                          id="lastName"
+                          name="lastName"
+                          placeholder="Smith"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          required
+                          data-testid="input-last-name"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email address</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="john@example.com"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        data-testid="input-email"
+                      />
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                      <p>
+                        You'll be redirected to PayFast's secure payment page to complete your purchase.
+                      </p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex-col gap-4">
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      size="lg"
+                      disabled={isProcessing}
+                      data-testid="button-pay"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Redirecting to PayFast...
+                        </>
+                      ) : (
+                        <>Proceed to Payment - R199.00</>
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">
+                      By completing this purchase, you agree to our terms of service. 
+                      You can cancel your subscription at any time.
+                    </p>
+                  </CardFooter>
+                </form>
+              ) : (
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Name on card</Label>
-                    <Input
-                      id="cardName"
-                      name="cardName"
-                      placeholder="John Smith"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      required
-                      data-testid="input-card-name"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card number</Label>
-                    <Input
-                      id="cardNumber"
-                      name="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      data-testid="input-card-number"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry date</Label>
-                      <Input
-                        id="expiry"
-                        name="expiry"
-                        placeholder="MM/YY"
-                        value={formData.expiry}
-                        onChange={handleInputChange}
-                        required
-                        data-testid="input-expiry"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        name="cvv"
-                        placeholder="123"
-                        type="password"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        required
-                        data-testid="input-cvv"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex-col gap-4">
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="lg"
-                    disabled={isProcessing}
-                    data-testid="button-pay"
-                  >
-                    {isProcessing ? (
-                      <>Processing...</>
-                    ) : (
-                      <>Pay R228.85</>
-                    )}
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    By completing this purchase, you agree to our terms of service. 
-                    You can cancel your subscription at any time.
+                  <p className="text-muted-foreground">
+                    You need to be signed in to upgrade your plan.
                   </p>
-                </CardFooter>
-              </form>
+                  <Button asChild className="w-full" data-testid="button-sign-in">
+                    <Link href="/">Sign In to Continue</Link>
+                  </Button>
+                </CardContent>
+              )}
             </Card>
           </div>
 

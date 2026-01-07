@@ -73,4 +73,19 @@ The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO serv
 ## Notes
 
 ### Payment Integration
-The checkout page (`/checkout`) is currently a placeholder. Payment processing with Stripe was not set up. When ready to implement payments, connect the Stripe integration to enable real payment processing. The checkout form includes card input fields but currently shows a "coming soon" message on submission.
+The checkout page (`/checkout`) integrates with PayFast for payment processing. PayFast is a South African payment gateway that handles ZAR transactions.
+
+**Configuration:**
+- `PAYFAST_MERCHANT_ID` - Your PayFast merchant ID
+- `PAYFAST_MERCHANT_KEY` - Your PayFast merchant key  
+- `PAYFAST_PASSPHRASE` - Security passphrase for signature verification
+
+**Flow:**
+1. User clicks "Upgrade to Basic" on pricing page
+2. User confirms details on checkout page
+3. User is redirected to PayFast secure payment page
+4. After payment, user returns to checkout with success/cancelled status
+5. PayFast sends ITN (Instant Transaction Notification) to `/api/payments/notify`
+
+**Testing:**
+Currently configured for PayFast sandbox mode. To switch to production, update the `sandbox` parameter in `server/routes.ts` payment initiation.
