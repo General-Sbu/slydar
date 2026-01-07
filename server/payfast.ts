@@ -20,30 +20,30 @@ interface PayFastPaymentData {
   custom_int2?: number;
 }
 
-export function generatePayFastSignature(data: Record<string, string | number | undefined>, passphrase: string): string {
+export function generatePayFastSignature(data: Record<string, string | number | undefined>, passphrase: string = ''): string {
   const filteredData: Record<string, string> = {};
   
   for (const key of Object.keys(data)) {
-    if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
-      filteredData[key] = String(data[key]);
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '' && key !== 'signature') {
+      filteredData[key] = String(data[key]).trim();
     }
   }
   
   const sortedKeys = Object.keys(filteredData).sort();
   
-  let signatureString = '';
+  let paramString = '';
   for (const key of sortedKeys) {
-    signatureString += `${key}=${encodeURIComponent(filteredData[key]).replace(/%20/g, '+')}`;
-    signatureString += '&';
+    const encodedValue = encodeURIComponent(filteredData[key]).replace(/%20/g, '+');
+    paramString += `${key}=${encodedValue}&`;
   }
   
-  signatureString = signatureString.slice(0, -1);
+  paramString = paramString.slice(0, -1);
   
-  if (passphrase) {
-    signatureString += `&passphrase=${encodeURIComponent(passphrase).replace(/%20/g, '+')}`;
+  if (passphrase && passphrase.trim() !== '') {
+    paramString += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
   }
   
-  return crypto.createHash('md5').update(signatureString).digest('hex');
+  return crypto.createHash('md5').update(paramString).digest('hex');
 }
 
 export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: string, sandbox: boolean = false): string {
@@ -72,9 +72,18 @@ export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: st
   const baseUrl = sandbox ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process';
   
   const params = new URLSearchParams();
-  for (const key of Object.keys(paymentData)) {
-    if (paymentData[key] !== undefined && paymentData[key] !== null && paymentData[key] !== '') {
-      params.append(key, String(paymentData[key]));
+  
+  const orderedKeys = [
+    'merchant_id', 'merchant_key', 'return_url', 'cancel_url', 'notify_url',
+    'name_first', 'name_last', 'email_address', 'm_payment_id', 'amount',
+    'item_name', 'item_description', 'custom_str1', 'custom_str2', 'custom_str3',
+    'custom_int1', 'custom_int2'
+  ];
+  
+  for (const key of orderedKeys) {
+    const value = paymentData[key];
+    if (value !== undefined && value !== null && value !== '') {
+      params.append(key, String(value).trim());
     }
   }
   params.append('signature', signature);
