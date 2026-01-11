@@ -6,6 +6,7 @@ import type { TextElement } from "@shared/schema";
 interface TextFormatToolbarProps {
   element: TextElement;
   onUpdate: (updates: Partial<TextElement>) => void;
+  onToolbarInteraction?: () => void;
 }
 
 const fontFamilies = [
@@ -19,7 +20,7 @@ const fontFamilies = [
 
 const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48, 56, 64, 72, 96, 128];
 
-export default function TextFormatToolbar({ element, onUpdate }: TextFormatToolbarProps) {
+export default function TextFormatToolbar({ element, onUpdate, onToolbarInteraction }: TextFormatToolbarProps) {
   const isBold = element.fontWeight === "bold";
   const isItalic = element.fontStyle === "italic";
   const isUnderline = element.textDecoration === "underline";
@@ -28,6 +29,7 @@ export default function TextFormatToolbar({ element, onUpdate }: TextFormatToolb
   const preventBlur = (e: React.MouseEvent | React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    onToolbarInteraction?.();
   };
 
   return (

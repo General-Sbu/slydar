@@ -45,6 +45,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextContent, setEditingTextContent] = useState<string>('');
   const canvasRef = useRef<HTMLDivElement>(null);
+  const isToolbarInteractionRef = useRef<boolean>(false);
 
   const handlePointerDown = (clientX: number, clientY: number, elementId: string) => {
     if (!isEditable || !canvasRef.current) return;
@@ -305,10 +306,17 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
   };
 
   const handleTextEditBlur = () => {
-    if (editingTextId && editingTextContent !== undefined) {
-      onElementUpdate?.(editingTextId, { content: editingTextContent });
-    }
-    setEditingTextId(null);
+    // Use timeout to allow toolbar interactions to set the flag
+    setTimeout(() => {
+      if (isToolbarInteractionRef.current) {
+        isToolbarInteractionRef.current = false;
+        return;
+      }
+      if (editingTextId && editingTextContent !== undefined) {
+        onElementUpdate?.(editingTextId, { content: editingTextContent });
+      }
+      setEditingTextId(null);
+    }, 100);
   };
 
   return (
@@ -427,6 +435,7 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 <TextFormatToolbar
                   element={element}
                   onUpdate={(updates) => onElementUpdate?.(element.id, updates)}
+                  onToolbarInteraction={() => { isToolbarInteractionRef.current = true; }}
                 />
               )}
               {isEditingThis ? (
