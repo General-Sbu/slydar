@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { SlideElement, TextElement } from '@shared/schema';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import TextFormatToolbar from './TextFormatToolbar';
 
 interface SlideCanvasProps {
   elements: SlideElement[];
@@ -401,6 +402,9 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                 zIndex: textZIndex,
                 fontSize: `${element.fontSize}px`,
                 fontWeight: element.fontWeight,
+                fontStyle: element.fontStyle || 'normal',
+                textDecoration: element.textDecoration || 'none',
+                fontFamily: element.fontFamily || 'Inter',
                 textAlign: element.textAlign,
                 color: element.color || 'inherit',
                 whiteSpace: 'pre-wrap',
@@ -419,6 +423,12 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
               onDoubleClick={() => handleTextDoubleClick(element)}
               data-testid={`element-${element.id}`}
             >
+              {isEditingThis && (
+                <TextFormatToolbar
+                  element={element}
+                  onUpdate={(updates) => onElementUpdate?.(element.id, updates)}
+                />
+              )}
               {isEditingThis ? (
                 <Textarea
                   value={editingTextContent}
@@ -435,6 +445,9 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
                   style={{
                     fontSize: `${element.fontSize}px`,
                     fontWeight: element.fontWeight,
+                    fontStyle: element.fontStyle || 'normal',
+                    textDecoration: element.textDecoration || 'none',
+                    fontFamily: element.fontFamily || 'Inter',
                     textAlign: element.textAlign,
                     color: element.color || 'inherit',
                     minHeight: '60px',
