@@ -1,17 +1,15 @@
+import { Presentation } from "lucide-react";
+
 export default function SlideWatermark() {
   return (
     <div 
-      className="absolute bottom-4 right-4 flex items-center gap-1 opacity-30 pointer-events-none select-none"
+      className="absolute bottom-4 right-4 flex items-center gap-1.5 opacity-60 pointer-events-none select-none"
       data-testid="watermark-slydar"
     >
-      <svg 
-        viewBox="0 0 24 24" 
-        className="h-5 w-5"
-        fill="currentColor"
-      >
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-      </svg>
-      <span className="text-sm font-semibold tracking-wide">
+      <div className="gradient-purple-blue rounded-md p-1 flex items-center justify-center">
+        <Presentation className="h-4 w-4 text-white" />
+      </div>
+      <span className="text-sm font-bold tracking-wide bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
         SLYDAR
       </span>
     </div>
