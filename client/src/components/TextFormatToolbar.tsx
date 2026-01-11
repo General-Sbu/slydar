@@ -28,7 +28,10 @@ export default function TextFormatToolbar({ element, onUpdate }: TextFormatToolb
     <div 
       className="absolute -top-14 left-0 right-0 flex items-center justify-center z-50"
       onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
     >
       <div className="flex items-center gap-1 bg-popover border border-border rounded-lg shadow-lg p-1.5">
         <Select
