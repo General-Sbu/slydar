@@ -1084,11 +1084,11 @@ export default function Editor() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="hidden lg:block w-72 border-r bg-gradient-to-b from-muted/50 to-muted/20 overflow-auto">
+        <aside className="hidden lg:block w-72 border-r bg-muted/30 overflow-auto">
           <SlidesPanel />
         </aside>
 
-        <main className="flex-1 overflow-auto gradient-mesh">
+        <main className="flex-1 overflow-auto bg-background">
           <div className="p-6 lg:p-10">
             <div className="max-w-5xl mx-auto space-y-6">
               {/* Floating Toolbar */}
