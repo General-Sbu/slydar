@@ -185,7 +185,7 @@ export default function Landing() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-8 relative z-10">
               <div className="text-center space-y-4 animate-fade-in">
                 <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
-                  Welcome to <span className="gradient-text">Slidr</span>
+                  Welcome to <span className="gradient-text">Slydar</span>
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   Sign in or create an account to get started
@@ -483,7 +483,7 @@ export default function Landing() {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Slidr. All rights reserved.
+              © 2024 Slydar. All rights reserved.
             </p>
           </div>
         </div>

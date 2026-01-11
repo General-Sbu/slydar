@@ -64,10 +64,10 @@ export default function Library() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <BookOpen className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">Slidr Library</h1>
+            <h1 className="text-4xl font-bold">Slydar Library</h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Browse and explore published presentations from the Slidr community
+            Browse and explore published presentations from the Slydar community
           </p>
         </div>
 

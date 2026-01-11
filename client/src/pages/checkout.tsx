@@ -97,7 +97,7 @@ export default function Checkout() {
     period: "month",
     features: [
       "Up to 200 participants",
-      "Remove Slidr watermark",
+      "Remove Slydar watermark",
       "Advanced analytics & exports",
       "Custom branding & logo",
       "Priority support",
@@ -115,7 +115,7 @@ export default function Checkout() {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Payment Successful!</h2>
               <p className="text-muted-foreground">
-                Thank you for upgrading to Slidr Basic. Your account has been upgraded and you now have access to all Basic features.
+                Thank you for upgrading to Slydar Basic. Your account has been upgraded and you now have access to all Basic features.
               </p>
             </div>
             <Button asChild className="w-full" data-testid="button-go-dashboard">

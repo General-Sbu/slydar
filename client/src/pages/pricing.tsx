@@ -19,7 +19,7 @@ const features: PlanFeature[] = [
   { category: "Content", name: "Spinner wheel", free: true, basic: true },
   { category: "Content", name: "Q&A sessions", free: true, basic: true },
   { category: "Content", name: "Custom templates", free: false, basic: true },
-  { category: "Branding", name: "Slidr watermark", free: "Included", basic: "Removable" },
+  { category: "Branding", name: "Slydar watermark", free: "Included", basic: "Removable" },
   { category: "Branding", name: "Custom color schemes", free: "5 presets", basic: "Unlimited" },
   { category: "Branding", name: "Custom logo on presentations", free: false, basic: true },
   { category: "Analytics", name: "Session analytics", free: "Basic", basic: "Advanced" },
@@ -145,7 +145,7 @@ export default function Pricing() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Remove Slidr watermark</span>
+                  <span>Remove Slydar watermark</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-primary flex-shrink-0" />

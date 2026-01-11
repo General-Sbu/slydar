@@ -26,7 +26,7 @@ export default function Logo({ className = "", showText = true, size = "md" }: L
       </div>
       {showText && (
         <span className={`font-display font-bold ${textSizeClasses[size]}`}>
-          Slidr
+          Slydar
         </span>
       )}
     </div>

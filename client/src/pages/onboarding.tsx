@@ -16,7 +16,7 @@ const USE_CASE_OPTIONS = [
 
 const EXPLORATION_GOAL_OPTIONS = [
   { value: "create", label: "I want to create slides", description: "Build presentations with interactive features like word clouds, quizzes, and polls." },
-  { value: "explore", label: "I want to explore Slidr", description: "Look around and see what the platform can do." },
+  { value: "explore", label: "I want to explore Slydar", description: "Look around and see what the platform can do." },
   { value: "vibes", label: "I'm here for vibes", description: "Other activities like giving feedback or managing a workspace." },
 ];
 
@@ -99,7 +99,7 @@ export default function Onboarding() {
       } else {
         await updateOnboardingMutation.mutateAsync({ onboardingComplete: true });
         setLocation("/dashboard");
-        showNotification("Welcome to Slidr! Your account is ready.", "success");
+        showNotification("Welcome to Slydar! Your account is ready.", "success");
       }
     } else if (currentStep === 3 && selectedSlideType) {
       createPresentationMutation.mutate(selectedSlideType);
@@ -113,7 +113,7 @@ export default function Onboarding() {
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-lg">S</span>
           </div>
-          <span className="text-xl font-bold">Slidr</span>
+          <span className="text-xl font-bold">Slydar</span>
         </div>
       </header>
 
@@ -126,7 +126,7 @@ export default function Onboarding() {
                   Hi, {user?.username || "there"}.
                 </h1>
                 <h2 className="text-4xl font-bold text-foreground">
-                  Where will you use Slidr?
+                  Where will you use Slydar?
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   Your choice will help us customize your experience.

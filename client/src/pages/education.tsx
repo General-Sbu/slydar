@@ -150,7 +150,7 @@ export default function Education() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                Why educators love <span className="gradient-text">Slidr</span>
+                Why educators love <span className="gradient-text">Slydar</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Built for the modern classroom, designed to maximize engagement and learning outcomes.
@@ -183,7 +183,7 @@ export default function Education() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                How educators use Slidr
+                How educators use Slydar
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Real scenarios from teachers, professors, and trainers who've transformed their sessions.

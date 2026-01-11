@@ -1,8 +1,8 @@
-# Slidr - Interactive Presentation Platform
+# Slydar - Interactive Presentation Platform
 
 ## Overview
 
-Slidr is a web-based interactive presentation platform designed for real-time audience engagement. It enables presenters to create interactive presentations featuring live polls, quizzes, word clouds, and Q&A sessions. Audiences can easily join presentations using a simple room code, promoting dynamic interaction without requiring downloads or authentication. The platform aims to be a robust, full-stack solution for engaging presentations with a strong focus on real-time capabilities and user-friendliness.
+Slydar is a web-based interactive presentation platform designed for real-time audience engagement. It enables presenters to create interactive presentations featuring live polls, quizzes, word clouds, and Q&A sessions. Audiences can easily join presentations using a simple room code, promoting dynamic interaction without requiring downloads or authentication. The platform aims to be a robust, full-stack solution for engaging presentations with a strong focus on real-time capabilities and user-friendliness.
 
 ## User Preferences
 
@@ -16,7 +16,7 @@ The frontend is built with React 18 and TypeScript, using Vite. It leverages Sha
 
 ### Technical Implementations
 
-Slidr is a full-stack TypeScript application with a React frontend and an Express.js backend. Real-time communication is facilitated by Socket.IO. Data is persisted using PostgreSQL and Drizzle ORM. Key features include:
+Slydar is a full-stack TypeScript application with a React frontend and an Express.js backend. Real-time communication is facilitated by Socket.IO. Data is persisted using PostgreSQL and Drizzle ORM. Key features include:
 
 -   **Dual Access Model:** Separate experiences for authenticated presenters and anonymous audience participants.
 -   **Real-time Interaction:** Socket.IO enables live updates for slides, responses, and participant tracking.
@@ -32,11 +32,11 @@ Slidr is a full-stack TypeScript application with a React frontend and an Expres
 -   **Poll Creation Form:** A dedicated Wooclap-style interface for creating and editing multiple choice polls. Features a "Create a Poll" section for entering the question, and an "Answers" section for managing choices. Each choice has an input field with example placeholder text (e.g.: Yes, e.g.: No), and a delete button (minimum 2 choices required). Users can add new choices with the "+ New choice" button. The slide canvas shows a compact preview of poll options in a 2-column grid layout.
 -   **Publish to Library:** Presenters can publish presentations to a public library with search functionality.
 -   **Ownership Differentiation:** Differentiates between user-owned and public presentations in the library, offering distinct actions (Present vs. View).
--   **Slidr Watermark:** A branding watermark is displayed on all slides.
+-   **Slydar Watermark:** A branding watermark is displayed on all slides.
 -   **Notification System:** A custom, context-based notification system provides user feedback.
 -   **Floating Emoji Reactions:** Real-time emoji reactions animate across participants' screens.
 -   **Multi-Step Onboarding:** New users complete a personalized onboarding flow to customize their experience:
-    -   **Step 1 (Use Case Selection):** Users select where they'll use Slidr (Company, Education, Student, or Other).
+    -   **Step 1 (Use Case Selection):** Users select where they'll use Slydar (Company, Education, Student, or Other).
     -   **Step 2 (Exploration Goal):** Users indicate their primary purpose - creating slides with interactive features, exploring the platform, or other activities. The flow tracks progress (Step X of 4) and saves data incrementally.
 -   **Enhanced Word Cloud:** Interactive word cloud slides display audience responses with visual engagement features including random positioning (15-75% height to prevent overlap with response counter), random colors from a 10-color palette, random rotation (-15° to +15°), and frequency-based sizing (words appearing more often scale up to 3em). Default question is "Ask your question here". The question displays as a title when waiting for responses, then disappears once the first audience member answers, showing only the randomly positioned words. Real-time updates occur as responses arrive.
 -   **Spinner Wheel:** Interactive spinner wheel slides for random selection. Features a circular SVG-based wheel divided into 8 equal colored segments (purple, red, orange, yellow, green, teal, blue, dark blue) with customizable labels. A triangular play button in the center triggers the spin animation with smooth easing. Presenters can spin the wheel during presentations, and the winner is displayed after the animation completes. The editor includes a settings panel where presenters can add, edit, or remove entries (minimum 2 required). Audience members see the wheel but cannot interact with it. Includes "Remove & Spin Again" elimination mode with confetti celebration.

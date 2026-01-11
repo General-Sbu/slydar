@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'Payment configuration not available' });
       }
 
-      const paymentId = `SLIDR-${userId}-${Date.now()}`;
+      const paymentId = `SLYDAR-${userId}-${Date.now()}`;
       const amount = '199.00';
 
       const baseUrl = process.env.REPLIT_DEV_DOMAIN 
@@ -175,8 +175,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email_address: email,
         m_payment_id: paymentId,
         amount: amount,
-        item_name: 'Slidr Basic Plan - Monthly',
-        item_description: 'Monthly subscription to Slidr Basic plan',
+        item_name: 'Slydar Basic Plan - Monthly',
+        item_description: 'Monthly subscription to Slydar Basic plan',
         custom_str1: userId,
         custom_str2: 'basic',
       }, passphrase, true);

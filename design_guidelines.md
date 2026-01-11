@@ -1,4 +1,4 @@
-# Slidr Design Guidelines
+# Slydar Design Guidelines
 
 ## Design Approach
 
