@@ -39,11 +39,11 @@
 
 **Font Stack:**
 - Primary: Inter (via Google Fonts) - UI, body text, data
-- Display: Space Grotesk (via Google Fonts) - Headings, presentation titles
+- Display: Helvetica (system font) - Headings, presentation titles
 
 **Type Scale:**
-- Hero/Display: text-6xl to text-7xl, font-bold (Space Grotesk)
-- Page Titles: text-4xl, font-semibold (Space Grotesk)
+- Hero/Display: text-6xl to text-7xl, font-bold (Helvetica)
+- Page Titles: text-4xl, font-semibold (Helvetica)
 - Section Headers: text-2xl, font-semibold (Inter)
 - Body: text-base, font-normal (Inter)
 - Labels: text-sm, font-medium (Inter)
@@ -128,7 +128,7 @@
 
 **Hero Section:**
 - Full-width gradient background (purple to blue subtle gradient)
-- Large headline with Space Grotesk bold
+- Large headline with Helvetica bold
 - Animated mockup of presentation in action (positioned right side)
 - Primary CTA: "Start Creating Free" (prominent, purple)
 - Social proof: "Trusted by 50,000+ presenters" with logos

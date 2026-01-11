@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### UI/UX Decisions
 
-The frontend is built with React 18 and TypeScript, using Vite. It leverages Shadcn/ui components (based on Radix UI) and Tailwind CSS for styling, adhering to a "New York" design with a custom color palette, Inter and Space Grotesk typography, and dark mode support. State management uses TanStack Query for server state and React hooks for local UI state. The interface is fully mobile-responsive across all key views including the landing page, dashboard, library, and presenter view, ensuring adaptive layouts, compact navigation, and scalable content for various screen sizes.
+The frontend is built with React 18 and TypeScript, using Vite. It leverages Shadcn/ui components (based on Radix UI) and Tailwind CSS for styling, adhering to a "New York" design with a custom color palette, Inter and Helvetica typography, and dark mode support. State management uses TanStack Query for server state and React hooks for local UI state. The interface is fully mobile-responsive across all key views including the landing page, dashboard, library, and presenter view, ensuring adaptive layouts, compact navigation, and scalable content for various screen sizes.
 
 ### Technical Implementations
 
@@ -52,7 +52,7 @@ The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO serv
 ### Third-party Services
 
 -   **ConvertAPI:** For PPTX to PNG conversion.
--   **Google Fonts:** For typography (Inter and Space Grotesk).
+-   **Google Fonts:** For typography (Inter and Helvetica).
 
 ### Database
 
