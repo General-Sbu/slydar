@@ -52,7 +52,7 @@ export default function PresentationCard({
 
   return (
     <>
-      <Card className="border-0 bg-card/50 hover:bg-card transition-smooth hover-lift group overflow-hidden">
+      <Card className="border border-border/60 bg-card/50 hover:bg-card hover:border-border transition-smooth hover-lift group overflow-hidden">
         <CardHeader className="space-y-3 pb-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
