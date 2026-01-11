@@ -268,7 +268,7 @@ export default function Business() {
               </p>
               
               <div className="flex flex-wrap justify-center gap-4 pt-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-                <Link href="/">
+                <Link href="/?auth=true">
                   <Button size="lg" className="gap-2 h-12 px-8 text-lg transition-smooth" data-testid="button-try-free">
                     Try Free
                     <ArrowRight className="w-5 h-5" />
@@ -397,7 +397,7 @@ export default function Business() {
               Start with a free trial, no credit card required.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/">
+              <Link href="/?auth=true">
                 <Button size="lg" className="gap-2 h-14 px-10 text-lg transition-smooth" data-testid="button-try-free-cta">
                   Try Free
                   <ArrowRight className="w-5 h-5" />

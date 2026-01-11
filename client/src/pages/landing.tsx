@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Logo from "@/components/Logo";
 import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { Link, useLocation, useSearch } from "wouter";
+import { useState, useEffect } from "react";
 import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle, GraduationCap, Briefcase } from "lucide-react";
 
 const RandIcon = ({ className }: { className?: string }) => (
@@ -37,6 +37,14 @@ export default function Landing() {
   const [showAuth, setShowAuth] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, navigate] = useLocation();
+  const searchString = useSearch();
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get('auth') === 'true') {
+      setShowAuth(true);
+    }
+  }, [searchString]);
 
   const { data: featuredPresentations = [] } = useQuery<FeaturedPresentation[]>({
     queryKey: ['/api/featured-presentations'],
