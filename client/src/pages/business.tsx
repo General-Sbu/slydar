@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Logo from "@/components/Logo";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "wouter";
+import { useState } from "react";
 import { 
   Briefcase, 
   Users, 
@@ -15,8 +17,15 @@ import {
   Globe,
   Sparkles,
   Play,
-  Building2
+  Building2,
+  Menu,
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
+
+const RandIcon = ({ className }: { className?: string }) => (
+  <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
+);
 
 function FloatingShape({ className, delay = "0s" }: { className?: string; delay?: string }) {
   return (
@@ -92,25 +101,142 @@ const stats = [
 ];
 
 export default function Business() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen overflow-hidden">
       <header className="sticky top-0 z-50 w-full glass border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
             <Link href="/">
-              <Logo showText={true} />
+              <Logo />
             </Link>
-            <div className="flex items-center gap-3">
+            
+            <div className="hidden lg:flex items-center gap-2">
+              <Link href="/education">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-education">
+                  Education
+                </Button>
+              </Link>
+              <Link href="/business">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-business">
+                  Business
+                </Button>
+              </Link>
+              <Link href="/library">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-library">
+                  Library
+                </Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-pricing">
+                  Pricing
+                </Button>
+              </Link>
               <Link href="/join">
-                <Button variant="ghost" className="transition-smooth" data-testid="button-join">
-                  Join Session
+                <Button variant="ghost" className="transition-smooth" data-testid="button-join-presentation">
+                  Join Presentation
                 </Button>
               </Link>
               <Link href="/">
-                <Button className="transition-smooth" data-testid="button-get-started">
+                <Button variant="outline" className="transition-smooth ml-2" data-testid="button-signin">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button className="transition-smooth" data-testid="button-get-started-nav">
                   Get Started
                 </Button>
               </Link>
+            </div>
+
+            <div className="flex lg:hidden items-center gap-2">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px]">
+                  <nav className="flex flex-col gap-4 mt-8">
+                    <Link href="/education">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-education-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <GraduationCap className="h-4 w-4" />
+                        Education
+                      </Button>
+                    </Link>
+                    <Link href="/business">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-business-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        Business
+                      </Button>
+                    </Link>
+                    <Link href="/library">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-library-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Library
+                      </Button>
+                    </Link>
+                    <Link href="/pricing">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-pricing-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <RandIcon className="h-4 w-4" />
+                        Pricing
+                      </Button>
+                    </Link>
+                    <Link href="/join">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-join-presentation-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Play className="h-4 w-4" />
+                        Join Presentation
+                      </Button>
+                    </Link>
+                    <div className="border-t my-2" />
+                    <Link href="/">
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        data-testid="button-signin-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/">
+                      <Button 
+                        className="w-full" 
+                        data-testid="button-get-started-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
