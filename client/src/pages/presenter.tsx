@@ -461,7 +461,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className={`cursor-grab active:cursor-grabbing relative overflow-visible w-full ${currentSlide.type === 'image' ? 'aspect-video p-0' : 'p-4 sm:p-6 md:p-12'}`}
+                className={`cursor-grab active:cursor-grabbing relative overflow-visible w-full ${currentSlide.type === 'image' ? 'aspect-video p-0' : currentSlide.type === 'heading' ? 'aspect-video p-4 sm:p-6 md:p-12' : 'min-h-[50vh] md:min-h-[60vh] p-4 sm:p-6 md:p-12'}`}
                 style={{
                   backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                   color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined)
