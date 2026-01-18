@@ -1,81 +1,187 @@
 import { storage } from "./storage";
 import type { InsertTemplate, TemplateSlide } from "@shared/schema";
 
-const pollSlides: TemplateSlide[] = [
+const quickOpinionPollSlides: TemplateSlide[] = [
   {
     type: "heading",
-    title: "Welcome to Our Poll",
-    config: { elements: [{ type: "text", id: "title", content: "Welcome to Our Poll", x: 10, y: 40, width: 80, fontSize: 48, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
+    title: "Quick Opinion Poll",
+    config: { elements: [{ type: "text", id: "title", content: "Quick Opinion Poll", x: 10, y: 35, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Share your thoughts with us!", x: 10, y: 55, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
   },
   {
     type: "multiple_choice",
-    question: "What's your preferred option?",
-    options: ["Option A", "Option B", "Option C", "Option D"],
+    question: "How do you prefer to receive updates?",
+    options: ["Email", "Text Message", "Mobile App", "Social Media"],
     config: { elements: [] }
   },
   {
     type: "multiple_choice",
-    question: "How satisfied are you with our service?",
-    options: ["Very Satisfied", "Satisfied", "Neutral", "Unsatisfied"],
-    config: { elements: [] }
-  }
-];
-
-const quizSlides: TemplateSlide[] = [
-  {
-    type: "heading",
-    title: "Quiz Time!",
-    config: { elements: [{ type: "text", id: "title", content: "Quiz Time!", x: 10, y: 35, width: 80, fontSize: 56, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
-  },
-  {
-    type: "multiple_choice",
-    question: "Question 1: What is the answer?",
-    options: ["Answer A", "Answer B", "Answer C", "Answer D"],
-    config: { elements: [] }
-  },
-  {
-    type: "multiple_choice",
-    question: "Question 2: Select the correct option",
-    options: ["Choice 1", "Choice 2", "Choice 3", "Choice 4"],
-    config: { elements: [] }
-  },
-  {
-    type: "multiple_choice",
-    question: "Question 3: True or False?",
-    options: ["True", "False"],
-    config: { elements: [] }
-  }
-];
-
-const feedbackSlides: TemplateSlide[] = [
-  {
-    type: "heading",
-    title: "We Value Your Feedback",
-    config: { elements: [{ type: "text", id: "title", content: "We Value Your Feedback", x: 10, y: 40, width: 80, fontSize: 48, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
-  },
-  {
-    type: "multiple_choice",
-    question: "How would you rate today's session?",
-    options: ["Excellent", "Good", "Average", "Needs Improvement"],
+    question: "What time of day works best for meetings?",
+    options: ["Early Morning (8-10 AM)", "Late Morning (10-12 PM)", "Afternoon (1-3 PM)", "Late Afternoon (3-5 PM)"],
     config: { elements: [] }
   },
   {
     type: "word_cloud",
-    question: "What did you enjoy most?",
-    config: { elements: [] }
-  },
-  {
-    type: "open_ended",
-    question: "Any suggestions for improvement?",
+    question: "In one word, what matters most to you?",
     config: { elements: [] }
   }
 ];
 
-const icebreakerSlides: TemplateSlide[] = [
+const decisionMakingPollSlides: TemplateSlide[] = [
   {
     type: "heading",
-    title: "Let's Get Started!",
-    config: { elements: [{ type: "text", id: "title", content: "Let's Get Started!", x: 10, y: 35, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
+    title: "Let's Decide Together",
+    config: { elements: [{ type: "text", id: "title", content: "Let's Decide Together", x: 10, y: 35, width: 80, fontSize: 48, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Your vote counts!", x: 10, y: 55, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Which option should we go with?",
+    options: ["Option A - Safe Choice", "Option B - Bold Move", "Option C - Middle Ground", "Need More Information"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "How confident are you in this decision?",
+    options: ["Very Confident", "Somewhat Confident", "Neutral", "Need Discussion"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "When should we implement this?",
+    options: ["Immediately", "This Week", "This Month", "Next Quarter"],
+    config: { elements: [] }
+  }
+];
+
+const triviaQuizSlides: TemplateSlide[] = [
+  {
+    type: "heading",
+    title: "Trivia Time!",
+    config: { elements: [{ type: "text", id: "title", content: "Trivia Time!", x: 10, y: 30, width: 80, fontSize: 56, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Test your knowledge and have fun!", x: 10, y: 52, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Which planet is known as the Red Planet?",
+    options: ["Venus", "Mars", "Jupiter", "Saturn"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "What is the capital city of Australia?",
+    options: ["Sydney", "Melbourne", "Canberra", "Brisbane"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "How many continents are there on Earth?",
+    options: ["5", "6", "7", "8"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Which element has the chemical symbol 'O'?",
+    options: ["Gold", "Osmium", "Oxygen", "Iron"],
+    config: { elements: [] }
+  }
+];
+
+const trainingQuizSlides: TemplateSlide[] = [
+  {
+    type: "heading",
+    title: "Training Assessment",
+    config: { elements: [{ type: "text", id: "title", content: "Training Assessment", x: 10, y: 30, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Let's check what you've learned!", x: 10, y: 52, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
+  },
+  {
+    type: "word_cloud",
+    question: "What key concepts do you remember from the training?",
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Which step comes first in the process?",
+    options: ["Planning", "Execution", "Review", "Documentation"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "True or False: Regular practice improves retention",
+    options: ["True", "False"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "What is the best approach when facing challenges?",
+    options: ["Ask for help immediately", "Try multiple solutions", "Give up quickly", "Ignore the problem"],
+    config: { elements: [] }
+  }
+];
+
+const eventFeedbackSlides: TemplateSlide[] = [
+  {
+    type: "heading",
+    title: "Event Feedback",
+    config: { elements: [{ type: "text", id: "title", content: "Event Feedback", x: 10, y: 30, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Help us improve future events!", x: 10, y: 52, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
+  },
+  {
+    type: "multiple_choice",
+    question: "How would you rate this event overall?",
+    options: ["Excellent", "Very Good", "Good", "Needs Improvement"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Was the event duration appropriate?",
+    options: ["Too Short", "Just Right", "Slightly Long", "Too Long"],
+    config: { elements: [] }
+  },
+  {
+    type: "word_cloud",
+    question: "What was the highlight of the event?",
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "Would you attend a similar event in the future?",
+    options: ["Definitely Yes", "Probably Yes", "Maybe", "Probably Not"],
+    config: { elements: [] }
+  }
+];
+
+const productFeedbackSlides: TemplateSlide[] = [
+  {
+    type: "heading",
+    title: "Product Feedback",
+    config: { elements: [{ type: "text", id: "title", content: "Product Feedback", x: 10, y: 30, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Your opinion shapes our future!", x: 10, y: 52, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
+  },
+  {
+    type: "multiple_choice",
+    question: "How satisfied are you with the product?",
+    options: ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied"],
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "How likely are you to recommend this to others?",
+    options: ["Very Likely", "Likely", "Unlikely", "Very Unlikely"],
+    config: { elements: [] }
+  },
+  {
+    type: "word_cloud",
+    question: "What feature do you use the most?",
+    config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "What would you most like us to improve?",
+    options: ["Performance", "Design", "Features", "Pricing"],
+    config: { elements: [] }
+  }
+];
+
+const teamIntroductionSlides: TemplateSlide[] = [
+  {
+    type: "heading",
+    title: "Meet the Team!",
+    config: { elements: [{ type: "text", id: "title", content: "Meet the Team!", x: 10, y: 30, width: 80, fontSize: 56, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Let's get to know each other", x: 10, y: 52, width: 80, fontSize: 24, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
   },
   {
     type: "word_cloud",
@@ -84,84 +190,83 @@ const icebreakerSlides: TemplateSlide[] = [
   },
   {
     type: "multiple_choice",
-    question: "How are you feeling today?",
-    options: ["Energetic", "Relaxed", "Curious", "Excited"],
+    question: "What's your role in the team?",
+    options: ["Engineering", "Design", "Product", "Operations", "Other"],
     config: { elements: [] }
   },
   {
     type: "spinner",
-    question: "Spin to pick a topic!",
+    question: "Spin to share something about yourself!",
     config: { 
       elements: [],
       spinnerEntries: [
-        { id: "1", label: "Introduce yourself", color: "#9333EA" },
-        { id: "2", label: "Share a fun fact", color: "#DC2626" },
-        { id: "3", label: "Your favorite hobby", color: "#EA580C" },
-        { id: "4", label: "Dream vacation", color: "#EAB308" },
-        { id: "5", label: "Favorite food", color: "#22C55E" },
-        { id: "6", label: "Best advice", color: "#14B8A6" },
+        { id: "1", label: "Your name & role", color: "#9333EA" },
+        { id: "2", label: "A fun fact", color: "#DC2626" },
+        { id: "3", label: "Your superpower", color: "#EA580C" },
+        { id: "4", label: "Weekend plans", color: "#EAB308" },
+        { id: "5", label: "Favorite book/show", color: "#22C55E" },
+        { id: "6", label: "Dream destination", color: "#14B8A6" },
         { id: "7", label: "Hidden talent", color: "#3B82F6" },
-        { id: "8", label: "Fun memory", color: "#1E3A8A" }
+        { id: "8", label: "Best advice received", color: "#1E3A8A" }
       ]
     }
-  }
-];
-
-const educationSlides: TemplateSlide[] = [
-  {
-    type: "heading",
-    title: "Today's Lesson",
-    config: { elements: [{ type: "text", id: "title", content: "Today's Lesson", x: 10, y: 40, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
   },
   {
     type: "word_cloud",
-    question: "What do you already know about this topic?",
-    config: { elements: [] }
-  },
-  {
-    type: "multiple_choice",
-    question: "Quick check: Select the correct answer",
-    options: ["Answer A", "Answer B", "Answer C", "Answer D"],
-    config: { elements: [] }
-  },
-  {
-    type: "open_ended",
-    question: "What questions do you have?",
+    question: "What are you most excited to work on?",
     config: { elements: [] }
   }
 ];
 
-const businessSlides: TemplateSlide[] = [
+const funIcebreakerSlides: TemplateSlide[] = [
   {
     type: "heading",
-    title: "Team Meeting",
-    config: { elements: [{ type: "text", id: "title", content: "Team Meeting", x: 10, y: 40, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }] }
+    title: "Let's Break the Ice!",
+    config: { elements: [{ type: "text", id: "title", content: "Let's Break the Ice!", x: 10, y: 30, width: 80, fontSize: 52, fontWeight: "bold", textAlign: "center", zIndex: 1 }, { type: "text", id: "subtitle", content: "Time for some fun!", x: 10, y: 52, width: 80, fontSize: 28, fontWeight: "normal", textAlign: "center", zIndex: 2 }] }
   },
   {
     type: "multiple_choice",
-    question: "What should we prioritize this quarter?",
-    options: ["Product Development", "Customer Acquisition", "Team Growth", "Process Optimization"],
+    question: "How are you feeling right now?",
+    options: ["Energized", "Relaxed", "Curious", "Ready to Go!"],
     config: { elements: [] }
+  },
+  {
+    type: "multiple_choice",
+    question: "If you could have any superpower, what would it be?",
+    options: ["Flying", "Invisibility", "Time Travel", "Mind Reading"],
+    config: { elements: [] }
+  },
+  {
+    type: "spinner",
+    question: "Spin the wheel for a fun question!",
+    config: { 
+      elements: [],
+      spinnerEntries: [
+        { id: "1", label: "Desert island item?", color: "#9333EA" },
+        { id: "2", label: "Morning or night?", color: "#DC2626" },
+        { id: "3", label: "Coffee or tea?", color: "#EA580C" },
+        { id: "4", label: "Cats or dogs?", color: "#EAB308" },
+        { id: "5", label: "Beach or mountains?", color: "#22C55E" },
+        { id: "6", label: "Sweet or savory?", color: "#14B8A6" },
+        { id: "7", label: "Early bird or night owl?", color: "#3B82F6" },
+        { id: "8", label: "Movie genre?", color: "#1E3A8A" }
+      ]
+    }
   },
   {
     type: "word_cloud",
-    question: "Share one word that describes our team",
-    config: { elements: [] }
-  },
-  {
-    type: "open_ended",
-    question: "What blockers are you facing?",
+    question: "Describe your ideal weekend in one word",
     config: { elements: [] }
   }
 ];
 
 const presentationTemplates: InsertTemplate[] = [
   {
-    name: "Quick Poll",
-    description: "Gather audience opinions with multiple choice polls. Perfect for quick decisions and voting.",
+    name: "Quick Opinion Poll",
+    description: "Gather quick opinions from your audience on any topic. Perfect for meetings, events, and group decisions.",
     category: "polls",
     featured: true,
-    slides: pollSlides,
+    slides: quickOpinionPollSlides,
     colorScheme: {
       primary: "#2563eb",
       secondary: "#dbeafe",
@@ -172,11 +277,26 @@ const presentationTemplates: InsertTemplate[] = [
     }
   },
   {
-    name: "Interactive Quiz",
-    description: "Test knowledge with engaging quiz questions. Great for training and education.",
+    name: "Decision Making Poll",
+    description: "Help your team make collective decisions with structured voting. Great for choosing between options.",
+    category: "polls",
+    featured: true,
+    slides: decisionMakingPollSlides,
+    colorScheme: {
+      primary: "#0891b2",
+      secondary: "#cffafe",
+      accent: "#06b6d4",
+      background: "#f0fdfa",
+      text: "#134e4a",
+      textMuted: "#0d9488"
+    }
+  },
+  {
+    name: "Trivia Quiz",
+    description: "Fun general knowledge quiz to test and engage your audience. Great for team bonding and entertainment.",
     category: "quizzes",
     featured: true,
-    slides: quizSlides,
+    slides: triviaQuizSlides,
     colorScheme: {
       primary: "#9333ea",
       secondary: "#f3e8ff",
@@ -187,11 +307,26 @@ const presentationTemplates: InsertTemplate[] = [
     }
   },
   {
-    name: "Session Feedback",
-    description: "Collect valuable feedback from your audience. Rate sessions and gather suggestions.",
+    name: "Training Assessment",
+    description: "Assess learning outcomes after training sessions. Track understanding and identify knowledge gaps.",
+    category: "quizzes",
+    featured: true,
+    slides: trainingQuizSlides,
+    colorScheme: {
+      primary: "#4f46e5",
+      secondary: "#e0e7ff",
+      accent: "#6366f1",
+      background: "#eef2ff",
+      text: "#3730a3",
+      textMuted: "#4f46e5"
+    }
+  },
+  {
+    name: "Event Feedback",
+    description: "Collect comprehensive feedback after events, workshops, or conferences. Improve future events.",
     category: "feedback",
     featured: true,
-    slides: feedbackSlides,
+    slides: eventFeedbackSlides,
     colorScheme: {
       primary: "#10b981",
       secondary: "#d1fae5",
@@ -202,11 +337,26 @@ const presentationTemplates: InsertTemplate[] = [
     }
   },
   {
-    name: "Team Icebreaker",
-    description: "Break the ice with fun interactive activities. Perfect for team meetings and events.",
+    name: "Product Feedback",
+    description: "Gather user insights about your product or service. Understand satisfaction and areas for improvement.",
+    category: "feedback",
+    featured: true,
+    slides: productFeedbackSlides,
+    colorScheme: {
+      primary: "#059669",
+      secondary: "#a7f3d0",
+      accent: "#10b981",
+      background: "#ecfdf5",
+      text: "#065f46",
+      textMuted: "#047857"
+    }
+  },
+  {
+    name: "Team Introduction",
+    description: "Help new team members introduce themselves. Perfect for onboarding and team building.",
     category: "icebreakers",
     featured: true,
-    slides: icebreakerSlides,
+    slides: teamIntroductionSlides,
     colorScheme: {
       primary: "#f59e0b",
       secondary: "#fef3c7",
@@ -217,59 +367,18 @@ const presentationTemplates: InsertTemplate[] = [
     }
   },
   {
-    name: "Classroom Engagement",
-    description: "Keep students engaged with interactive lesson slides. Perfect for teachers and trainers.",
-    category: "education",
+    name: "Fun Icebreaker",
+    description: "Energize your meetings with fun questions and activities. Break the ice and build connections.",
+    category: "icebreakers",
     featured: true,
-    slides: educationSlides,
+    slides: funIcebreakerSlides,
     colorScheme: {
-      primary: "#0284c7",
-      secondary: "#e0f2fe",
-      accent: "#0ea5e9",
-      background: "#f0f9ff",
-      text: "#0c4a6e",
-      textMuted: "#075985"
-    }
-  },
-  {
-    name: "Business Meeting",
-    description: "Run engaging team meetings with polls and brainstorming. Great for standups and retrospectives.",
-    category: "business",
-    featured: true,
-    slides: businessSlides,
-    colorScheme: {
-      primary: "#475569",
-      secondary: "#f1f5f9",
-      accent: "#64748b",
-      background: "#ffffff",
-      text: "#0f172a",
-      textMuted: "#475569"
-    }
-  },
-  {
-    name: "Professional Blue",
-    description: "Clean and professional design with blue accents, perfect for business presentations",
-    category: "general",
-    colorScheme: {
-      primary: "#2563eb",
-      secondary: "#dbeafe",
-      accent: "#3b82f6",
-      background: "#ffffff",
-      text: "#1e293b",
-      textMuted: "#64748b"
-    }
-  },
-  {
-    name: "Modern Dark",
-    description: "Sleek dark theme with vibrant purple accents for a modern look",
-    category: "general",
-    colorScheme: {
-      primary: "#8b5cf6",
-      secondary: "#1e1b4b",
-      accent: "#a78bfa",
-      background: "#0f172a",
-      text: "#f1f5f9",
-      textMuted: "#94a3b8"
+      primary: "#ec4899",
+      secondary: "#fce7f3",
+      accent: "#f472b6",
+      background: "#fdf2f8",
+      text: "#831843",
+      textMuted: "#be185d"
     }
   }
 ];
@@ -286,16 +395,6 @@ export async function seedTemplates() {
       }
       
       console.log(`Seeded ${presentationTemplates.length} presentation templates`);
-    } else if (existingTemplates.length < presentationTemplates.length) {
-      console.log("Updating templates with new entries...");
-      const existingNames = existingTemplates.map(t => t.name);
-      
-      for (const template of presentationTemplates) {
-        if (!existingNames.includes(template.name)) {
-          await storage.createTemplate(template);
-          console.log(`Added new template: ${template.name}`);
-        }
-      }
     } else {
       console.log(`Templates already exist (${existingTemplates.length} templates found)`);
     }
