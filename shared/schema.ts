@@ -14,6 +14,26 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
+export const onboardingChecklistSchema = z.object({
+  createdFirstPresentation: z.boolean().default(false),
+  addedFirstSlide: z.boolean().default(false),
+  startedFirstSession: z.boolean().default(false),
+  invitedFirstParticipant: z.boolean().default(false),
+  viewedAnalytics: z.boolean().default(false),
+  exploredTemplates: z.boolean().default(false),
+});
+
+export type OnboardingChecklist = z.infer<typeof onboardingChecklistSchema>;
+
+export const defaultOnboardingChecklist: OnboardingChecklist = {
+  createdFirstPresentation: false,
+  addedFirstSlide: false,
+  startedFirstSession: false,
+  invitedFirstParticipant: false,
+  viewedAnalytics: false,
+  exploredTemplates: false,
+};
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: varchar("username").unique(),
@@ -23,6 +43,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
+  onboardingChecklist: jsonb("onboarding_checklist").$type<OnboardingChecklist>().default(defaultOnboardingChecklist),
   useCase: varchar("use_case"),
   explorationGoal: varchar("exploration_goal"),
   organizationSize: varchar("organization_size"),
@@ -30,6 +51,14 @@ export const users = pgTable("users", {
   industry: varchar("industry"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const onboardingAnalytics = pgTable("onboarding_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  stepName: varchar("step_name").notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  timeSpentSeconds: integer("time_spent_seconds"),
 });
 
 export const templateColorScheme = z.object({
@@ -43,12 +72,37 @@ export const templateColorScheme = z.object({
 
 export type TemplateColorScheme = z.infer<typeof templateColorScheme>;
 
+export const templateCategoryEnum = z.enum(["polls", "quizzes", "feedback", "icebreakers", "education", "business", "general"]);
+export type TemplateCategory = z.infer<typeof templateCategoryEnum>;
+
+export const templateSlideSchema = z.object({
+  type: z.string(),
+  title: z.string().optional(),
+  question: z.string().optional(),
+  options: z.array(z.string()).optional(),
+  config: z.object({
+    elements: z.array(z.any()).default([]),
+    background: z.string().optional(),
+    spinnerEntries: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      color: z.string(),
+    })).optional(),
+  }).optional(),
+});
+
+export type TemplateSlide = z.infer<typeof templateSlideSchema>;
+
 export const templates = pgTable("templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description").notNull(),
+  category: text("category").notNull().default("general"),
   colorScheme: jsonb("color_scheme").$type<TemplateColorScheme>().notNull(),
+  slides: jsonb("slides").$type<TemplateSlide[]>().default([]),
   thumbnail: text("thumbnail"),
+  featured: boolean("featured").default(false).notNull(),
+  usageCount: integer("usage_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

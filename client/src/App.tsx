@@ -25,6 +25,7 @@ import Onboarding from "@/pages/onboarding";
 import Education from "@/pages/education";
 import Business from "@/pages/business";
 import Checkout from "@/pages/checkout";
+import Templates from "@/pages/templates";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -121,6 +122,9 @@ function Router() {
       <Route path="/education" component={Education} />
       <Route path="/business" component={Business} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/templates">
+        <ProtectedRouteWithSidebar component={Templates} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

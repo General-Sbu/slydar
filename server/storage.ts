@@ -77,6 +77,7 @@ export interface IStorage {
   createTemplate(template: InsertTemplate): Promise<Template>;
   getTemplate(id: string): Promise<Template | undefined>;
   getAllTemplates(): Promise<Template[]>;
+  incrementTemplateUsage(templateId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -521,6 +522,14 @@ export class MemStorage implements IStorage {
       a.createdAt.getTime() - b.createdAt.getTime()
     );
   }
+
+  async incrementTemplateUsage(templateId: string): Promise<void> {
+    const template = this.templates.get(templateId);
+    if (template) {
+      template.usageCount = (template.usageCount || 0) + 1;
+      this.templates.set(templateId, template);
+    }
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -858,6 +867,12 @@ export class DbStorage implements IStorage {
 
   async getAllTemplates(): Promise<Template[]> {
     return db.select().from(templates).orderBy(templates.createdAt);
+  }
+
+  async incrementTemplateUsage(templateId: string): Promise<void> {
+    await db.update(templates)
+      .set({ usageCount: sql`usage_count + 1` })
+      .where(eq(templates.id, templateId));
   }
 }
 

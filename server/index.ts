@@ -149,6 +149,79 @@ app.use((req, res, next) => {
       END $$;
     `);
     
+    // Add template category and slides columns
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='templates' AND column_name='category'
+        ) THEN
+          ALTER TABLE templates ADD COLUMN category TEXT DEFAULT 'general' NOT NULL;
+        END IF;
+      END $$;
+    `);
+    
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='templates' AND column_name='slides'
+        ) THEN
+          ALTER TABLE templates ADD COLUMN slides JSONB DEFAULT '[]';
+        END IF;
+      END $$;
+    `);
+    
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='templates' AND column_name='featured'
+        ) THEN
+          ALTER TABLE templates ADD COLUMN featured BOOLEAN DEFAULT false NOT NULL;
+        END IF;
+      END $$;
+    `);
+    
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='templates' AND column_name='usage_count'
+        ) THEN
+          ALTER TABLE templates ADD COLUMN usage_count INTEGER DEFAULT 0 NOT NULL;
+        END IF;
+      END $$;
+    `);
+    
+    // Add onboarding checklist to users
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='users' AND column_name='onboarding_checklist'
+        ) THEN
+          ALTER TABLE users ADD COLUMN onboarding_checklist JSONB DEFAULT '{"createdFirstPresentation":false,"addedFirstSlide":false,"startedFirstSession":false,"invitedFirstParticipant":false,"viewedAnalytics":false,"exploredTemplates":false}';
+        END IF;
+      END $$;
+    `);
+    
+    // Create onboarding_analytics table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS onboarding_analytics (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        step_name VARCHAR NOT NULL,
+        completed_at TIMESTAMP DEFAULT now() NOT NULL,
+        time_spent_seconds INTEGER
+      );
+    `);
+    
     log('✅ Database tables initialized');
     
     await seedTemplates();

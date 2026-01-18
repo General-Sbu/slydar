@@ -406,6 +406,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/presentations/from-template", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { templateId } = req.body;
+      
+      if (!templateId) {
+        return res.status(400).json({ error: "Template ID is required" });
+      }
+      
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      const presentation = await storage.createPresentation({
+        userId,
+        title: `${template.name} - New Presentation`,
+        templateId: template.id,
+      });
+      
+      const templateSlides = template.slides as any[] || [];
+      
+      if (templateSlides.length > 0) {
+        for (let i = 0; i < templateSlides.length; i++) {
+          const slideData = templateSlides[i];
+          await storage.createSlide({
+            presentationId: presentation.id,
+            type: slideData.type || "heading",
+            title: slideData.title,
+            question: slideData.question,
+            options: slideData.options,
+            config: {
+              ...slideData.config,
+              background: template.colorScheme?.background,
+            },
+            order: i,
+          });
+        }
+      } else {
+        await storage.createSlide({
+          presentationId: presentation.id,
+          type: "heading",
+          question: "",
+          order: 0,
+          config: {
+            background: template.colorScheme?.background,
+            elements: [
+              {
+                id: crypto.randomUUID(),
+                type: "text" as const,
+                x: 10,
+                y: 35,
+                width: 80,
+                content: "Your Presentation Title",
+                fontSize: 48,
+                fontWeight: "bold" as const,
+                textAlign: "center" as const,
+                color: template.colorScheme?.text,
+                rotation: 0,
+                zIndex: 1,
+              }
+            ]
+          }
+        });
+      }
+      
+      await storage.incrementTemplateUsage(templateId);
+      
+      res.json(presentation);
+    } catch (error) {
+      console.error("Error creating presentation from template:", error);
+      res.status(500).json({ error: "Failed to create presentation from template" });
+    }
+  });
+
   app.get("/api/presentations/:id", isAuthenticated, async (req: any, res) => {
     try {
       const presentation = await storage.getPresentation(req.params.id);

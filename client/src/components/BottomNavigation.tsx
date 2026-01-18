@@ -1,4 +1,4 @@
-import { Home, Presentation, BarChart3, CreditCard, User } from "lucide-react";
+import { Home, Presentation, BarChart3, LayoutTemplate } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,14 +14,14 @@ const navItems = [
     icon: Presentation,
   },
   {
+    title: "Templates",
+    url: "/templates",
+    icon: LayoutTemplate,
+  },
+  {
     title: "Reports",
     url: "/report",
     icon: BarChart3,
-  },
-  {
-    title: "Plan",
-    url: "/pricing",
-    icon: CreditCard,
   },
 ];
 
