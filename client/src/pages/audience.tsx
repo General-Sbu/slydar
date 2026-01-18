@@ -296,7 +296,7 @@ export default function Audience() {
               />
             </div>
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold">{currentSlide.question || "Heading"}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
             </div>
             <DrawingCanvas
               annotations={annotations}
@@ -339,8 +339,8 @@ export default function Audience() {
                 <Check className="h-8 w-8 text-green-500" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Response Submitted!</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-xl sm:text-2xl font-bold">Response Submitted!</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Waiting for the next question...
                 </p>
               </div>
@@ -358,13 +358,14 @@ export default function Audience() {
             <div className="space-y-6 sm:space-y-8 relative z-10">
               {currentSlide.type === 'multiple_choice' && (
                 <div className="text-center mb-4">
-                  <h2 className="text-2xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
-                  <p className="text-muted-foreground">Select one option</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">Select one option</p>
                 </div>
               )}
               {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
                 <div className="text-center">
-                  <p className="text-muted-foreground">Type your answer below</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">Type your answer below</p>
                 </div>
               )}
 
