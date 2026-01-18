@@ -279,10 +279,10 @@ export default function Audience() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {currentSlide.type === 'heading' ? (
           <div 
-            className="rounded-xl border shadow-sm p-12 text-center relative overflow-visible"
+            className="rounded-xl border shadow-sm p-8 sm:p-12 text-center relative overflow-visible aspect-video flex items-center justify-center"
             style={{
               backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : 'hsl(var(--card))'),
               color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : 'hsl(var(--card-foreground))'),
@@ -308,18 +308,18 @@ export default function Audience() {
             <SlideWatermark />
           </div>
         ) : currentSlide.type === 'image' ? (
-          <Card className="p-0 overflow-visible relative">
+          <Card className="p-0 overflow-visible relative aspect-video">
             <div className="absolute inset-0">
               <SlideCanvas
                 elements={currentSlide?.config?.elements || []}
                 isEditable={false}
               />
             </div>
-            <div className="relative z-10">
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <img 
                 src={currentSlide.question || ''} 
                 alt="Presentation slide" 
-                className="w-full h-auto"
+                className="max-w-full max-h-full object-contain"
                 data-testid="img-slide"
               />
             </div>
@@ -333,7 +333,7 @@ export default function Audience() {
             <SlideWatermark />
           </Card>
         ) : submitted ? (
-          <Card className="p-12 text-center relative overflow-visible">
+          <Card className="p-8 sm:p-12 text-center relative overflow-visible min-h-[50vh] md:min-h-[60vh] flex items-center justify-center">
             <div className="flex flex-col items-center gap-4 relative z-10">
               <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
                 <Check className="h-8 w-8 text-green-500" />
@@ -354,8 +354,8 @@ export default function Audience() {
             />
           </Card>
         ) : (
-          <Card className="p-8 relative overflow-visible" data-testid="card-slide">
-            <div className="space-y-8 relative z-10">
+          <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
+            <div className="space-y-6 sm:space-y-8 relative z-10">
               {currentSlide.type === 'multiple_choice' && (
                 <div className="text-center mb-4">
                   <h2 className="text-2xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
