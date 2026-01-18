@@ -122,22 +122,56 @@ export default function View() {
       </header>
 
       <main className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <div className="relative w-full max-w-6xl aspect-video bg-card rounded-lg shadow-lg overflow-hidden">
+        <div 
+          className="relative w-full max-w-6xl aspect-video rounded-lg shadow-lg overflow-hidden"
+          style={{
+            backgroundColor: currentSlide?.config?.background || 'hsl(var(--card))'
+          }}
+        >
           {currentSlide && (
-            <div className="w-full h-full relative">
-              {currentSlide.type === 'content' && currentSlide.config?.background && (
-                <div 
-                  className="absolute inset-0" 
-                  style={{ 
-                    backgroundColor: currentSlide.config.background,
-                    backgroundImage: currentSlide.config.background.startsWith('url') ? currentSlide.config.background : undefined 
-                  }} 
-                />
-              )}
+            <div className="w-full h-full relative flex items-center justify-center p-8">
               <SlideCanvas
                 elements={currentSlide.config?.elements || []}
                 isEditable={false}
               />
+              {currentSlide.type === 'heading' && currentSlide.question && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <h1 className="text-4xl md:text-6xl font-bold text-center px-8">{currentSlide.question}</h1>
+                </div>
+              )}
+              {currentSlide.type === 'multiple_choice' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none p-8">
+                  <h2 className="text-2xl md:text-4xl font-bold text-center mb-6">{currentSlide.question}</h2>
+                  {currentSlide.options && (
+                    <div className="grid grid-cols-2 gap-4 max-w-2xl">
+                      {currentSlide.options.map((option, idx) => (
+                        <div key={idx} className="bg-white/20 backdrop-blur rounded-lg p-4 text-center font-medium">
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {currentSlide.type === 'word_cloud' && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <h2 className="text-2xl md:text-4xl font-bold text-center">{currentSlide.question}</h2>
+                </div>
+              )}
+              {currentSlide.type === 'spinner' && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <h2 className="text-2xl md:text-4xl font-bold text-center">{currentSlide.question || 'Spin the Wheel!'}</h2>
+                </div>
+              )}
+              {currentSlide.type === 'image' && currentSlide.question && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <img 
+                    src={currentSlide.question} 
+                    alt="Slide" 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              )}
               <SlideWatermark />
             </div>
           )}
