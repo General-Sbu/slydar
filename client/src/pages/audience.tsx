@@ -11,7 +11,7 @@ import DrawingCanvas from "@/components/DrawingCanvas";
 import AudienceQA from "@/components/AudienceQA";
 import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import { useState, useEffect, useMemo } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
@@ -24,6 +24,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Audience() {
   const [, params] = useRoute("/audience/:code");
+  const [, setLocation] = useLocation();
   const { showNotification } = useNotification();
   const roomCode = params?.code?.toUpperCase();
 
@@ -164,11 +165,14 @@ export default function Audience() {
     },
     onSessionEnded: () => {
       showNotification("The presentation has been closed by the presenter", "info");
+      setTimeout(() => {
+        setLocation('/');
+      }, 2000);
     },
     onError: (error: string) => {
       showNotification(error, "error");
     }
-  }), [showNotification, currentSlide?.id, session?.id]);
+  }), [showNotification, currentSlide?.id, session?.id, setLocation]);
 
   const { isConnected, joinSession, submitResponse, sendEmoji } = useWebSocket(websocketOptions);
 
