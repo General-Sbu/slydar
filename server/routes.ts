@@ -26,6 +26,7 @@ import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/sch
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
+import * as admin from "firebase-admin";
 
 interface SocketClient {
   sessionId?: string;
@@ -137,6 +138,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ success: true });
       });
     });
+  });
+
+  // Firebase Google auth endpoint
+  app.post('/api/auth/firebase', async (req, res) => {
+    try {
+      const { idToken } = req.body;
+      
+      if (!idToken) {
+        return res.status(400).json({ message: "ID token is required" });
+      }
+
+      // Initialize Firebase Admin if not already initialized
+      if (!admin.apps.length) {
+        const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+        if (!projectId) {
+          return res.status(500).json({ message: "Firebase not configured" });
+        }
+        
+        admin.initializeApp({
+          projectId: projectId,
+        });
+      }
+
+      // Verify the ID token
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const { uid, email, name, picture } = decodedToken;
+
+      // Find or create user
+      let user = await storage.getUserByEmail(email || '');
+      
+      if (!user) {
+        // Create new user from Firebase auth
+        user = await storage.createUser({
+          username: name || email?.split('@')[0] || `user_${uid.slice(0, 8)}`,
+          email: email || undefined,
+          profileImageUrl: picture,
+        });
+      }
+
+      // Create session
+      const userSession = {
+        claims: { sub: user.id },
+        id: user.id,
+      };
+
+      req.login(userSession, (err: any) => {
+        if (err) {
+          console.error("Firebase login session error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json(user);
+      });
+    } catch (error: any) {
+      console.error("Firebase auth error:", error);
+      res.status(401).json({ message: error.message || "Firebase authentication failed" });
+    }
   });
 
   // PayFast Payment Routes

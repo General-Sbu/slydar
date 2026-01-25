@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SiGoogle } from "react-icons/si";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { signInWithGoogle } from "@/lib/firebase";
 
 type AuthMode = "login" | "register";
 
@@ -63,8 +64,20 @@ export default function AuthForm() {
     });
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = "/api/login";
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setErrorMessage(null);
+    try {
+      await signInWithGoogle();
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    } catch (error: any) {
+      console.error("Google sign-in error:", error);
+      setErrorMessage(error.message || "Google sign-in failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -168,10 +181,19 @@ export default function AuthForm() {
             variant="outline"
             className="w-full gap-2 h-11 transition-smooth"
             onClick={handleGoogleSignIn}
+            disabled={isGoogleLoading}
             data-testid="button-google-signin"
           >
-            <SiGoogle className="h-4 w-4" />
-            {mode === "login" ? "Sign in with Google" : "Sign up with Google"}
+            {isGoogleLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SiGoogle className="h-4 w-4" />
+            )}
+            {isGoogleLoading 
+              ? "Signing in..." 
+              : mode === "login" 
+                ? "Sign in with Google" 
+                : "Sign up with Google"}
           </Button>
           
           <Button

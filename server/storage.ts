@@ -23,6 +23,7 @@ type UserWithPassword = User & { password: string | null };
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<UserWithPassword | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserOnboarding(userId: string, data: { useCase?: string; explorationGoal?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined>;
@@ -114,6 +115,13 @@ export class MemStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<UserWithPassword | undefined> {
     return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const user = Array.from(this.users.values()).find(u => u.email === email);
+    if (!user) return undefined;
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async createUser(userData: UpsertUser): Promise<User> {
@@ -543,6 +551,13 @@ export class DbStorage implements IStorage {
   async getUserByUsername(username: string): Promise<UserWithPassword | undefined> {
     const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
     return result[0] as UserWithPassword | undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!result[0]) return undefined;
+    const { password: _, ...userWithoutPassword } = result[0];
+    return userWithoutPassword as User;
   }
 
   async createUser(userData: UpsertUser): Promise<User> {
