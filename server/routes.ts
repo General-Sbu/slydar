@@ -33,6 +33,9 @@ interface SocketClient {
   participantId?: string;
 }
 
+// Module-level io instance for use in API endpoints
+let ioInstance: SocketIOServer | null = null;
+
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
@@ -1392,7 +1395,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Forbidden" });
       }
       
+      // Get session info before ending to get the room code
+      const sessionInfo = await storage.getSession(req.params.id);
       const ended = await storage.endSession(req.params.id);
+      
+      // Emit session_ended to all clients in the room
+      if (sessionInfo && ioInstance) {
+        ioInstance.to(sessionInfo.code).emit('session_ended');
+        console.log(`Session ${sessionInfo.code} ended, notifying audience`);
+      }
+      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to end session" });
@@ -1677,6 +1689,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     transports: ['polling', 'websocket'],
     allowEIO3: true
   });
+  
+  // Store io instance for use in API endpoints
+  ioInstance = io;
 
   // Set up session middleware for Socket.IO
   const wrap = (middleware: any) => (socket: any, next: any) => 
