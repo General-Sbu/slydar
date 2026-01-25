@@ -282,7 +282,7 @@ export default function Audience() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {currentSlide.type === 'heading' ? (
           <div 
-            className="rounded-xl border shadow-sm p-8 sm:p-12 text-center relative overflow-visible aspect-video flex items-center justify-center"
+            className="rounded-xl border shadow-sm text-center relative overflow-visible aspect-video"
             style={{
               backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : 'hsl(var(--card))'),
               color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : 'hsl(var(--card-foreground))'),
@@ -295,9 +295,11 @@ export default function Audience() {
                 isEditable={false}
               />
             </div>
-            <div className="relative z-10">
-              <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
-            </div>
+            {!currentSlide?.config?.elements?.length && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+              </div>
+            )}
             <DrawingCanvas
               annotations={annotations}
               activeTool="pen"
