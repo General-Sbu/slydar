@@ -14,7 +14,7 @@ import DrawingToolbar from "@/components/DrawingToolbar";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import WordCloud from "@/components/WordCloud";
 import SpinnerWheel from "@/components/SpinnerWheel";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -443,6 +443,19 @@ export default function Presenter() {
                   ref={castButtonRef}
                   presentationUrl={`${window.location.origin}/audience/${session.code}`} 
                 />
+              )}
+              {session && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleEndPresentation}
+                  disabled={endSessionMutation.isPending}
+                  data-testid="button-end-presentation"
+                  className="h-9"
+                >
+                  <StopCircle className="h-4 w-4 sm:mr-1" />
+                  <span className="sr-only sm:not-sr-only">End</span>
+                </Button>
               )}
             </div>
           </div>
