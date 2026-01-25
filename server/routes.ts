@@ -1399,9 +1399,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionInfo = await storage.getSession(req.params.id);
       const ended = await storage.endSession(req.params.id);
       
-      // Emit session_ended to all clients in the room
+      // Emit session_ended to all clients in the room (using session.id as room name)
       if (sessionInfo && ioInstance) {
-        ioInstance.to(sessionInfo.code).emit('session_ended');
+        ioInstance.to(sessionInfo.id).emit('session_ended');
         console.log(`Session ${sessionInfo.code} ended, notifying audience`);
       }
       
