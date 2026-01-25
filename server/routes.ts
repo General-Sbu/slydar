@@ -26,7 +26,6 @@ import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/sch
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
-import * as admin from "firebase-admin";
 
 interface SocketClient {
   sessionId?: string;
@@ -149,21 +148,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "ID token is required" });
       }
 
-      // Initialize Firebase Admin if not already initialized
-      if (!admin.apps.length) {
-        const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
-        if (!projectId) {
-          return res.status(500).json({ message: "Firebase not configured" });
-        }
-        
-        admin.initializeApp({
-          projectId: projectId,
-        });
+      // Verify the ID token using Firebase REST API
+      const apiKey = "AIzaSyA94MfOnralkwev4D6j52SZIzn90x3i_fs";
+      const verifyUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
+      
+      const verifyResponse = await fetch(verifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        console.error("Firebase token verification failed:", errorData);
+        return res.status(401).json({ message: "Invalid token" });
       }
 
-      // Verify the ID token
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      const { uid, email, name, picture } = decodedToken;
+      const verifyData = await verifyResponse.json();
+      const userInfo = verifyData.users?.[0];
+      
+      if (!userInfo) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { localId: uid, email, displayName: name, photoUrl: picture } = userInfo;
 
       // Find or create user
       let user = await storage.getUserByEmail(email || '');
