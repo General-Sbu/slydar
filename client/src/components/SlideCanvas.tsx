@@ -398,11 +398,12 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
           const isEditingThis = editingTextId === element.id;
           // Ensure text elements always render in foreground with high z-index
           const textZIndex = Math.max(element.zIndex || 0, 1000);
-          // Use responsive font size: clamp(minSize, preferred, maxSize)
-          // Base size scaled to viewport width for mobile responsiveness
+          // Use responsive font size with aggressive mobile scaling
+          // Formula: scales from ~40% at 320px to 100% at 1024px+
           const baseFontSize = element.fontSize || 16;
           const minFontSize = Math.max(baseFontSize * 0.4, 10); // Min 40% of original or 10px
-          const responsiveFontSize = `clamp(${minFontSize}px, ${baseFontSize * 0.25}vw + ${baseFontSize * 0.5}px, ${baseFontSize}px)`;
+          // Scale based on viewport width: grows from min at 320px to max at 1024px
+          const responsiveFontSize = `clamp(${minFontSize}px, ${baseFontSize / 16}vw + ${minFontSize * 0.5}px, ${baseFontSize}px)`;
           
           return (
             <div
