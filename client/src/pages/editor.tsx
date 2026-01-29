@@ -14,10 +14,11 @@ import SlideTypeCard from "@/components/SlideTypeCard";
 import SlideWatermark from "@/components/SlideWatermark";
 import { SlideCanvas } from "@/components/SlideCanvas";
 import SpinnerWheel from "@/components/SpinnerWheel";
+import FillBlankEditor from "@/components/FillBlankEditor";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput 
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -351,6 +352,21 @@ export default function Editor() {
         config: {
           elements: [],
           spinnerEntries: defaultSpinnerEntries
+        }
+      },
+      fill_blank: {
+        type: 'fill_blank',
+        question: "Fill in the Missing Words",
+        options: [],
+        config: {
+          elements: [createTextElement("Fill in the Missing Words", 40, 10, "bold", "center")],
+          fillBlankQuestions: [
+            {
+              id: crypto.randomUUID(),
+              sentence: "The capital of France is ____.",
+              blanks: [{ answer: "Paris" }]
+            }
+          ]
         }
       }
     };
@@ -914,6 +930,18 @@ export default function Editor() {
               description="Random picker"
             />
           </motion.div>
+          <motion.div 
+            onClick={() => { handleAddSlide('fill_blank'); setSlidesSheetOpen(false); }}
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            <SlideTypeCard
+              icon={TextCursorInput}
+              title="Fill in the Blank"
+              description="Missing words activity"
+            />
+          </motion.div>
         </div>
       </div>
 
@@ -1437,6 +1465,30 @@ export default function Editor() {
                         />
                       </div>
                     )}
+                    {currentSlide?.type === 'fill_blank' && (
+                      <div className="absolute inset-0 p-6 flex flex-col justify-center pointer-events-none overflow-auto">
+                        <div className="space-y-3 max-w-2xl mx-auto">
+                          {(editingSlide?.config?.fillBlankQuestions || currentSlide?.config?.fillBlankQuestions || []).slice(0, 3).map((q: any, i: number) => (
+                            <div key={q.id || i} className="bg-muted/50 rounded-lg p-3 text-sm">
+                              <span className="text-muted-foreground mr-2">{i + 1}.</span>
+                              {q.sentence.split('____').map((part: string, pi: number, arr: string[]) => (
+                                <span key={pi}>
+                                  {part}
+                                  {pi < arr.length - 1 && (
+                                    <span className="inline-block min-w-[50px] border-b-2 border-primary mx-1" />
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          ))}
+                          {(editingSlide?.config?.fillBlankQuestions || currentSlide?.config?.fillBlankQuestions || []).length > 3 && (
+                            <p className="text-xs text-muted-foreground text-center">
+                              +{(editingSlide?.config?.fillBlankQuestions || currentSlide?.config?.fillBlankQuestions || []).length - 3} more questions
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <SlideWatermark />
                 </Card>
@@ -1657,6 +1709,41 @@ export default function Editor() {
                         Add entry
                       </Button>
                     </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Fill in the Blank Editor Panel */}
+              {currentSlide?.type === 'fill_blank' && (
+                <Card className="p-6" data-testid="fill-blank-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Fill in the Blank</h3>
+                      <p className="text-sm text-muted-foreground">Create sentences with missing words for your audience to complete</p>
+                    </div>
+
+                    <Separator />
+
+                    <FillBlankEditor
+                      questions={editingSlide?.config?.fillBlankQuestions || currentSlide?.config?.fillBlankQuestions || []}
+                      onChange={(questions) => {
+                        const newConfig = {
+                          elements: editingSlide?.config?.elements || [],
+                          ...editingSlide?.config,
+                          fillBlankQuestions: questions
+                        };
+                        setEditingSlide({
+                          ...editingSlide,
+                          config: newConfig
+                        });
+                        if (editingSlide?.id) {
+                          updateSlideMutation.mutate({
+                            id: editingSlide.id,
+                            data: { config: newConfig }
+                          });
+                        }
+                      }}
+                    />
                   </div>
                 </Card>
               )}

@@ -116,8 +116,17 @@ export const presentations = pgTable("presentations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image", "spinner"]);
+export const slideTypeEnum = z.enum(["multiple_choice", "word_cloud", "open_ended", "heading", "image", "spinner", "fill_blank"]);
 export type SlideType = z.infer<typeof slideTypeEnum>;
+
+export const fillBlankQuestionSchema = z.object({
+  id: z.string(),
+  sentence: z.string(),
+  blanks: z.array(z.object({
+    answer: z.string(),
+  })),
+});
+export type FillBlankQuestion = z.infer<typeof fillBlankQuestionSchema>;
 
 export const spinnerEntrySchema = z.object({
   id: z.string(),
@@ -179,6 +188,7 @@ export const slideConfigSchema = z.object({
   elements: z.array(slideElementSchema).default([]),
   background: z.string().optional(),
   spinnerEntries: z.array(spinnerEntrySchema).optional(),
+  fillBlankQuestions: z.array(fillBlankQuestionSchema).optional(),
 }).passthrough();
 
 export type SlideConfig = z.infer<typeof slideConfigSchema>;

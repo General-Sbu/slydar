@@ -40,6 +40,8 @@ export default function Audience() {
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([]);
   const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
+  const [fillBlankAnswers, setFillBlankAnswers] = useState<Record<string, string[]>>({});
+  const [fillBlankSubmitted, setFillBlankSubmitted] = useState(false);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -135,6 +137,8 @@ export default function Audience() {
       setTextAnswer("");
       setFeedbackContent("");
       setAnnotations([]);
+      setFillBlankAnswers({});
+      setFillBlankSubmitted(false);
     },
     onReactionsUpdated: (data: { slideId: string; reactions: Reaction[] }) => {
       if (currentSlide?.id && session?.id) {
@@ -224,6 +228,54 @@ export default function Audience() {
       submitResponse(currentSlide.id, textAnswer.trim());
       setSubmitted(true);
     }
+  };
+
+  const handleFillBlankAnswerChange = (questionIndex: number, blankIndex: number, value: string) => {
+    setFillBlankAnswers(prev => {
+      const key = `${questionIndex}`;
+      const currentAnswers = prev[key] || [];
+      const newAnswers = [...currentAnswers];
+      newAnswers[blankIndex] = value;
+      return { ...prev, [key]: newAnswers };
+    });
+  };
+
+  const handleFillBlankSubmit = () => {
+    if (!currentSlide || fillBlankSubmitted || !canSubmitFillBlank()) return;
+    
+    const questions = currentSlide.config?.fillBlankQuestions || [];
+    const allAnswers: Array<{ questionIndex: number; answers: string[] }> = [];
+    
+    for (let qIdx = 0; qIdx < questions.length; qIdx++) {
+      const question = questions[qIdx];
+      const blankCount = (question.sentence.match(/____/g) || []).length;
+      const userAnswers = fillBlankAnswers[`${qIdx}`] || [];
+      const filledAnswers = userAnswers.slice(0, blankCount);
+      allAnswers.push({ questionIndex: qIdx, answers: filledAnswers });
+    }
+    
+    submitResponse(currentSlide.id, JSON.stringify(allAnswers));
+    setFillBlankSubmitted(true);
+  };
+  
+  const canSubmitFillBlank = () => {
+    if (!currentSlide?.config?.fillBlankQuestions) return false;
+    const questions = currentSlide.config.fillBlankQuestions;
+    if (questions.length === 0) return false;
+    
+    for (let qIdx = 0; qIdx < questions.length; qIdx++) {
+      const question = questions[qIdx];
+      const sentenceBlankCount = (question.sentence.match(/____/g) || []).length;
+      const configuredBlankCount = question.blanks.length;
+      
+      if (sentenceBlankCount !== configuredBlankCount) return false;
+      
+      const userAnswers = fillBlankAnswers[`${qIdx}`] || [];
+      for (let i = 0; i < sentenceBlankCount; i++) {
+        if (!userAnswers[i]?.trim()) return false;
+      }
+    }
+    return true;
   };
 
   const handleReaction = (reactionType: ReactionType) => {
@@ -420,6 +472,63 @@ export default function Audience() {
                   <p className="text-muted-foreground mt-4 text-center">
                     The presenter will spin the wheel
                   </p>
+                </div>
+              )}
+
+              {currentSlide.type === 'fill_blank' && (
+                <div className="space-y-6">
+                  <div className="text-center mb-4">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Fill in the Blanks</h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">Complete the sentences below</p>
+                  </div>
+                  
+                  {fillBlankSubmitted ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <Check className="w-8 h-8 text-green-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">Submitted!</h3>
+                      <p className="text-muted-foreground">Your answers have been recorded.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {currentSlide.config?.fillBlankQuestions?.map((question, qIdx) => {
+                        const parts = question.sentence.split('____');
+                        const blanks = question.blanks || [];
+                        
+                        return (
+                          <Card key={qIdx} className="p-4" data-testid={`card-question-${qIdx}`}>
+                            <div className="flex flex-wrap items-center gap-2 text-lg">
+                              {parts.map((part, pIdx) => (
+                                <span key={pIdx}>
+                                  {part}
+                                  {pIdx < parts.length - 1 && (
+                                    <Input
+                                      className="inline-block w-32 mx-1 text-center"
+                                      placeholder="..."
+                                      value={fillBlankAnswers[`${qIdx}`]?.[pIdx] || ''}
+                                      onChange={(e) => handleFillBlankAnswerChange(qIdx, pIdx, e.target.value)}
+                                      data-testid={`input-blank-${qIdx}-${pIdx}`}
+                                    />
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                      
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        onClick={handleFillBlankSubmit}
+                        disabled={!canSubmitFillBlank()}
+                        data-testid="button-submit-fill-blank"
+                      >
+                        Submit Answers
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
