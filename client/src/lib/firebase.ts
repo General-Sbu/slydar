@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, type User } from "firebase/auth";
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider, onAuthStateChanged, type User } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA94MfOnralkwev4D6j52SZIzn90x3i_fs",
@@ -16,27 +16,57 @@ export const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 
+async function createServerSession(user: User): Promise<void> {
+  const idToken = await user.getIdToken();
+  const response = await fetch('/api/auth/firebase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Server session creation failed:', errorData);
+    throw new Error(errorData.message || 'Failed to authenticate with server');
+  }
+}
+
 export async function signInWithGoogle(): Promise<User | null> {
   try {
+    // Try popup first, fall back to redirect if it fails
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+    await createServerSession(user);
+    return user;
+  } catch (error: any) {
+    console.error('Google sign-in error:', error);
     
-    const idToken = await user.getIdToken();
-    const response = await fetch('/api/auth/firebase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to authenticate with server');
+    // If popup was blocked or failed due to domain issues, try redirect
+    if (error.code === 'auth/popup-blocked' || 
+        error.code === 'auth/popup-closed-by-user' ||
+        error.code === 'auth/unauthorized-domain') {
+      console.log('Popup failed, trying redirect...');
+      await signInWithRedirect(auth, provider);
+      return null;
     }
     
-    return user;
-  } catch (error) {
-    console.error('Google sign-in error:', error);
     throw error;
+  }
+}
+
+// Handle redirect result on page load
+export async function handleRedirectResult(): Promise<User | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      await createServerSession(result.user);
+      return result.user;
+    }
+    return null;
+  } catch (error) {
+    console.error('Redirect result error:', error);
+    return null;
   }
 }
 

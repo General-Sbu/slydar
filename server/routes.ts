@@ -101,14 +101,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       loginSchema.parse(req.body);
     } catch (error) {
+      console.error("Login validation error:", error);
       return res.status(400).json({ message: "Invalid login data" });
     }
 
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
+        console.error("Passport authentication error:", err);
         return res.status(500).json({ message: "Authentication error" });
       }
       if (!user) {
+        console.log("Login failed - no user:", info?.message);
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
       
@@ -120,8 +123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       req.login(userSession, (err: any) => {
         if (err) {
-          return res.status(500).json({ message: "Login failed" });
+          console.error("Session creation error:", err);
+          return res.status(500).json({ message: "Login failed - session error" });
         }
+        console.log("Login successful for user:", user.id);
         res.json(user);
       });
     })(req, res, next);
@@ -144,10 +149,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Firebase Google auth endpoint
   app.post('/api/auth/firebase', async (req, res) => {
+    console.log("Firebase auth request received");
     try {
       const { idToken } = req.body;
       
       if (!idToken) {
+        console.log("Firebase auth: No ID token provided");
         return res.status(400).json({ message: "ID token is required" });
       }
 
@@ -155,6 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiKey = "AIzaSyA94MfOnralkwev4D6j52SZIzn90x3i_fs";
       const verifyUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
       
+      console.log("Firebase auth: Verifying token...");
       const verifyResponse = await fetch(verifyUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,15 +179,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userInfo = verifyData.users?.[0];
       
       if (!userInfo) {
+        console.log("Firebase auth: No user info in response");
         return res.status(401).json({ message: "User not found" });
       }
 
       const { localId: uid, email, displayName: name, photoUrl: picture } = userInfo;
+      console.log("Firebase auth: User verified -", email);
 
       // Find or create user
       let user = await storage.getUserByEmail(email || '');
       
       if (!user) {
+        console.log("Firebase auth: Creating new user for", email);
         // Create new user from Firebase auth
         user = await storage.createUser({
           username: name || email?.split('@')[0] || `user_${uid.slice(0, 8)}`,
@@ -197,8 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.login(userSession, (err: any) => {
         if (err) {
           console.error("Firebase login session error:", err);
-          return res.status(500).json({ message: "Login failed" });
+          return res.status(500).json({ message: "Login failed - session error" });
         }
+        console.log("Firebase auth: Session created for user", user!.id);
         res.json(user);
       });
     } catch (error: any) {

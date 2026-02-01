@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { NotificationProvider } from "@/hooks/useNotification";
 import { NotificationContainer } from "@/components/NotificationContainer";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { handleRedirectResult } from "@/lib/firebase";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Presentations from "@/pages/presentations";
@@ -130,11 +132,23 @@ function Router() {
   );
 }
 
+function FirebaseRedirectHandler() {
+  useEffect(() => {
+    handleRedirectResult().then((user) => {
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }
+    });
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <TooltipProvider>
+          <FirebaseRedirectHandler />
           <NotificationContainer />
           <Router />
         </TooltipProvider>
