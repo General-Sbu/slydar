@@ -22,8 +22,9 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   
-  // Build connection string from PG* environment variables for Neon/Replit database
-  const dbUrl = `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=require`;
+  // Use DATABASE_URL if available, otherwise build from PG* environment variables
+  const dbUrl = process.env.DATABASE_URL || 
+    `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=require`;
   
   const sessionStore = new pgStore({
     conString: dbUrl,
@@ -31,14 +32,20 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  // In production or when behind a proxy, use secure cookies
+  // NODE_ENV is 'development' only when running locally via `npm run dev`
+  const isDevMode = process.env.NODE_ENV === 'development';
+  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: !isDevMode,
       sameSite: 'lax',
       maxAge: sessionTtl,
     },
