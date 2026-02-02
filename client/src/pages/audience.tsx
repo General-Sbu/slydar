@@ -10,6 +10,7 @@ import { SlideCanvas } from "@/components/SlideCanvas";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import AudienceQA from "@/components/AudienceQA";
 import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
+import PinchZoomContainer from "@/components/PinchZoomContainer";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { Check, Loader2, StickyNote, Save } from "lucide-react";
@@ -337,59 +338,63 @@ export default function Audience() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {currentSlide.type === 'heading' ? (
-          <div 
-            className="rounded-xl border shadow-sm text-center relative overflow-visible aspect-video"
-            style={{
-              backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : 'hsl(var(--card))'),
-              color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : 'hsl(var(--card-foreground))'),
-              borderColor: 'hsl(var(--card-border))'
-            }}
-          >
-            <div className="absolute inset-0">
-              <SlideCanvas
-                elements={currentSlide?.config?.elements || []}
-                isEditable={false}
-              />
-            </div>
-            {!currentSlide?.config?.elements?.length && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+          <PinchZoomContainer className="relative rounded-xl">
+            <div 
+              className="rounded-xl border shadow-sm text-center relative overflow-visible aspect-video"
+              style={{
+                backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : 'hsl(var(--card))'),
+                color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : 'hsl(var(--card-foreground))'),
+                borderColor: 'hsl(var(--card-border))'
+              }}
+            >
+              <div className="absolute inset-0">
+                <SlideCanvas
+                  elements={currentSlide?.config?.elements || []}
+                  isEditable={false}
+                />
               </div>
-            )}
-            <DrawingCanvas
-              annotations={annotations}
-              activeTool="pen"
-              activeColor="#000000"
-              isDrawingMode={false}
-              onAnnotationAdd={() => {}}
-            />
-            <SlideWatermark />
-          </div>
+              {!currentSlide?.config?.elements?.length && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                </div>
+              )}
+              <DrawingCanvas
+                annotations={annotations}
+                activeTool="pen"
+                activeColor="#000000"
+                isDrawingMode={false}
+                onAnnotationAdd={() => {}}
+              />
+              <SlideWatermark />
+            </div>
+          </PinchZoomContainer>
         ) : currentSlide.type === 'image' ? (
-          <Card className="p-0 overflow-visible relative aspect-video">
-            <div className="absolute inset-0">
-              <SlideCanvas
-                elements={currentSlide?.config?.elements || []}
-                isEditable={false}
+          <PinchZoomContainer className="relative rounded-xl">
+            <Card className="p-0 overflow-visible relative aspect-video">
+              <div className="absolute inset-0">
+                <SlideCanvas
+                  elements={currentSlide?.config?.elements || []}
+                  isEditable={false}
+                />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <img 
+                  src={currentSlide.question || ''} 
+                  alt="Presentation slide" 
+                  className="max-w-full max-h-full object-contain"
+                  data-testid="img-slide"
+                />
+              </div>
+              <DrawingCanvas
+                annotations={annotations}
+                activeTool="pen"
+                activeColor="#000000"
+                isDrawingMode={false}
+                onAnnotationAdd={() => {}}
               />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <img 
-                src={currentSlide.question || ''} 
-                alt="Presentation slide" 
-                className="max-w-full max-h-full object-contain"
-                data-testid="img-slide"
-              />
-            </div>
-            <DrawingCanvas
-              annotations={annotations}
-              activeTool="pen"
-              activeColor="#000000"
-              isDrawingMode={false}
-              onAnnotationAdd={() => {}}
-            />
-            <SlideWatermark />
-          </Card>
+              <SlideWatermark />
+            </Card>
+          </PinchZoomContainer>
         ) : submitted ? (
           <Card className="p-8 sm:p-12 text-center relative overflow-visible min-h-[50vh] md:min-h-[60vh] flex items-center justify-center">
             <div className="flex flex-col items-center gap-4 relative z-10">
