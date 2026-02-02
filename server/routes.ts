@@ -127,9 +127,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "Login failed - session error" });
         }
         console.log("Login successful for user:", user.id);
-        res.json(user);
+        console.log("Session ID:", req.sessionID);
+        console.log("Session saved:", !!req.session);
+        
+        // Force session save before responding
+        req.session.save((saveErr: any) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).json({ message: "Login failed - session save error" });
+          }
+          console.log("Session saved successfully");
+          res.json(user);
+        });
       });
     })(req, res, next);
+  });
+
+  // Debug endpoint to check session and environment
+  app.get('/api/debug/session', (req, res) => {
+    const isDevMode = process.env.NODE_ENV === 'development';
+    res.json({
+      hasSession: !!req.session,
+      sessionID: req.sessionID,
+      isAuthenticated: req.isAuthenticated?.() || false,
+      nodeEnv: process.env.NODE_ENV || 'not set',
+      isDevMode,
+      secureCookies: !isDevMode,
+      user: req.user ? 'present' : 'none',
+    });
   });
 
   // Local auth logout endpoint

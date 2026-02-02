@@ -26,16 +26,23 @@ export function getSession() {
   const dbUrl = process.env.DATABASE_URL || 
     `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=require`;
   
+  console.log("Session store connecting to database...");
+  
   const sessionStore = new pgStore({
     conString: dbUrl,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
+  });
+  
+  sessionStore.on('error', (error: any) => {
+    console.error('Session store error:', error);
   });
   
   // In production or when behind a proxy, use secure cookies
   // NODE_ENV is 'development' only when running locally via `npm run dev`
   const isDevMode = process.env.NODE_ENV === 'development';
+  console.log(`Session config: isDevMode=${isDevMode}, secure=${!isDevMode}`);
   
   return session({
     secret: process.env.SESSION_SECRET!,
