@@ -13,6 +13,7 @@ import Dashboard from "@/pages/dashboard";
 import Presentations from "@/pages/presentations";
 import Report from "@/pages/report";
 import SessionAnalytics from "@/pages/session-analytics";
+import SlideResponses from "@/pages/slide-responses";
 import Editor from "@/pages/editor";
 import Presenter from "@/pages/presenter";
 import Audience from "@/pages/audience";
@@ -100,6 +101,9 @@ function Router() {
       </Route>
       <Route path="/session/:id">
         <ProtectedRouteWithSidebar component={SessionAnalytics} />
+      </Route>
+      <Route path="/session/:sessionId/slide/:slideId">
+        <ProtectedRouteWithSidebar component={SlideResponses} />
       </Route>
       <Route path="/pricing" component={Pricing} />
       <Route path="/editor/:id?">

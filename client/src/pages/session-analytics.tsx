@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Users, MessageSquare, BarChart3, ThumbsUp, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageSquare, BarChart3, FileText, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { format } from "date-fns";
@@ -162,7 +162,12 @@ export default function SessionAnalytics() {
           ) : (
             <div className="space-y-3">
               {session.slideAnalytics.map((slide, index) => (
-                <Card key={slide.slideId} data-testid={`slide-analytics-${slide.slideId}`}>
+                <Card 
+                  key={slide.slideId} 
+                  className="hover-elevate cursor-pointer transition-all"
+                  onClick={() => setLocation(`/session/${session.id}/slide/${slide.slideId}`)}
+                  data-testid={`slide-analytics-${slide.slideId}`}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 min-w-0">
@@ -195,6 +200,7 @@ export default function SessionAnalytics() {
                           </div>
                           <div className="text-xs text-muted-foreground">Participants</div>
                         </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </div>
                   </CardContent>

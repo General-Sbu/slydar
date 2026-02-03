@@ -860,6 +860,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/sessions/:sessionId/slides/:slideId/responses", isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionId, slideId } = req.params;
+      const userId = req.user?.claims?.sub;
+      
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation || presentation.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const slide = await storage.getSlide(slideId);
+      if (!slide) {
+        return res.status(404).json({ error: "Slide not found" });
+      }
+      
+      if (slide.presentationId !== presentation.id) {
+        return res.status(403).json({ error: "Slide does not belong to this session's presentation" });
+      }
+      
+      const responses = await storage.getResponsesBySlide(slideId, sessionId);
+      const feedback = await storage.getFeedbackBySlide(slideId, sessionId);
+      const reactions = await storage.getReactionsBySlide(slideId, sessionId);
+      
+      const uniqueParticipants = new Set([
+        ...responses.map(r => r.participantId),
+        ...feedback.map(f => f.participantId),
+        ...reactions.map(r => r.participantId)
+      ]);
+      
+      res.json({
+        sessionId,
+        slideId,
+        slideType: slide.type,
+        slideOrder: slide.order,
+        question: slide.question,
+        config: slide.config,
+        presentationTitle: presentation.title,
+        sessionCode: session.code,
+        responses: responses.map(r => ({
+          id: r.id,
+          participantId: r.participantId,
+          answer: r.answer,
+          submittedAt: r.submittedAt
+        })),
+        feedback: feedback.map(f => ({
+          id: f.id,
+          participantId: f.participantId,
+          content: f.content,
+          submittedAt: f.submittedAt
+        })),
+        reactions: reactions.map(r => ({
+          id: r.id,
+          participantId: r.participantId,
+          reactionType: r.reactionType,
+          submittedAt: r.submittedAt
+        })),
+        uniqueParticipantCount: uniqueParticipants.size
+      });
+    } catch (error) {
+      console.error("Slide responses fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch slide responses" });
+    }
+  });
+
   app.get("/api/library", async (req, res) => {
     try {
       const presentations = await storage.getPublishedPresentations();
