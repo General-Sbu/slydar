@@ -1398,6 +1398,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Forbidden" });
       }
       
+      // End any existing active sessions for this presentation
+      const existingActiveSessions = await storage.getActiveSessionsByPresentation(req.body.presentationId);
+      for (const existingSession of existingActiveSessions) {
+        await storage.endSession(existingSession.id);
+        // Notify connected clients that the session has ended
+        io.to(existingSession.id).emit('session_ended');
+      }
+      
       let code = generateRoomCode();
       let existing = await storage.getSessionByCode(code);
       while (existing) {
@@ -1820,6 +1828,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const session = await storage.getSessionByCode(code);
         if (!session) {
           socket.emit('error', { message: 'Session not found' });
+          return;
+        }
+        
+        // Prevent joining inactive sessions (except for presenter who might be reconnecting)
+        if (!session.isActive && role === 'audience') {
+          socket.emit('error', { message: 'This session has ended' });
           return;
         }
         

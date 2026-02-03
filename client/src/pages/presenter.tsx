@@ -62,10 +62,6 @@ export default function Presenter() {
     enabled: !!presentationId,
   });
 
-  const { data: activeSessions = [] } = useQuery<PresentationSession[]>({
-    queryKey: ['/api/presentations', presentationId, 'sessions', 'active'],
-    enabled: !!presentationId,
-  });
 
   const { data: responses = [] } = useQuery<Response[]>({
     queryKey: ['/api/sessions', session?.id, 'responses'],
@@ -85,8 +81,8 @@ export default function Presenter() {
   });
 
   const { data: allWordCloudResponses = [] } = useQuery<Response[]>({
-    queryKey: ['/api/slides', currentSlide?.id, 'all-responses'],
-    enabled: !!currentSlide?.id && currentSlide?.type === 'word_cloud',
+    queryKey: ['/api/slides', currentSlide?.id, 'responses', session?.id],
+    enabled: !!currentSlide?.id && !!session?.id && currentSlide?.type === 'word_cloud',
     refetchInterval: 3000,
   });
 
@@ -101,8 +97,14 @@ export default function Presenter() {
       return res.json();
     },
     onSuccess: (data: PresentationSession) => {
+      // Reset all session-scoped state for a fresh start
       setSession(data);
       setCurrentSlideIndex(0);
+      setAllResponses([]);
+      setParticipantCount(0);
+      setAnnotations([]);
+      setFloatingEmojis([]);
+      setActiveSpinnerEntries(null);
       if (slides.length > 0) {
         setCurrentSlide(slides[0]);
       }
@@ -124,6 +126,8 @@ export default function Presenter() {
       return res.json();
     },
     onSuccess: () => {
+      setSession(null);
+      setCurrentSlideIndex(0);
       showNotification("Presentation has been closed", "success");
       setLocation('/dashboard');
     }
@@ -175,19 +179,11 @@ export default function Presenter() {
 
   useEffect(() => {
     if (!session && presentationId && slides.length > 0 && !createSessionMutation.isPending) {
-      // Check if there's an active session to reuse
-      if (activeSessions.length > 0) {
-        const existingSession = activeSessions[0];
-        setSession(existingSession);
-        setCurrentSlideIndex(existingSession.currentSlideIndex);
-        if (slides[existingSession.currentSlideIndex]) {
-          setCurrentSlide(slides[existingSession.currentSlideIndex]);
-        }
-      } else {
-        createSessionMutation.mutate();
-      }
+      // Always create a new session - don't reuse old ones
+      // This ensures presentations start fresh from the beginning with no previous responses
+      createSessionMutation.mutate();
     }
-  }, [presentationId, slides, activeSessions]);
+  }, [presentationId, slides, session, createSessionMutation.isPending]);
 
   useEffect(() => {
     if (session && isConnected) {
@@ -196,9 +192,8 @@ export default function Presenter() {
   }, [session, isConnected]);
 
   useEffect(() => {
-    if (responses.length > 0) {
-      setAllResponses(responses);
-    }
+    // Always sync allResponses with the query result
+    setAllResponses(responses);
   }, [responses]);
 
   const handlePreviousSlide = () => {
