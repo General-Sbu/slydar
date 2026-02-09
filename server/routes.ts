@@ -2231,7 +2231,7 @@ For the "imagePrompt" field:
         const imagePromises = imagesToGenerate.map(({ slideId, imagePrompt, slideTitle }, i) =>
           generateImageBuffer(
             `Educational illustration: ${imagePrompt}. Style: clean, modern flat design for slides.`,
-            "512x512",
+            "auto",
             "low"
           )
             .then(async (imageBuffer) => {
