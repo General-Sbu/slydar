@@ -751,7 +751,7 @@ export default function Editor() {
     );
   };
 
-  const SlidesPanel = () => (
+  const slidesPanel = (
     <div className="p-4 space-y-5 h-full overflow-auto">
       <div>
         <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Slides</h3>
@@ -1045,7 +1045,7 @@ export default function Editor() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
-                  <SlidesPanel />
+                  {slidesPanel}
                 </SheetContent>
               </Sheet>
 
@@ -1128,7 +1128,7 @@ export default function Editor() {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="hidden lg:block w-72 border-r bg-muted/30 overflow-auto">
-          <SlidesPanel />
+          {slidesPanel}
         </aside>
 
         <main className="flex-1 overflow-auto bg-background">
