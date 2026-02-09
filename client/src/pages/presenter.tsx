@@ -515,7 +515,7 @@ export default function Presenter() {
                     <div className="relative z-10">
                       {currentSlide.type === 'heading' ? (
                         <div className="text-center">
-                          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || currentSlide.title || ""}</h1>
                         </div>
                       ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
                         <LivePollChart

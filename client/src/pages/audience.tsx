@@ -383,7 +383,7 @@ export default function Audience() {
               </div>
               {!currentSlide?.config?.elements?.length && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || "Heading"}</h1>
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || currentSlide.title || ""}</h1>
                 </div>
               )}
               <DrawingCanvas

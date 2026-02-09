@@ -42,7 +42,7 @@ export default function UpcomingSlidePreview({ slide }: UpcomingSlidePreviewProp
           <div className="relative z-10 p-4 flex items-center justify-center h-full">
             {slide.type === 'heading' ? (
               <div className="text-center">
-                <h4 className="text-sm font-semibold line-clamp-2">{slide.question || "Heading"}</h4>
+                <h4 className="text-sm font-semibold line-clamp-2">{slide.question || slide.title || ""}</h4>
               </div>
             ) : slide.type === 'image' ? (
               <div className="flex items-center justify-center h-full">
