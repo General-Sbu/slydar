@@ -18,7 +18,13 @@ import {
   Sparkles,
   Play,
   Menu,
-  Briefcase
+  Briefcase,
+  Wand2,
+  Clock,
+  Palette,
+  Brain,
+  ImageIcon,
+  Layers
 } from "lucide-react";
 
 const RandIcon = ({ className }: { className?: string }) => (
@@ -254,13 +260,13 @@ export default function Education() {
               
               <div className="flex flex-wrap justify-center gap-4 pt-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
                 <Link href="/?auth=true">
-                  <Button size="lg" className="gap-2 h-12 px-8 text-lg transition-smooth" data-testid="button-try-free">
+                  <Button size="lg" className="gap-2 transition-smooth" data-testid="button-try-free">
                     Try Free
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="/library">
-                  <Button variant="outline" size="lg" className="gap-2 h-12 px-8 text-lg transition-smooth" data-testid="button-view-examples">
+                  <Button variant="outline" size="lg" className="gap-2 transition-smooth" data-testid="button-view-examples">
                     <Play className="w-5 h-5" />
                     View Examples
                   </Button>
@@ -346,6 +352,78 @@ export default function Education() {
           </div>
         </section>
 
+        {/* AI Slide Generator Section */}
+        <section className="py-24 relative" data-testid="section-ai-generator-edu">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-6">
+                <Wand2 className="w-4 h-4" />
+                AI-Powered
+              </div>
+              <h2 className="text-3xl lg:text-4xl font-bold mb-4" data-testid="heading-ai-edu">
+                Generate lesson slides with <span className="gradient-text">AI</span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Enter any topic and get a complete, ready-to-teach slide deck in under a minute. No more spending hours on slide preparation.
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-semibold">How it benefits educators</h3>
+                <div className="space-y-4">
+                  {[
+                    { icon: Clock, title: "Save hours of prep time", desc: "Turn a topic like \"Photosynthesis\" or \"The French Revolution\" into a full slide deck instantly. Focus on teaching, not designing." },
+                    { icon: Brain, title: "Depth levels for every class", desc: "Choose Beginner, Intermediate, or Advanced to match your students' level. Perfect for differentiated instruction across grades." },
+                    { icon: Layers, title: "Structured lesson flow", desc: "Every deck follows proven pedagogy: title, learning objectives, concept slides, real-world examples, activities, and assessment quizzes." },
+                    { icon: ImageIcon, title: "AI-generated visuals", desc: "Key concept slides automatically include AI-generated images to help visual learners grasp complex topics more easily." },
+                    { icon: Palette, title: "8 beautiful themes", desc: "Choose from classroom-ready themes like Classic, Ocean, Forest, or Rose. Your slides look polished and professional from the start." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4 animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }} data-testid={`ai-benefit-edu-${i}`}>
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <item.icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">{item.title}</h4>
+                        <p className="text-sm text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Card className="p-8 border-0 bg-card/60 backdrop-blur" data-testid="card-ai-steps-edu">
+                <CardContent className="p-0 space-y-8">
+                  <h3 className="text-2xl font-semibold text-center">3 steps to a full lesson</h3>
+                  {[
+                    { step: "1", title: "Type your topic", desc: "Enter any subject — \"Cell Division\", \"World War II\", \"Algebra Basics\" — and choose a depth level." },
+                    { step: "2", title: "Pick a theme", desc: "Select from 8 professionally designed color schemes. Each theme is crafted to keep student attention without distraction." },
+                    { step: "3", title: "Generate & present", desc: "AI builds 10-20 structured slides with quizzes and visuals. Edit anything you like, then present directly to your class." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4 items-start" data-testid={`ai-step-edu-${i}`}>
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold flex-shrink-0">
+                        {item.step}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-1">{item.title}</h4>
+                        <p className="text-sm text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-2 text-center">
+                    <Link href="/?auth=true">
+                      <Button size="lg" className="gap-2 transition-smooth" data-testid="button-try-ai-edu">
+                        <Wand2 className="w-4 h-4" />
+                        Try AI Generator
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-24 relative">
           <div className="absolute inset-0 gradient-hero pointer-events-none" />
@@ -362,7 +440,7 @@ export default function Education() {
               Start free and upgrade as you grow.
             </p>
             <Link href="/">
-              <Button size="lg" className="gap-2 h-14 px-10 text-lg transition-smooth" data-testid="button-start-free">
+              <Button size="lg" className="gap-2 transition-smooth" data-testid="button-start-free">
                 Start Free Today
                 <ArrowRight className="w-5 h-5" />
               </Button>
