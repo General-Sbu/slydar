@@ -355,6 +355,8 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    padding-bottom: 0.1em;
+    line-height: 1.15;
   }
 
   .gradient-mesh {
