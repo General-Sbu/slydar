@@ -560,6 +560,8 @@ export default function Presenter() {
                             }}
                           />
                         </div>
+                      ) : currentSlide?.config?.elements?.length ? (
+                        null
                       ) : (
                         <div className="text-center">
                           <h2 className="text-3xl font-bold">{currentSlide.question || currentSlide.title || ''}</h2>
