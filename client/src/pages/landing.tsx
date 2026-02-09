@@ -5,7 +5,7 @@ import AuthForm from "@/components/AuthForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation, useSearch } from "wouter";
 import { useState, useEffect } from "react";
-import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle, GraduationCap, Briefcase } from "lucide-react";
+import { Menu, BookOpen, ArrowRight, LogIn, Sparkles, Users, BarChart3, MessageCircle, Presentation, Upload, Zap, Play, Circle, GraduationCap, Briefcase, Wand2, Palette, Clock, Brain } from "lucide-react";
 
 const RandIcon = ({ className }: { className?: string }) => (
   <span className={`font-bold text-center leading-none ${className}`} style={{ fontFamily: 'serif' }}>R</span>
@@ -320,6 +320,106 @@ export default function Landing() {
               </div>
             </section>
 
+            {/* AI Slide Generator Section */}
+            <section className="py-24 lg:py-32 relative overflow-hidden">
+              <div className="absolute inset-0 gradient-hero pointer-events-none" />
+              <FloatingShape className="w-80 h-80 bg-chart-3/20 -top-10 right-10" delay="1s" />
+              <FloatingShape className="w-64 h-64 bg-primary/15 bottom-10 -left-10" delay="3s" />
+              
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-16 items-center">
+                  <div className="space-y-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary">
+                      <Wand2 className="w-4 h-4" />
+                      AI-Powered
+                    </div>
+                    <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
+                      Generate slides with
+                      <span className="gradient-text block mt-1">artificial intelligence</span>
+                    </h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                      Turn any topic into a complete, interactive slide deck in seconds. Our AI generates structured teaching presentations with quizzes, activities, and even custom images.
+                    </p>
+                    <div className="space-y-4">
+                      {[
+                        { icon: Brain, text: "10-20 structured slides from any topic" },
+                        { icon: Palette, text: "8 beautiful themes to choose from" },
+                        { icon: Sparkles, text: "AI-generated images for key concepts" },
+                        { icon: Clock, text: "Ready in under a minute" },
+                      ].map((item) => (
+                        <div key={item.text} className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <item.icon className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium" data-testid={`text-ai-feature-${item.text.slice(0, 10).replace(/\s+/g, '-').toLowerCase()}`}>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Button 
+                        onClick={() => setShowAuth(true)} 
+                        size="lg" 
+                        className="transition-smooth"
+                        data-testid="button-try-ai-generator"
+                      >
+                        Try AI Generator
+                        <Wand2 className="w-4 h-4 ml-2" />
+                      </Button>
+                      <Link href="/ai-slides">
+                        <Button variant="outline" size="lg" className="transition-smooth" data-testid="button-learn-more-ai">
+                          Learn More
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm p-6 space-y-4 shadow-lg">
+                      <div className="flex items-center gap-3 pb-4 border-b border-border/50">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Wand2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-sm">AI Slide Generator</div>
+                          <div className="text-xs text-muted-foreground">Powered by OpenAI</div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Topic</div>
+                          <div className="text-sm font-medium">Introduction to Machine Learning</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="rounded-lg bg-muted/50 p-3 flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">Depth</div>
+                            <div className="text-sm font-medium">Beginner</div>
+                          </div>
+                          <div className="rounded-lg bg-muted/50 p-3 flex-1">
+                            <div className="text-xs text-muted-foreground mb-1">Theme</div>
+                            <div className="text-sm font-medium">Ocean</div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="w-full bg-muted rounded-full h-2">
+                              <div className="bg-primary rounded-full h-2 w-3/4 transition-all" />
+                            </div>
+                            <span className="whitespace-nowrap">15 slides</span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {["#ecfeff", "#e0f2fe", "#dbeafe", "#ecfeff", "#f0fdfa", "#ecfeff", "#e0f2fe", "#dbeafe"].map((color, i) => (
+                              <div key={i} className="aspect-[16/10] rounded-md border border-border/30" style={{ backgroundColor: color }} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Featured Presentations Section */}
             {featuredPresentations.length > 0 && (
               <section className="py-24 lg:py-32 relative">
@@ -477,6 +577,11 @@ export default function Landing() {
               <Link href="/library">
                 <Button variant="ghost" size="sm" className="transition-smooth" data-testid="link-footer-library">
                   Library
+                </Button>
+              </Link>
+              <Link href="/ai-slides">
+                <Button variant="ghost" size="sm" className="transition-smooth" data-testid="link-footer-ai-slides">
+                  AI Slides
                 </Button>
               </Link>
               <Link href="/pricing">
