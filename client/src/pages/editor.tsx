@@ -53,6 +53,7 @@ export default function Editor() {
   // Debounce ref must be declared before any conditional returns
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const slideRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -248,6 +249,13 @@ export default function Editor() {
       setEditingSlide({ ...slides[selectedSlideIndex] });
     }
   }, [selectedSlideIndex, slides]);
+
+  useEffect(() => {
+    const el = slideRefs.current.get(selectedSlideIndex);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedSlideIndex]);
 
   // Sync presentation title when data loads
   useEffect(() => {
@@ -752,6 +760,10 @@ export default function Editor() {
             {slides.map((slide, index) => (
               <motion.div
                 key={slide.id}
+                ref={(el: HTMLDivElement | null) => {
+                  if (el) slideRefs.current.set(index, el);
+                  else slideRefs.current.delete(index);
+                }}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50, scale: 0.9 }}
