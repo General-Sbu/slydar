@@ -230,7 +230,7 @@ export default function Landing() {
                   
                   <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight animate-slide-up">
                     Make every presentation
-                    <span className="gradient-text block mt-2 mb-6">unforgettable</span>
+                    <span className="gradient-text block mt-2" style={{ marginBottom: "50px" }}>unforgettable</span>
                   </h1>
                   
                   <p className="text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto animate-fade-in font-light" style={{ animationDelay: "0.2s" }}>
