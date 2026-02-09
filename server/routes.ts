@@ -1586,6 +1586,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/notes/presentation/:presentationId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const notesResult = await storage.getNotesByPresentation(userId, req.params.presentationId);
+      res.json(notesResult);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
   app.get("/api/notes/slide/:slideId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;

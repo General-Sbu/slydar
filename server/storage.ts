@@ -56,6 +56,7 @@ export interface IStorage {
 
   createNote(note: InsertNote): Promise<Note>;
   getNotesByUser(userId: string): Promise<Note[]>;
+  getNotesByPresentation(userId: string, presentationId: string): Promise<Note[]>;
   getNotesBySlide(userId: string, slideId: string): Promise<Note | undefined>;
   updateNote(id: string, content: string): Promise<Note | undefined>;
   deleteNote(id: string): Promise<boolean>;
@@ -376,6 +377,10 @@ export class MemStorage implements IStorage {
   }
 
   async getNotesByUser(userId: string): Promise<Note[]> {
+    return [];
+  }
+
+  async getNotesByPresentation(userId: string, presentationId: string): Promise<Note[]> {
     return [];
   }
 
@@ -734,6 +739,13 @@ export class DbStorage implements IStorage {
     return db.select()
       .from(notes)
       .where(eq(notes.userId, userId))
+      .orderBy(desc(notes.updatedAt));
+  }
+
+  async getNotesByPresentation(userId: string, presentationId: string): Promise<Note[]> {
+    return db.select()
+      .from(notes)
+      .where(and(eq(notes.userId, userId), eq(notes.presentationId, presentationId)))
       .orderBy(desc(notes.updatedAt));
   }
 

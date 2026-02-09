@@ -13,7 +13,7 @@ import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import PinchZoomContainer from "@/components/PinchZoomContainer";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
-import { Check, Loader2, StickyNote, Save } from "lucide-react";
+import { Check, Loader2, StickyNote, Save, FileText, Trash2 } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
 import { defaultSpinnerEntries } from "@shared/schema";
@@ -31,6 +31,7 @@ export default function Audience() {
 
   const [session, setSession] = useState<PresentationSession | null>(null);
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
+  const [allSlides, setAllSlides] = useState<Slide[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [textAnswer, setTextAnswer] = useState("");
@@ -49,6 +50,11 @@ export default function Audience() {
   const { data: existingNote } = useQuery<Note | null>({
     queryKey: currentSlide?.id ? [`/api/notes/slide/${currentSlide.id}`] : [],
     enabled: isAuthenticated && !!currentSlide?.id,
+  });
+
+  const { data: presentationNotes = [] } = useQuery<Note[]>({
+    queryKey: session?.presentationId ? ['/api/notes/presentation', session.presentationId] : [],
+    enabled: isAuthenticated && !!session?.presentationId,
   });
 
   const { data: reactions = [] } = useQuery<Reaction[]>({
@@ -70,6 +76,9 @@ export default function Audience() {
       if (currentSlide?.id) {
         queryClient.invalidateQueries({ queryKey: [`/api/notes/slide/${currentSlide.id}`] });
       }
+      if (session?.presentationId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/notes/presentation', session.presentationId] });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
       setIsSavingNote(false);
       showNotification("Note saved successfully", "success");
@@ -77,6 +86,24 @@ export default function Audience() {
     onError: () => {
       setIsSavingNote(false);
       showNotification("Failed to save note", "error");
+    },
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (noteId: string) => {
+      await apiRequest('DELETE', `/api/notes/${noteId}`);
+    },
+    onSuccess: () => {
+      if (currentSlide?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/notes/slide/${currentSlide.id}`] });
+      }
+      if (session?.presentationId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/notes/presentation', session.presentationId] });
+      }
+      showNotification("Note deleted", "success");
+    },
+    onError: () => {
+      showNotification("Failed to delete note", "error");
     },
   });
 
@@ -126,6 +153,7 @@ export default function Audience() {
     onSessionJoined: (data: { session: PresentationSession; currentSlide: Slide; slides: Slide[]; participantId?: string }) => {
       setSession(data.session);
       setCurrentSlide(data.currentSlide);
+      setAllSlides(data.slides || []);
       setParticipantId(data.participantId || null);
       setSubmitted(false);
       setSelectedAnswer(null);
@@ -612,7 +640,7 @@ export default function Audience() {
         )}
 
         {isAuthenticated && currentSlide && (
-          <Card className="mt-6 p-6">
+          <Card className="mt-6 p-6" data-testid="card-notes-section">
             <div className="flex items-center gap-2 mb-4">
               <StickyNote className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">My Notes</h3>
@@ -644,6 +672,50 @@ export default function Audience() {
                 )}
               </Button>
             </div>
+
+            {presentationNotes.length > 0 && (
+              <div className="mt-6 border-t pt-4" data-testid="saved-notes-list">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <h4 className="text-sm font-medium text-muted-foreground">Saved Notes ({presentationNotes.length})</h4>
+                </div>
+                <div className="space-y-3">
+                  {presentationNotes.map((savedNote) => {
+                    const slideIndex = allSlides.findIndex(s => s.id === savedNote.slideId);
+                    const slide = allSlides.find(s => s.id === savedNote.slideId);
+                    const slideLabel = slideIndex >= 0 
+                      ? `Slide ${slideIndex + 1}${slide?.question ? ` - ${slide.question.substring(0, 40)}${slide.question.length > 40 ? '...' : ''}` : ''}`
+                      : 'Unknown slide';
+                    const isCurrentSlideNote = savedNote.slideId === currentSlide?.id;
+
+                    return (
+                      <div 
+                        key={savedNote.id} 
+                        className={`p-3 rounded-md border text-sm ${isCurrentSlideNote ? 'border-primary/30 bg-primary/5' : 'bg-muted/30'}`}
+                        data-testid={`saved-note-${savedNote.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className={`text-xs font-medium ${isCurrentSlideNote ? 'text-primary' : 'text-muted-foreground'}`} data-testid={`note-slide-label-${savedNote.id}`}>
+                            {slideLabel}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="flex-shrink-0"
+                            onClick={() => deleteNoteMutation.mutate(savedNote.id)}
+                            disabled={deleteNoteMutation.isPending}
+                            data-testid={`button-delete-note-${savedNote.id}`}
+                          >
+                            <Trash2 className="h-3 w-3 text-muted-foreground" />
+                          </Button>
+                        </div>
+                        <p className="text-foreground whitespace-pre-wrap" data-testid={`note-content-${savedNote.id}`}>{savedNote.content}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </Card>
         )}
       </main>
