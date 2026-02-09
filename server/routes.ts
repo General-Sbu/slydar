@@ -2019,7 +2019,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/generate-slides", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const { topic, depth = "Beginner" } = req.body;
+      const { topic, depth = "Beginner", theme = "classic" } = req.body;
+
+      const themeColors: Record<string, { background: string; text: string; primary: string; accent: string }> = {
+        classic: { background: "#ffffff", text: "#1e293b", primary: "#2563eb", accent: "#dbeafe" },
+        midnight: { background: "#0f172a", text: "#f1f5f9", primary: "#818cf8", accent: "#1e293b" },
+        sunset: { background: "#fef2f2", text: "#7f1d1d", primary: "#ef4444", accent: "#fecaca" },
+        forest: { background: "#f0fdf4", text: "#14532d", primary: "#22c55e", accent: "#bbf7d0" },
+        ocean: { background: "#ecfeff", text: "#164e63", primary: "#06b6d4", accent: "#a5f3fc" },
+        royal: { background: "#faf5ff", text: "#3b0764", primary: "#a855f7", accent: "#e9d5ff" },
+        charcoal: { background: "#1c1917", text: "#fafaf9", primary: "#f97316", accent: "#292524" },
+        rose: { background: "#fff1f2", text: "#881337", primary: "#f43f5e", accent: "#fecdd3" },
+      };
+      const activeTheme = themeColors[theme] || themeColors.classic;
 
       if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
         return res.status(400).json({ error: "Topic is required" });
@@ -2166,6 +2178,7 @@ For the "imagePrompt" field:
             textDecoration: "none" as const,
             fontFamily: "Inter" as const,
             textAlign: "left" as const,
+            color: activeTheme.text,
             rotation: 0,
             zIndex: 2
           },
@@ -2185,6 +2198,7 @@ For the "imagePrompt" field:
             textDecoration: "none" as const,
             fontFamily: "Inter" as const,
             textAlign: "left" as const,
+            color: activeTheme.text,
             rotation: 0,
             zIndex: 1
           });
@@ -2203,6 +2217,8 @@ For the "imagePrompt" field:
           question: questionText,
           options: slideOptions,
           config: {
+            background: activeTheme.background,
+            textColor: activeTheme.text,
             elements,
             speakerNotes: slide.speakerNotes || "",
           },

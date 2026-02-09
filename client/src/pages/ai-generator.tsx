@@ -5,7 +5,74 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, ArrowRight, Loader2, CheckCircle2, BookOpen, GraduationCap, Rocket } from "lucide-react";
+import { Sparkles, ArrowRight, Loader2, CheckCircle2, BookOpen, GraduationCap, Rocket, Palette } from "lucide-react";
+
+const slideThemes = [
+  {
+    id: "classic",
+    name: "Classic",
+    background: "#ffffff",
+    text: "#1e293b",
+    primary: "#2563eb",
+    accent: "#dbeafe",
+  },
+  {
+    id: "midnight",
+    name: "Midnight",
+    background: "#0f172a",
+    text: "#f1f5f9",
+    primary: "#818cf8",
+    accent: "#1e293b",
+  },
+  {
+    id: "sunset",
+    name: "Sunset",
+    background: "#fef2f2",
+    text: "#7f1d1d",
+    primary: "#ef4444",
+    accent: "#fecaca",
+  },
+  {
+    id: "forest",
+    name: "Forest",
+    background: "#f0fdf4",
+    text: "#14532d",
+    primary: "#22c55e",
+    accent: "#bbf7d0",
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    background: "#ecfeff",
+    text: "#164e63",
+    primary: "#06b6d4",
+    accent: "#a5f3fc",
+  },
+  {
+    id: "royal",
+    name: "Royal",
+    background: "#faf5ff",
+    text: "#3b0764",
+    primary: "#a855f7",
+    accent: "#e9d5ff",
+  },
+  {
+    id: "charcoal",
+    name: "Charcoal",
+    background: "#1c1917",
+    text: "#fafaf9",
+    primary: "#f97316",
+    accent: "#292524",
+  },
+  {
+    id: "rose",
+    name: "Rose",
+    background: "#fff1f2",
+    text: "#881337",
+    primary: "#f43f5e",
+    accent: "#fecdd3",
+  },
+];
 
 interface GenerationEvent {
   type: "status" | "progress" | "complete" | "error";
@@ -21,6 +88,7 @@ export default function AIGenerator() {
   const [, setLocation] = useLocation();
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState("Beginner");
+  const [selectedTheme, setSelectedTheme] = useState("classic");
   const [isGenerating, setIsGenerating] = useState(false);
   const [events, setEvents] = useState<GenerationEvent[]>([]);
   const [completedPresentation, setCompletedPresentation] = useState<{ id: string; count: number } | null>(null);
@@ -59,7 +127,7 @@ export default function AIGenerator() {
       const response = await fetch("/api/ai/generate-slides", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim(), depth }),
+        body: JSON.stringify({ topic: topic.trim(), depth, theme: selectedTheme }),
         signal: abortRef.current.signal,
       });
 
@@ -178,6 +246,60 @@ export default function AIGenerator() {
                       <opt.icon className={`h-4 w-4 ${isSelected ? "text-primary" : ""}`} />
                       <span className="text-sm font-medium">{opt.label}</span>
                       <span className="text-[11px] leading-tight">{opt.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium flex items-center gap-1.5">
+                <Palette className="h-3.5 w-3.5" />
+                Slide Theme
+              </Label>
+              <div className="grid grid-cols-4 gap-2">
+                {slideThemes.map((theme) => {
+                  const isSelected = selectedTheme === theme.id;
+                  return (
+                    <button
+                      key={theme.id}
+                      data-testid={`button-theme-${theme.id}`}
+                      onClick={() => setSelectedTheme(theme.id)}
+                      disabled={isGenerating}
+                      className={`relative rounded-md border overflow-hidden transition-all ${
+                        isSelected
+                          ? "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                          : "border-border hover:border-muted-foreground/40"
+                      }`}
+                    >
+                      <div
+                        className="aspect-[16/10] p-2 flex flex-col justify-between"
+                        style={{ backgroundColor: theme.background }}
+                      >
+                        <div className="space-y-1">
+                          <div
+                            className="h-1.5 rounded-full w-3/4"
+                            style={{ backgroundColor: theme.primary }}
+                          />
+                          <div
+                            className="h-1 rounded-full w-1/2 opacity-60"
+                            style={{ backgroundColor: theme.text }}
+                          />
+                        </div>
+                        <div className="flex gap-1">
+                          <div
+                            className="h-1 rounded-full flex-1"
+                            style={{ backgroundColor: theme.accent }}
+                          />
+                          <div
+                            className="h-1 rounded-full flex-1"
+                            style={{ backgroundColor: theme.accent }}
+                          />
+                        </div>
+                      </div>
+                      <div className="py-1 px-1.5 text-center">
+                        <span className="text-[10px] font-medium leading-none">{theme.name}</span>
+                      </div>
                     </button>
                   );
                 })}
