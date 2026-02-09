@@ -562,7 +562,7 @@ export default function Presenter() {
                         </div>
                       ) : (
                         <div className="text-center">
-                          <h2 className="text-3xl font-bold">{currentSlide.question || 'Slide'}</h2>
+                          <h2 className="text-3xl font-bold">{currentSlide.question || currentSlide.title || ''}</h2>
                         </div>
                       )}
                     </div>
