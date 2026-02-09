@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Home, Presentation, BarChart3, LogOut, LayoutTemplate } from "lucide-react";
+import { Menu, Home, Presentation, BarChart3, LogOut, LayoutTemplate, Sparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/authUtils";
@@ -18,6 +18,7 @@ const RandIcon = ({ className }: { className?: string }) => (
 const mobileMenuItems = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "My Presentations", url: "/presentations", icon: Presentation },
+  { title: "AI Generator", url: "/ai-generator", icon: Sparkles },
   { title: "Templates", url: "/templates", icon: LayoutTemplate },
   { title: "Report", url: "/report", icon: BarChart3 },
   { title: "My Plan", url: "/pricing", icon: RandIcon },

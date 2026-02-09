@@ -464,3 +464,5 @@ export const insertTemplateSchema = createInsertSchema(templates).omit({
 
 export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type Template = typeof templates.$inferSelect;
+
+export * from "./models/chat";

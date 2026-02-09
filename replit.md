@@ -43,6 +43,7 @@ Slydar is a full-stack TypeScript application with a React frontend and an Expre
 -   **Authenticated Navigation Panel:** A dark left sidebar navigation panel visible only when users are signed in. Contains menu options: Home (dashboard overview), My Presentations (full list of user's presentations), Report (session analytics), and My Plan (pricing). The sidebar uses Shadcn's sidebar primitives with collapsible functionality.
 -   **Report & Session Analytics:** Dedicated report page showing all past presentation sessions with presentation name, date/time, and participant counts. Users can click on any session to view detailed analytics including per-slide engagement metrics, response counts, and unique participant breakdowns. Clicking on individual slides drills down to show all individual responses with anonymized participant IDs, timestamps, feedback content, and reaction types.
 -   **Mobile Pinch-to-Zoom:** Audience view supports pinch-to-zoom (1x-4x) and panning on heading and image slides for better readability on mobile devices. Double-tap toggles between 1x and 2x zoom.
+-   **AI Slide Generator:** Signed-in users can generate complete teaching slide decks (10-20 slides) from any topic using OpenAI. Supports Beginner/Intermediate/Advanced depth levels. Uses SSE for real-time progress updates during generation. Generated slides include title slides, learning objectives, concept slides, examples, activities, and quizzes. Accessible via /ai-generator with sidebar navigation.
 
 ### System Design Choices
 
@@ -54,6 +55,7 @@ The backend uses RESTful HTTP endpoints for CRUD operations and a Socket.IO serv
 
 -   **ConvertAPI:** For PPTX to PNG conversion.
 -   **Google Fonts:** For typography (Inter and Helvetica).
+-   **OpenAI (via Replit AI Integrations):** For AI slide generation. Uses gpt-5-mini model.
 
 ### Database
 

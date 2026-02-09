@@ -29,6 +29,7 @@ import Education from "@/pages/education";
 import Business from "@/pages/business";
 import Checkout from "@/pages/checkout";
 import Templates from "@/pages/templates";
+import AIGenerator from "@/pages/ai-generator";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -130,6 +131,9 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/templates">
         <ProtectedRouteWithSidebar component={Templates} />
+      </Route>
+      <Route path="/ai-generator">
+        <ProtectedRouteWithSidebar component={AIGenerator} />
       </Route>
       <Route component={NotFound} />
     </Switch>

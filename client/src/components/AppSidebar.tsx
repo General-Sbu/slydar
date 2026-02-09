@@ -1,4 +1,4 @@
-import { Home, Presentation, BarChart3, LogOut, Settings, LayoutTemplate } from "lucide-react";
+import { Home, Presentation, BarChart3, LogOut, Settings, LayoutTemplate, Sparkles } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/authUtils";
@@ -31,6 +31,11 @@ const menuItems = [
     title: "My Presentations",
     url: "/presentations",
     icon: Presentation,
+  },
+  {
+    title: "AI Generator",
+    url: "/ai-generator",
+    icon: Sparkles,
   },
   {
     title: "Templates",

@@ -16,7 +16,7 @@ import {
   responses,
   slides
 } from "@shared/schema";
-import { randomBytes } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import multer from "multer";
 import { setupAuth as setupOIDCAuth, isAuthenticated, registerAuthRoutes, getSession } from "./replit_integrations/auth";
 import passport from "passport";
@@ -26,6 +26,7 @@ import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/sch
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
+import OpenAI from "openai";
 
 interface SocketClient {
   sessionId?: string;
@@ -2006,6 +2007,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
         io.to(clientData.sessionId).emit('participant_count', { count: participantCount });
       }
     });
+  });
+
+  // AI Slide Generator endpoint
+  const aiOpenai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+
+  app.post("/api/ai/generate-slides", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { topic, depth = "Beginner" } = req.body;
+
+      if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
+        return res.status(400).json({ error: "Topic is required" });
+      }
+
+      if (topic.trim().length > 500) {
+        return res.status(400).json({ error: "Topic must be under 500 characters" });
+      }
+
+      const systemPrompt = `Your job is to automatically generate a complete, ready-to-teach slide deck from any topic provided.
+
+When given a topic, create structured slides that:
+- teach clearly
+- follow logical learning progression
+- are concise and visual-first
+- are suitable for classroom or workshop teaching
+
+Instructions:
+
+1. Structure
+Always include:
+- Title slide
+- Learning objectives
+- Hook/intro slide (why it matters)
+- Concept slides (chunked into small sections)
+- Examples
+- Step-by-step explanation or process
+- Practice/activity or discussion
+- Recap/summary
+- Optional quiz or reflection
+
+2. Teaching Style
+- Use simple language
+- Avoid long paragraphs
+- Explain concepts progressively
+- Include analogies/examples
+- Emphasize clarity over density
+- Break complex topics into small steps
+- Include at least one interactive or thinking activity
+- Make slides engaging, not textbook-like
+
+3. Depth Control
+The depth level is: ${depth}
+- Beginner: simple explanations + basics
+- Intermediate: deeper concepts + examples
+- Advanced: technical depth + tradeoffs
+
+4. Output Requirements
+- 10-20 slides
+- Clean and ready to use
+
+IMPORTANT: You MUST respond with valid JSON only. No markdown, no commentary outside the JSON.
+The JSON must be an array of slide objects with this exact structure:
+[
+  {
+    "slideNumber": 1,
+    "title": "Slide Title Here",
+    "type": "heading",
+    "bullets": ["bullet point 1", "bullet point 2"],
+    "speakerNotes": "What the teacher should say for this slide."
+  }
+]
+
+For the "type" field, use these values:
+- "heading" for title slides, intro slides, summary slides, and general content slides
+- "multiple_choice" for quiz/reflection slides (add an "options" array with 3-4 choices and a "question" field)
+- "word_cloud" for interactive thinking/brainstorming activities (add a "question" field)
+- "open_ended" for discussion or practice activities (add a "question" field)
+
+Every slide MUST have: slideNumber, title, type, bullets (array of strings), speakerNotes (string).`;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      res.write(`data: ${JSON.stringify({ type: "status", message: "Generating slides..." })}\n\n`);
+
+      const completion = await aiOpenai.chat.completions.create({
+        model: "gpt-5-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Create a complete teaching slide deck about: ${topic.trim()}` }
+        ],
+        max_completion_tokens: 8192,
+      });
+
+      const content = completion.choices[0]?.message?.content || "";
+
+      let slidesData: any[];
+      try {
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) throw new Error("No JSON array found");
+        slidesData = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        res.write(`data: ${JSON.stringify({ type: "error", message: "Failed to parse AI response. Please try again." })}\n\n`);
+        res.end();
+        return;
+      }
+
+      if (!Array.isArray(slidesData) || slidesData.length === 0) {
+        res.write(`data: ${JSON.stringify({ type: "error", message: "No slides were generated. Please try a different topic." })}\n\n`);
+        res.end();
+        return;
+      }
+
+      slidesData.sort((a: any, b: any) => (a.slideNumber || 0) - (b.slideNumber || 0));
+
+      res.write(`data: ${JSON.stringify({ type: "status", message: "Creating presentation..." })}\n\n`);
+
+      const presentation = await storage.createPresentation({
+        userId,
+        title: topic.trim(),
+      });
+
+      for (let i = 0; i < slidesData.length; i++) {
+        const slide = slidesData[i];
+        const slideType = slide.type || "heading";
+        const validTypes = ["heading", "multiple_choice", "word_cloud", "open_ended", "image", "spinner", "fill_blank"];
+        const finalType = validTypes.includes(slideType) ? slideType : "heading";
+
+        const bulletsText = Array.isArray(slide.bullets) ? slide.bullets.join("\n") : "";
+        const titleText = slide.title || `Slide ${i + 1}`;
+
+        const elements: any[] = [
+          {
+            id: randomUUID(),
+            type: "text" as const,
+            x: 5,
+            y: 8,
+            width: 90,
+            content: titleText,
+            fontSize: 40,
+            fontWeight: "bold" as const,
+            fontStyle: "normal" as const,
+            textDecoration: "none" as const,
+            fontFamily: "Inter" as const,
+            textAlign: "left" as const,
+            rotation: 0,
+            zIndex: 2
+          },
+        ];
+
+        if (bulletsText) {
+          elements.push({
+            id: randomUUID(),
+            type: "text" as const,
+            x: 5,
+            y: finalType === "heading" ? 30 : 55,
+            width: 90,
+            content: bulletsText,
+            fontSize: finalType === "heading" ? 24 : 18,
+            fontWeight: "normal" as const,
+            fontStyle: "normal" as const,
+            textDecoration: "none" as const,
+            fontFamily: "Inter" as const,
+            textAlign: "left" as const,
+            rotation: 0,
+            zIndex: 1
+          });
+        }
+
+        const questionText = slide.question || (finalType !== "heading" ? titleText : null);
+        const slideOptions = finalType === "multiple_choice" 
+          ? (Array.isArray(slide.options) && slide.options.length >= 2 ? slide.options : ["Option A", "Option B", "Option C"])
+          : null;
+
+        const slideData: any = {
+          presentationId: presentation.id,
+          type: finalType,
+          order: i,
+          title: titleText,
+          question: questionText,
+          options: slideOptions,
+          config: {
+            elements,
+            speakerNotes: slide.speakerNotes || "",
+          },
+        };
+
+        await storage.createSlide(slideData);
+
+        res.write(`data: ${JSON.stringify({ type: "progress", current: i + 1, total: slidesData.length, slideTitle: titleText })}\n\n`);
+      }
+
+      res.write(`data: ${JSON.stringify({ type: "complete", presentationId: presentation.id, slideCount: slidesData.length })}\n\n`);
+      res.end();
+    } catch (error: any) {
+      console.error("AI slide generation error:", error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ type: "error", message: "An error occurred during generation. Please try again." })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to generate slides" });
+      }
+    }
   });
 
   return httpServer;
