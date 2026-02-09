@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,10 +25,30 @@ export default function AIGenerator() {
   const [events, setEvents] = useState<GenerationEvent[]>([]);
   const [completedPresentation, setCompletedPresentation] = useState<{ id: string; count: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelRedirect = useCallback(() => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      cancelRedirect();
+    };
+  }, [cancelRedirect]);
+
+  const navigateTo = useCallback((path: string) => {
+    cancelRedirect();
+    setLocation(path);
+  }, [cancelRedirect, setLocation]);
 
   const handleGenerate = useCallback(async () => {
     if (!topic.trim() || isGenerating) return;
 
+    cancelRedirect();
     setIsGenerating(true);
     setEvents([]);
     setCompletedPresentation(null);
@@ -75,6 +95,9 @@ export default function AIGenerator() {
                 id: event.presentationId!,
                 count: event.slideCount!,
               });
+              redirectTimerRef.current = setTimeout(() => {
+                setLocation(`/editor/${event.presentationId}`);
+              }, 1500);
             }
           } catch {}
         }
@@ -89,6 +112,7 @@ export default function AIGenerator() {
   }, [topic, depth, isGenerating]);
 
   const latestProgress = events.filter(e => e.type === "progress").pop();
+  const latestStatus = events.filter(e => e.type === "status").pop();
   const hasError = events.some(e => e.type === "error");
   const errorMessage = events.find(e => e.type === "error")?.message;
 
@@ -200,7 +224,7 @@ export default function AIGenerator() {
                 </span>
               </div>
 
-              {latestProgress && (
+              {latestProgress && !completedPresentation && (
                 <div className="space-y-2">
                   <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                     <div
@@ -214,6 +238,12 @@ export default function AIGenerator() {
                 </div>
               )}
 
+              {latestStatus && !completedPresentation && !hasError && (
+                <p className="text-xs text-muted-foreground" data-testid="text-ai-status">
+                  {latestStatus.message}
+                </p>
+              )}
+
               {hasError && (
                 <p className="text-sm text-destructive" data-testid="text-ai-error">
                   {errorMessage}
@@ -221,39 +251,30 @@ export default function AIGenerator() {
               )}
 
               {completedPresentation && (
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    data-testid="button-edit-generated"
-                    onClick={() => setLocation(`/editor/${completedPresentation.id}`)}
-                    className="flex-1"
-                  >
-                    Edit Slides
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                  <Button
-                    data-testid="button-present-generated"
-                    variant="outline"
-                    onClick={() => setLocation(`/presenter/${completedPresentation.id}`)}
-                    className="flex-1"
-                  >
-                    Present Now
-                  </Button>
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Opening editor...
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      data-testid="button-edit-generated"
+                      onClick={() => navigateTo(`/editor/${completedPresentation.id}`)}
+                      className="flex-1"
+                    >
+                      Edit Slides
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    <Button
+                      data-testid="button-present-generated"
+                      variant="outline"
+                      onClick={() => navigateTo(`/presenter/${completedPresentation.id}`)}
+                      className="flex-1"
+                    >
+                      Present Now
+                    </Button>
+                  </div>
                 </div>
-              )}
-
-              {completedPresentation && (
-                <Button
-                  data-testid="button-generate-another"
-                  variant="ghost"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    setTopic("");
-                    setEvents([]);
-                    setCompletedPresentation(null);
-                  }}
-                >
-                  Generate Another
-                </Button>
               )}
             </div>
           </Card>

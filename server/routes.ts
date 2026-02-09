@@ -27,6 +27,7 @@ import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
 import OpenAI from "openai";
+import { generateImageBuffer } from "./replit_integrations/image";
 
 interface SocketClient {
   sessionId?: string;
@@ -2078,7 +2079,8 @@ The JSON must be an array of slide objects with this exact structure:
     "title": "Slide Title Here",
     "type": "heading",
     "bullets": ["bullet point 1", "bullet point 2"],
-    "speakerNotes": "What the teacher should say for this slide."
+    "speakerNotes": "What the teacher should say for this slide.",
+    "imagePrompt": "A clear, educational illustration of..."
   }
 ]
 
@@ -2088,7 +2090,13 @@ For the "type" field, use these values:
 - "word_cloud" for interactive thinking/brainstorming activities (add a "question" field)
 - "open_ended" for discussion or practice activities (add a "question" field)
 
-Every slide MUST have: slideNumber, title, type, bullets (array of strings), speakerNotes (string).`;
+Every slide MUST have: slideNumber, title, type, bullets (array of strings), speakerNotes (string).
+
+For the "imagePrompt" field:
+- Add an "imagePrompt" field to 3-5 key concept/content slides (NOT title slides, NOT quiz slides, NOT summary slides)
+- The imagePrompt should describe a clear, educational illustration or diagram that visually explains the slide content
+- Keep prompts specific and descriptive, e.g. "A labeled diagram showing the water cycle with evaporation, condensation, and precipitation arrows"
+- Only add imagePrompt to slides where a visual would genuinely help understanding`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -2132,6 +2140,8 @@ Every slide MUST have: slideNumber, title, type, bullets (array of strings), spe
         userId,
         title: topic.trim(),
       });
+
+      const slidesWithImages: { slideId: string; imagePrompt: string; slideTitle: string }[] = [];
 
       for (let i = 0; i < slidesData.length; i++) {
         const slide = slidesData[i];
@@ -2198,9 +2208,76 @@ Every slide MUST have: slideNumber, title, type, bullets (array of strings), spe
           },
         };
 
-        await storage.createSlide(slideData);
+        const createdSlide = await storage.createSlide(slideData);
+
+        const skipImageTypes = ["multiple_choice", "word_cloud", "open_ended", "spinner", "fill_blank"];
+        if (slide.imagePrompt && !skipImageTypes.includes(finalType)) {
+          slidesWithImages.push({ slideId: createdSlide.id, imagePrompt: slide.imagePrompt, slideTitle: titleText });
+        }
 
         res.write(`data: ${JSON.stringify({ type: "progress", current: i + 1, total: slidesData.length, slideTitle: titleText })}\n\n`);
+      }
+
+      if (slidesWithImages.length > 0) {
+        res.write(`data: ${JSON.stringify({ type: "status", message: `Generating images for ${slidesWithImages.length} slides...` })}\n\n`);
+
+        const fs = await import('fs');
+        const path = await import('path');
+
+        for (let i = 0; i < slidesWithImages.length; i++) {
+          const { slideId, imagePrompt, slideTitle } = slidesWithImages[i];
+          try {
+            res.write(`data: ${JSON.stringify({ type: "status", message: `Generating image ${i + 1}/${slidesWithImages.length}: ${slideTitle}` })}\n\n`);
+
+            const imageBuffer = await generateImageBuffer(
+              `Educational illustration, clean and professional: ${imagePrompt}. Style: modern, flat design, suitable for presentation slides, white or light background.`,
+              "1024x1024"
+            );
+
+            const timestamp = Date.now();
+            const publicOutputFolder = path.join(process.cwd(), 'public', 'uploads', `presentation-${presentation.id}-${timestamp}`);
+            await fs.promises.mkdir(publicOutputFolder, { recursive: true });
+
+            const elementId = randomUUID();
+            const fileName = `element-${elementId}.png`;
+            const filePath = path.join(publicOutputFolder, fileName);
+            await fs.promises.writeFile(filePath, imageBuffer);
+
+            const imagePath = `/uploads/presentation-${presentation.id}-${timestamp}/${fileName}`;
+
+            const currentSlide = await storage.getSlide(slideId);
+            if (currentSlide) {
+              const config = currentSlide.config || { elements: [] };
+              const elements = config.elements || [];
+
+              elements.forEach((el: any) => {
+                if (el.type === "text" && el.y < 25) {
+                  el.width = 55;
+                }
+                if (el.type === "text" && el.y >= 25) {
+                  el.width = 55;
+                }
+              });
+
+              elements.push({
+                type: 'image' as const,
+                id: elementId,
+                src: imagePath,
+                x: 58,
+                y: 20,
+                width: 38,
+                height: 65,
+                zIndex: 3,
+              });
+
+              await storage.updateSlide(slideId, {
+                config: { ...config, elements }
+              });
+            }
+          } catch (imgError) {
+            console.error(`Failed to generate image for slide "${slideTitle}":`, imgError);
+          }
+        }
       }
 
       res.write(`data: ${JSON.stringify({ type: "complete", presentationId: presentation.id, slideCount: slidesData.length })}\n\n`);
