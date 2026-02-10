@@ -210,6 +210,7 @@ export const presentationSessions = pgTable("presentation_sessions", {
   code: varchar("code", { length: 6 }).notNull().unique(),
   currentSlideIndex: integer("current_slide_index").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  allowDownload: boolean("allow_download").notNull().default(false),
   startedAt: timestamp("started_at").defaultNow().notNull(),
 });
 
