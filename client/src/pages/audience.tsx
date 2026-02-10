@@ -13,7 +13,7 @@ import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import PinchZoomContainer from "@/components/PinchZoomContainer";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
-import { Check, Loader2, StickyNote, Save, FileText, Trash2 } from "lucide-react";
+import { Check, Loader2, StickyNote, Save, FileText, Trash2, Download } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
 import { defaultSpinnerEntries } from "@shared/schema";
@@ -44,6 +44,7 @@ export default function Audience() {
   const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
   const [fillBlankAnswers, setFillBlankAnswers] = useState<Record<string, string[]>>({});
   const [fillBlankSubmitted, setFillBlankSubmitted] = useState(false);
+  const [allowDownload, setAllowDownload] = useState(false);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -155,6 +156,7 @@ export default function Audience() {
       setCurrentSlide(data.currentSlide);
       setAllSlides(data.slides || []);
       setParticipantId(data.participantId || null);
+      setAllowDownload(!!data.session.allowDownload);
       setSubmitted(false);
       setSelectedAnswer(null);
       setTextAnswer("");
@@ -201,6 +203,9 @@ export default function Audience() {
       setTimeout(() => {
         setLocation('/');
       }, 2000);
+    },
+    onDownloadToggle: (data: { allowDownload: boolean }) => {
+      setAllowDownload(data.allowDownload);
     },
     onError: (error: string) => {
       showNotification(error, "error");
@@ -355,10 +360,25 @@ export default function Audience() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-14 items-center justify-between gap-4">
             <Logo size="sm" />
-            <div className="text-sm text-muted-foreground">
-              Room: <span className="font-mono font-semibold" data-testid="text-room-code">{session.code}</span>
+            <div className="flex items-center gap-3 flex-wrap">
+              {allowDownload && session && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open(`/api/sessions/${session.id}/download/pptx`, '_blank');
+                  }}
+                  data-testid="button-download-slides"
+                >
+                  <Download className="h-4 w-4 mr-1.5" />
+                  Download
+                </Button>
+              )}
+              <div className="text-sm text-muted-foreground">
+                Room: <span className="font-mono font-semibold" data-testid="text-room-code">{session.code}</span>
+              </div>
             </div>
           </div>
         </div>

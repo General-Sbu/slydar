@@ -1490,6 +1490,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updated = await storage.updateSession(req.params.id, req.body);
+      
+      if (req.body.allowDownload !== undefined && ioInstance && updated) {
+        ioInstance.to(req.params.id).emit('download_toggle', { allowDownload: updated.allowDownload });
+      }
+      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update session" });
@@ -1524,6 +1529,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to end session" });
+    }
+  });
+
+  app.get("/api/sessions/:sessionId/download/:format", async (req, res) => {
+    try {
+      const session = await storage.getSession(req.params.sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      if (!session.allowDownload) {
+        return res.status(403).json({ error: "Downloads are not enabled for this session" });
+      }
+
+      const presentation = await storage.getPresentation(session.presentationId);
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+
+      const slidesData = await storage.getSlidesByPresentation(session.presentationId);
+      const format = req.params.format;
+
+      if (format === "pptx") {
+        const PptxGenJS = (await import("pptxgenjs")).default;
+        const pptx = new PptxGenJS();
+        pptx.title = presentation.title;
+
+        for (const slide of slidesData) {
+          const pptSlide = pptx.addSlide();
+          const bgColor = typeof slide.config?.background === "string" 
+            ? slide.config.background.replace("#", "") 
+            : "FFFFFF";
+          if (bgColor && /^[0-9a-fA-F]{6}$/.test(bgColor)) {
+            pptSlide.background = { color: bgColor };
+          }
+
+          if (slide.type === "image" && slide.question) {
+            pptSlide.addImage({ path: slide.question, x: 0, y: 0, w: "100%", h: "100%", sizing: { type: "contain", w: 10, h: 5.63 } });
+          } else if (slide.config?.elements && slide.config.elements.length > 0) {
+            for (const el of slide.config.elements) {
+              if (el.type === "text" && el.content) {
+                pptSlide.addText(el.content, {
+                  x: (el.x / 100) * 10,
+                  y: (el.y / 100) * 5.63,
+                  w: (el.width / 100) * 10,
+                  fontSize: Math.max(8, Math.min(44, Math.round((el.fontSize || 24) * 0.6))),
+                  bold: el.fontWeight === "bold",
+                  italic: el.fontStyle === "italic",
+                  color: el.color?.replace("#", "") || "333333",
+                  fontFace: el.fontFamily || "Arial",
+                  valign: "top",
+                  wrap: true,
+                });
+              } else if (el.type === "image" && el.src) {
+                pptSlide.addImage({
+                  path: el.src,
+                  x: (el.x / 100) * 10,
+                  y: (el.y / 100) * 5.63,
+                  w: (el.width / 100) * 10,
+                  h: ((el.height || 30) / 100) * 5.63,
+                  sizing: { type: "contain", w: (el.width / 100) * 10, h: ((el.height || 30) / 100) * 5.63 },
+                });
+              }
+            }
+          } else {
+            const title = slide.title || slide.question || "";
+            if (title) {
+              pptSlide.addText(title, {
+                x: 0.5,
+                y: 1.5,
+                w: 9,
+                fontSize: 32,
+                bold: true,
+                color: "333333",
+                align: "center",
+              });
+            }
+            if (slide.type === "multiple_choice" && slide.options) {
+              slide.options.forEach((opt, i) => {
+                pptSlide.addText(`${String.fromCharCode(65 + i)}. ${opt}`, {
+                  x: 1,
+                  y: 3 + i * 0.5,
+                  w: 8,
+                  fontSize: 18,
+                  color: "555555",
+                });
+              });
+            }
+          }
+        }
+
+        const buffer = await pptx.write({ outputType: "nodebuffer" }) as Buffer;
+        const filename = `${presentation.title.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.send(buffer);
+      } else {
+        return res.status(400).json({ error: "Unsupported format. Use 'pptx'." });
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      res.status(500).json({ error: "Failed to generate download" });
     }
   });
 

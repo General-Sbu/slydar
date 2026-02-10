@@ -14,7 +14,7 @@ import DrawingToolbar from "@/components/DrawingToolbar";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import WordCloud from "@/components/WordCloud";
 import SpinnerWheel from "@/components/SpinnerWheel";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -130,6 +130,24 @@ export default function Presenter() {
       setCurrentSlideIndex(0);
       showNotification("Presentation has been closed", "success");
       setLocation('/dashboard');
+    }
+  });
+
+  const toggleDownloadMutation = useMutation({
+    mutationFn: async () => {
+      if (!session) return;
+      const res = await fetch(`/api/sessions/${session.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allowDownload: !session.allowDownload })
+      });
+      if (!res.ok) throw new Error('Failed to toggle download');
+      return res.json();
+    },
+    onSuccess: (updatedSession: any) => {
+      if (updatedSession) {
+        setSession(updatedSession);
+      }
     }
   });
 
@@ -433,6 +451,19 @@ export default function Presenter() {
                 <ChevronRight className="h-4 w-4" />
                 <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
               </Button>
+              {session && (
+                <Button
+                  variant={session.allowDownload ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => toggleDownloadMutation.mutate()}
+                  disabled={toggleDownloadMutation.isPending}
+                  data-testid="button-toggle-download"
+                  title={session.allowDownload ? "Downloads enabled for audience" : "Enable audience downloads"}
+                  className={`toggle-elevate ${session.allowDownload ? "toggle-elevated" : ""}`}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
               {session && typeof window !== 'undefined' && (
                 <CastButton 
                   ref={castButtonRef}

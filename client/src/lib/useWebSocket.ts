@@ -13,6 +13,7 @@ interface UseWebSocketOptions {
   onEmojiSent?: (data: { emoji: string; participantId?: string }) => void;
   onAnnotationAdded?: (data: { annotation: AnnotationData }) => void;
   onAnnotationsCleared?: () => void;
+  onDownloadToggle?: (data: { allowDownload: boolean }) => void;
   onError?: (error: string) => void;
 }
 
@@ -102,6 +103,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     socket.on('annotations_cleared', () => {
       console.log('[Socket.IO] Annotations cleared');
       optionsRef.current.onAnnotationsCleared?.();
+    });
+
+    socket.on('download_toggle', (data: { allowDownload: boolean }) => {
+      optionsRef.current.onDownloadToggle?.(data);
     });
 
     socket.on('error', (data: { message: string }) => {
