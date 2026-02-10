@@ -51,6 +51,7 @@ export default function Presenter() {
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
   const castButtonRef = useRef<CastButtonRef>(null);
+  const sessionCreationAttempted = useRef(false);
 
   const { data: presentation, isLoading: presentationLoading } = useQuery<Presentation>({
     queryKey: ['/api/presentations', presentationId],
@@ -196,12 +197,11 @@ export default function Presenter() {
   });
 
   useEffect(() => {
-    if (!session && presentationId && slides.length > 0 && !createSessionMutation.isPending) {
-      // Always create a new session - don't reuse old ones
-      // This ensures presentations start fresh from the beginning with no previous responses
+    if (!session && presentationId && slides.length > 0 && !createSessionMutation.isPending && !createSessionMutation.isError && !sessionCreationAttempted.current) {
+      sessionCreationAttempted.current = true;
       createSessionMutation.mutate();
     }
-  }, [presentationId, slides, session, createSessionMutation.isPending]);
+  }, [presentationId, slides.length, session]);
 
   useEffect(() => {
     if (session && isConnected) {
