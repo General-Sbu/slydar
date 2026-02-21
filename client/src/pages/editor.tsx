@@ -1456,7 +1456,137 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'open_ended' && (
-                      <div className="text-muted-foreground pointer-events-none">Open text input will appear here</div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <h2 className="text-2xl font-bold mb-6">{editingSlide?.question || currentSlide.question || 'Share your thoughts...'}</h2>
+                        <div className="w-full max-w-md bg-muted/30 rounded-lg p-4 border border-dashed border-muted-foreground/30">
+                          <p className="text-sm text-muted-foreground">Audience will type their responses here...</p>
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'poll' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <div className="text-center mb-8">
+                          <h2 className="text-3xl font-bold px-4">
+                            {editingSlide?.question || currentSlide.question || 'What do you think?'}
+                          </h2>
+                        </div>
+                        <div className="w-full max-w-xl mx-auto px-4">
+                          <div className="space-y-3">
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+                              return (
+                                <div key={index} className="flex items-center gap-3 bg-background/90 backdrop-blur rounded-lg px-4 py-3 border">
+                                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[index % colors.length] }} />
+                                  <span className="font-medium text-sm">{option}</span>
+                                  <div className="flex-1 h-2 bg-muted rounded-full ml-2" />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'select_answer' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <div className="text-center mb-8">
+                          <h2 className="text-3xl font-bold px-4">
+                            {editingSlide?.question || currentSlide.question || 'Select the correct answer'}
+                          </h2>
+                        </div>
+                        <div className="w-full max-w-xl mx-auto px-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const correctIdx = editingSlide?.config?.correctAnswer ?? currentSlide.config?.correctAnswer ?? 0;
+                              const isCorrect = index === correctIdx;
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+                              return (
+                                <div key={index} className={`bg-background/90 backdrop-blur rounded-lg px-4 py-3 text-center border-2 ${isCorrect ? 'border-green-500 bg-green-500/10' : ''}`} style={{ borderLeftColor: colors[index % colors.length], borderLeftWidth: '4px' }}>
+                                  <span className="font-medium text-sm">{option}</span>
+                                  {isCorrect && <Check className="inline-block ml-2 h-4 w-4 text-green-500" />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'type_answer' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <h2 className="text-2xl font-bold mb-6">{editingSlide?.question || currentSlide.question || 'Type your answer'}</h2>
+                        <div className="w-full max-w-md bg-muted/30 rounded-lg p-4 border border-dashed border-muted-foreground/30">
+                          <p className="text-sm text-muted-foreground">Type your answer here...</p>
+                        </div>
+                        {(editingSlide?.config?.correctAnswer !== undefined || currentSlide.config?.correctAnswer !== undefined) && (
+                          <div className="mt-4 px-3 py-1.5 rounded-md bg-green-500/10 border border-green-500/30">
+                            <p className="text-xs text-green-600 dark:text-green-400">Correct: {String((editingSlide?.config as any)?.correctAnswer || (currentSlide.config as any)?.correctAnswer || '')}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {currentSlide?.type === 'match_pair' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <h2 className="text-2xl font-bold mb-6">{editingSlide?.question || currentSlide.question || 'Match the pairs'}</h2>
+                        <div className="w-full max-w-lg mx-auto">
+                          <div className="flex gap-8 justify-center">
+                            <div className="space-y-3 flex-1">
+                              {((editingSlide?.config as any)?.pairs || (currentSlide.config as any)?.pairs || []).map((pair: any, i: number) => (
+                                <div key={i} className="bg-primary/10 rounded-lg px-4 py-2.5 text-center border border-primary/20">
+                                  <span className="text-sm font-medium">{pair.left}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="space-y-3 flex-1">
+                              {((editingSlide?.config as any)?.pairs || (currentSlide.config as any)?.pairs || []).map((pair: any, i: number) => (
+                                <div key={i} className="bg-accent/30 rounded-lg px-4 py-2.5 text-center border border-accent/30">
+                                  <span className="text-sm font-medium">{pair.right}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'q_a' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <HelpCircle className="h-12 w-12 text-primary/40 mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">{editingSlide?.question || currentSlide.question || 'Ask me anything'}</h2>
+                        <p className="text-sm text-muted-foreground">Audience questions will appear here in real-time</p>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'puzzle' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <Puzzle className="h-12 w-12 text-primary/40 mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">{editingSlide?.question || currentSlide.question || 'Solve the puzzle'}</h2>
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                          {Array.from({ length: 9 }).map((_, i) => (
+                            <div key={i} className="w-12 h-12 rounded-md bg-muted/50 border border-muted-foreground/20 flex items-center justify-center">
+                              <span className="text-xs text-muted-foreground">{i + 1}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'leaderboard' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <Trophy className="h-12 w-12 text-yellow-500/60 mb-4" />
+                        <h2 className="text-2xl font-bold mb-6">Leaderboard</h2>
+                        <div className="w-full max-w-sm space-y-2">
+                          {['1st Place', '2nd Place', '3rd Place'].map((place, i) => (
+                            <div key={i} className="flex items-center gap-3 bg-muted/30 rounded-lg px-4 py-2.5">
+                              <span className="text-lg font-bold text-primary/60">{i + 1}</span>
+                              <div className="flex-1 h-2 bg-muted rounded-full" />
+                              <span className="text-xs text-muted-foreground">{place}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {currentSlide?.type === 'whiteboard' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                        <PenTool className="h-12 w-12 text-primary/40 mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Whiteboard</h2>
+                        <p className="text-sm text-muted-foreground">Interactive drawing canvas during presentation</p>
+                      </div>
                     )}
                     {currentSlide?.type === 'spinner' && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1745,6 +1875,507 @@ export default function Editor() {
                         }
                       }}
                     />
+                  </div>
+                </Card>
+              )}
+
+              {/* Poll Editor Panel */}
+              {currentSlide?.type === 'poll' && (
+                <Card className="p-6" data-testid="poll-type-editor-panel">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-lg font-semibold">Poll</h3>
+                        <p className="text-sm text-muted-foreground">Ask your audience a question and let them vote</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Question</Label>
+                        <Input
+                          placeholder="What do you think?"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            }
+                          }}
+                          data-testid="input-poll-type-question"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Options</h3>
+                        <p className="text-sm text-muted-foreground">Add the choices your audience can vote on</p>
+                      </div>
+                      <div className="space-y-3">
+                        {(editingSlide?.options || currentSlide?.options || []).map((option, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder={`Option ${index + 1}`}
+                              value={option}
+                              onChange={(e) => handleUpdateOption(index, e.target.value)}
+                              onBlur={() => {
+                                if (editingSlide?.id) {
+                                  updateSlideMutation.mutate({ id: editingSlide.id, data: { options: editingSlide.options } });
+                                }
+                              }}
+                              className="flex-1"
+                              data-testid={`input-poll-option-${index}`}
+                            />
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveOption(index)} disabled={((editingSlide?.options || currentSlide?.options)?.length ?? 0) <= 2} className="text-muted-foreground shrink-0" data-testid={`button-delete-poll-option-${index}`}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <Button variant="outline" onClick={handleAddOption} className="gap-2" data-testid="button-add-poll-option">
+                        <Plus className="h-4 w-4" />
+                        Add option
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Select Answer Editor Panel */}
+              {currentSlide?.type === 'select_answer' && (
+                <Card className="p-6" data-testid="select-answer-editor-panel">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-lg font-semibold">Select Answer</h3>
+                        <p className="text-sm text-muted-foreground">Create a quiz question with one correct answer</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Question</Label>
+                        <Input
+                          placeholder="Select the correct answer"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            }
+                          }}
+                          data-testid="input-select-answer-question"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Answer Choices</h3>
+                        <p className="text-sm text-muted-foreground">Click the circle to mark the correct answer</p>
+                      </div>
+                      <div className="space-y-3">
+                        {(editingSlide?.options || currentSlide?.options || []).map((option, index) => {
+                          const correctIdx = (editingSlide?.config as any)?.correctAnswer ?? (currentSlide?.config as any)?.correctAnswer ?? 0;
+                          const isCorrect = index === correctIdx;
+                          return (
+                            <div key={index} className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  const newConfig = { ...editingSlide?.config, correctAnswer: index } as any;
+                                  setEditingSlide({ ...editingSlide, config: newConfig });
+                                  if (editingSlide?.id) {
+                                    updateSlideMutation.mutate({ id: editingSlide.id, data: { config: newConfig } });
+                                  }
+                                }}
+                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isCorrect ? 'border-green-500 bg-green-500' : 'border-muted-foreground/40'}`}
+                                data-testid={`button-correct-${index}`}
+                              >
+                                {isCorrect && <Check className="h-3.5 w-3.5 text-white" />}
+                              </button>
+                              <Input
+                                placeholder={`Answer ${index + 1}`}
+                                value={option}
+                                onChange={(e) => handleUpdateOption(index, e.target.value)}
+                                onBlur={() => {
+                                  if (editingSlide?.id) {
+                                    updateSlideMutation.mutate({ id: editingSlide.id, data: { options: editingSlide.options } });
+                                  }
+                                }}
+                                className="flex-1"
+                                data-testid={`input-select-answer-option-${index}`}
+                              />
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveOption(index)} disabled={((editingSlide?.options || currentSlide?.options)?.length ?? 0) <= 2} className="text-muted-foreground shrink-0" data-testid={`button-delete-select-option-${index}`}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <Button variant="outline" onClick={handleAddOption} className="gap-2" data-testid="button-add-select-option">
+                        <Plus className="h-4 w-4" />
+                        Add answer
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Type Answer Editor Panel */}
+              {currentSlide?.type === 'type_answer' && (
+                <Card className="p-6" data-testid="type-answer-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Type Answer</h3>
+                      <p className="text-sm text-muted-foreground">Audience types their answer, optionally check against the correct one</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label>Question</Label>
+                        <Input
+                          placeholder="What is the capital of France?"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            }
+                          }}
+                          data-testid="input-type-answer-question"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Correct Answer (optional)</Label>
+                        <Input
+                          placeholder="Paris"
+                          value={(editingSlide?.config as any)?.correctAnswer || ''}
+                          onChange={(e) => {
+                            const newConfig = { ...editingSlide?.config, correctAnswer: e.target.value } as any;
+                            setEditingSlide({ ...editingSlide, config: newConfig });
+                            if (editingSlide?.id) debouncedUpdate(editingSlide.id, newConfig);
+                          }}
+                          data-testid="input-type-answer-correct"
+                        />
+                        <p className="text-xs text-muted-foreground">Leave blank to accept any answer</p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Word Cloud Editor Panel */}
+              {currentSlide?.type === 'word_cloud' && (
+                <Card className="p-6" data-testid="word-cloud-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Word Cloud</h3>
+                      <p className="text-sm text-muted-foreground">Audience submits words that form a visual cloud</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Question / Prompt</Label>
+                      <Input
+                        placeholder="What comes to mind when you think of innovation?"
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-word-cloud-question"
+                      />
+                      <p className="text-xs text-muted-foreground">This question will be shown to your audience</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Open Ended Editor Panel */}
+              {currentSlide?.type === 'open_ended' && (
+                <Card className="p-6" data-testid="open-ended-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Open Ended</h3>
+                      <p className="text-sm text-muted-foreground">Let your audience share their thoughts freely</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Question / Prompt</Label>
+                      <Input
+                        placeholder="Share your thoughts..."
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-open-ended-question"
+                      />
+                      <p className="text-xs text-muted-foreground">Audience can submit text responses to this prompt</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Q&A Editor Panel */}
+              {currentSlide?.type === 'q_a' && (
+                <Card className="p-6" data-testid="qa-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Q&A Session</h3>
+                      <p className="text-sm text-muted-foreground">Audience submits questions that you can answer live</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Prompt / Title</Label>
+                      <Input
+                        placeholder="Ask me anything"
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-qa-prompt"
+                      />
+                      <p className="text-xs text-muted-foreground">Audience can submit and upvote questions in real-time</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Match Pair Editor Panel */}
+              {currentSlide?.type === 'match_pair' && (
+                <Card className="p-6" data-testid="match-pair-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Match Pairs</h3>
+                      <p className="text-sm text-muted-foreground">Audience matches items from the left column to the right</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label>Question</Label>
+                        <Input
+                          placeholder="Match the pairs"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            }
+                          }}
+                          data-testid="input-match-pair-question"
+                        />
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Pairs</h3>
+                        <p className="text-sm text-muted-foreground">Each row is a matching pair</p>
+                      </div>
+                      <div className="space-y-3">
+                        {((editingSlide?.config as any)?.pairs || (currentSlide?.config as any)?.pairs || []).map((pair: any, index: number) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder="Left item"
+                              value={pair.left}
+                              onChange={(e) => {
+                                const pairs = [...((editingSlide?.config as any)?.pairs || [])];
+                                pairs[index] = { ...pairs[index], left: e.target.value };
+                                const newConfig = { ...editingSlide?.config, pairs } as any;
+                                setEditingSlide({ ...editingSlide, config: newConfig });
+                                if (editingSlide?.id) debouncedUpdate(editingSlide.id, newConfig);
+                              }}
+                              className="flex-1"
+                              data-testid={`input-pair-left-${index}`}
+                            />
+                            <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <Input
+                              placeholder="Right item"
+                              value={pair.right}
+                              onChange={(e) => {
+                                const pairs = [...((editingSlide?.config as any)?.pairs || [])];
+                                pairs[index] = { ...pairs[index], right: e.target.value };
+                                const newConfig = { ...editingSlide?.config, pairs } as any;
+                                setEditingSlide({ ...editingSlide, config: newConfig });
+                                if (editingSlide?.id) debouncedUpdate(editingSlide.id, newConfig);
+                              }}
+                              className="flex-1"
+                              data-testid={`input-pair-right-${index}`}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const pairs = [...((editingSlide?.config as any)?.pairs || [])];
+                                if (pairs.length > 2) {
+                                  pairs.splice(index, 1);
+                                  const newConfig = { ...editingSlide?.config, pairs } as any;
+                                  setEditingSlide({ ...editingSlide, config: newConfig });
+                                  if (editingSlide?.id) {
+                                    updateSlideMutation.mutate({ id: editingSlide.id, data: { config: newConfig } });
+                                  }
+                                }
+                              }}
+                              disabled={((editingSlide?.config as any)?.pairs || []).length <= 2}
+                              className="text-muted-foreground shrink-0"
+                              data-testid={`button-delete-pair-${index}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const pairs = [...((editingSlide?.config as any)?.pairs || [])];
+                          pairs.push({ left: `Item ${pairs.length + 1}`, right: `Match ${pairs.length + 1}` });
+                          const newConfig = { ...editingSlide?.config, pairs } as any;
+                          setEditingSlide({ ...editingSlide, config: newConfig });
+                          if (editingSlide?.id) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { config: newConfig } });
+                          }
+                        }}
+                        className="gap-2"
+                        data-testid="button-add-pair"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add pair
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Puzzle Editor Panel */}
+              {currentSlide?.type === 'puzzle' && (
+                <Card className="p-6" data-testid="puzzle-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Puzzle</h3>
+                      <p className="text-sm text-muted-foreground">Create a puzzle challenge for your audience</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label>Question / Instructions</Label>
+                        <Input
+                          placeholder="Solve the puzzle"
+                          value={editingSlide?.question || ''}
+                          onChange={(e) => {
+                            if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          }}
+                          onBlur={() => {
+                            if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                              updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            }
+                          }}
+                          data-testid="input-puzzle-question"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Answer</Label>
+                        <Input
+                          placeholder="The answer to the puzzle"
+                          value={(editingSlide?.config as any)?.puzzleAnswer || ''}
+                          onChange={(e) => {
+                            const newConfig = { ...editingSlide?.config, puzzleAnswer: e.target.value } as any;
+                            setEditingSlide({ ...editingSlide, config: newConfig });
+                            if (editingSlide?.id) debouncedUpdate(editingSlide.id, newConfig);
+                          }}
+                          data-testid="input-puzzle-answer"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Hint (optional)</Label>
+                        <Input
+                          placeholder="A helpful hint..."
+                          value={(editingSlide?.config as any)?.puzzleHint || ''}
+                          onChange={(e) => {
+                            const newConfig = { ...editingSlide?.config, puzzleHint: e.target.value } as any;
+                            setEditingSlide({ ...editingSlide, config: newConfig });
+                            if (editingSlide?.id) debouncedUpdate(editingSlide.id, newConfig);
+                          }}
+                          data-testid="input-puzzle-hint"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Leaderboard Editor Panel */}
+              {currentSlide?.type === 'leaderboard' && (
+                <Card className="p-6" data-testid="leaderboard-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Leaderboard</h3>
+                      <p className="text-sm text-muted-foreground">Displays participant scores and rankings during the presentation</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Title</Label>
+                      <Input
+                        placeholder="Leaderboard"
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-leaderboard-title"
+                      />
+                      <p className="text-xs text-muted-foreground">Scores are calculated automatically from quiz answers</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Whiteboard Editor Panel */}
+              {currentSlide?.type === 'whiteboard' && (
+                <Card className="p-6" data-testid="whiteboard-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Whiteboard</h3>
+                      <p className="text-sm text-muted-foreground">An interactive drawing canvas for live collaboration</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Title</Label>
+                      <Input
+                        placeholder="Whiteboard"
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-whiteboard-title"
+                      />
+                      <p className="text-xs text-muted-foreground">The drawing tools will be available during the presentation</p>
+                    </div>
                   </div>
                 </Card>
               )}
