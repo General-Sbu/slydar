@@ -809,6 +809,14 @@ export default function Editor() {
         { type: 'fill_blank' as SlideType, label: 'Fill in the Blank', icon: TextCursorInput },
         { type: 'whiteboard' as SlideType, label: 'Whiteboard', icon: PenTool },
       ]
+    },
+    {
+      title: "Content Slides",
+      types: [
+        { type: 'heading' as SlideType, label: 'Heading', icon: Type },
+        { type: 'image' as SlideType, label: 'Image', icon: ImageIcon },
+        { type: 'multiple_choice' as SlideType, label: 'Multiple Choice', icon: BarChart3 },
+      ]
     }
   ];
 
@@ -910,7 +918,7 @@ export default function Editor() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 shrink-0 invisible group-hover:visible"
+                          className="h-6 w-6 shrink-0 invisible group-hover:visible focus:visible active:visible"
                           data-testid={`button-slide-menu-${index}`}
                         >
                           <MoreVertical className="h-3 w-3" />
