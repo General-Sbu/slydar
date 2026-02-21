@@ -18,7 +18,8 @@ import FillBlankEditor from "@/components/FillBlankEditor";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
-  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput 
+  ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput,
+  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,6 +50,7 @@ export default function Editor() {
   const [renameSlideTitle, setRenameSlideTitle] = useState('');
   const [presentationTitle, setPresentationTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [newSlideModalOpen, setNewSlideModalOpen] = useState(false);
   
   // Debounce ref must be declared before any conditional returns
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -314,25 +316,19 @@ export default function Editor() {
         type: 'multiple_choice', 
         question: "Your question here", 
         options: ["Option 1", "Option 2", "Option 3", "Option 4"],
-        config: {
-          elements: []
-        }
+        config: { elements: [] }
       },
       word_cloud: { 
         type: 'word_cloud', 
         question: "", 
         options: [],
-        config: {
-          elements: [createTextElement("Your Word Cloud question here", 40, 20, "bold", "center")]
-        }
+        config: { elements: [createTextElement("Your Word Cloud question here", 40, 20, "bold", "center")] }
       },
       open_ended: { 
         type: 'open_ended', 
         question: "", 
         options: [],
-        config: {
-          elements: [createTextElement("Share your thoughts...", 40, 30, "bold", "center")]
-        }
+        config: { elements: [createTextElement("Share your thoughts...", 40, 30, "bold", "center")] }
       },
       heading: { 
         type: 'heading', 
@@ -349,18 +345,13 @@ export default function Editor() {
         type: 'image', 
         question: "", 
         options: [],
-        config: {
-          elements: []
-        }
+        config: { elements: [] }
       },
       spinner: {
         type: 'spinner',
         question: "",
         options: [],
-        config: {
-          elements: [],
-          spinnerEntries: defaultSpinnerEntries
-        }
+        config: { elements: [], spinnerEntries: defaultSpinnerEntries }
       },
       fill_blank: {
         type: 'fill_blank',
@@ -368,18 +359,61 @@ export default function Editor() {
         options: [],
         config: {
           elements: [createTextElement("Fill in the Missing Words", 40, 10, "bold", "center")],
-          fillBlankQuestions: [
-            {
-              id: crypto.randomUUID(),
-              sentence: "The capital of France is ____.",
-              blanks: [{ answer: "Paris" }]
-            }
-          ]
+          fillBlankQuestions: [{ id: crypto.randomUUID(), sentence: "The capital of France is ____.", blanks: [{ answer: "Paris" }] }]
         }
+      },
+      select_answer: {
+        type: 'select_answer',
+        question: "Select the correct answer",
+        options: ["Answer A", "Answer B", "Answer C", "Answer D"],
+        config: { elements: [], correctAnswer: 0 }
+      },
+      puzzle: {
+        type: 'puzzle',
+        question: "Solve the puzzle",
+        options: [],
+        config: { elements: [createTextElement("Solve the Puzzle", 40, 20, "bold", "center")] }
+      },
+      type_answer: {
+        type: 'type_answer',
+        question: "Type your answer",
+        options: [],
+        config: { elements: [createTextElement("Type Your Answer", 40, 20, "bold", "center")] }
+      },
+      match_pair: {
+        type: 'match_pair',
+        question: "Match the pairs",
+        options: [],
+        config: { elements: [createTextElement("Match the Pairs", 40, 20, "bold", "center")], pairs: [{ left: "Item A", right: "Match A" }, { left: "Item B", right: "Match B" }] }
+      },
+      leaderboard: {
+        type: 'leaderboard',
+        question: "",
+        options: [],
+        config: { elements: [createTextElement("Leaderboard", 48, 30, "bold", "center")] }
+      },
+      poll: {
+        type: 'poll',
+        question: "What do you think?",
+        options: ["Option 1", "Option 2", "Option 3"],
+        config: { elements: [] }
+      },
+      q_a: {
+        type: 'q_a',
+        question: "",
+        options: [],
+        config: { elements: [createTextElement("Ask me anything", 40, 30, "bold", "center")] }
+      },
+      whiteboard: {
+        type: 'whiteboard',
+        question: "",
+        options: [],
+        config: { elements: [createTextElement("Whiteboard", 40, 30, "bold", "center")] }
       }
     };
     
     createSlideMutation.mutate(defaultData[type]);
+    setNewSlideModalOpen(false);
   };
 
   const handleSaveSlide = () => {
@@ -693,17 +727,27 @@ export default function Editor() {
     setInlineEditingOptions(null);
   };
 
+  const slideTypeInfo: Record<string, { label: string; icon: typeof BarChart3 }> = {
+    'multiple_choice': { label: 'Multiple Choice', icon: BarChart3 },
+    'word_cloud': { label: 'Word Cloud', icon: Cloud },
+    'open_ended': { label: 'Open Ended', icon: MessageSquare },
+    'heading': { label: 'Heading', icon: Type },
+    'image': { label: 'Image', icon: ImageIcon },
+    'spinner': { label: 'Spinner Wheel', icon: CircleDot },
+    'fill_blank': { label: 'Fill in the Blank', icon: TextCursorInput },
+    'select_answer': { label: 'Select Answer', icon: CheckSquare },
+    'puzzle': { label: 'Puzzle', icon: Puzzle },
+    'type_answer': { label: 'Type Answer', icon: Keyboard },
+    'match_pair': { label: 'Match Pair', icon: Link2 },
+    'leaderboard': { label: 'Leaderboard', icon: Trophy },
+    'poll': { label: 'Poll', icon: BarChart3 },
+    'q_a': { label: 'Q&A', icon: HelpCircle },
+    'whiteboard': { label: 'Whiteboard', icon: PenTool },
+  };
+
   const getSlideLabel = (slide: Slide, index: number) => {
     if (slide.title) return slide.title;
-    const typeLabels: Record<string, string> = {
-      'multiple_choice': 'Poll',
-      'word_cloud': 'Word Cloud',
-      'open_ended': 'Q&A',
-      'heading': 'Heading',
-      'image': 'Image',
-      'spinner': 'Spinner'
-    };
-    return `${typeLabels[slide.type] || slide.type} ${index + 1}`;
+    return slideTypeInfo[slide.type]?.label || slide.type;
   };
 
   const getSlidePreview = (slide: Slide, index: number) => {
@@ -726,15 +770,7 @@ export default function Editor() {
       );
     }
     
-    const typeLabels: Record<string, string> = {
-      'multiple_choice': 'Poll',
-      'word_cloud': 'Cloud',
-      'open_ended': 'Q&A',
-      'heading': 'Title',
-      'image': 'Image',
-      'spinner': 'Spin'
-    };
-    const label = typeLabels[slide.type] || slide.type.replace('_', ' ');
+    const label = slideTypeInfo[slide.type]?.label || slide.type.replace('_', ' ');
     
     return (
       <div 
@@ -751,91 +787,132 @@ export default function Editor() {
     );
   };
 
+  const slideTypeGroups = [
+    {
+      title: "Quiz & Game Competitions",
+      types: [
+        { type: 'select_answer' as SlideType, label: 'Select Answer', icon: CheckSquare },
+        { type: 'puzzle' as SlideType, label: 'Puzzle', icon: Puzzle },
+        { type: 'type_answer' as SlideType, label: 'Type Answer', icon: Keyboard },
+        { type: 'match_pair' as SlideType, label: 'Match Pair', icon: Link2 },
+        { type: 'leaderboard' as SlideType, label: 'Leaderboard', icon: Trophy },
+        { type: 'spinner' as SlideType, label: 'Spinner Wheel', icon: CircleDot },
+      ]
+    },
+    {
+      title: "Interactive Questions",
+      types: [
+        { type: 'poll' as SlideType, label: 'Poll', icon: BarChart3 },
+        { type: 'word_cloud' as SlideType, label: 'Word Cloud', icon: Cloud },
+        { type: 'open_ended' as SlideType, label: 'Open Ended', icon: MessageSquare },
+        { type: 'q_a' as SlideType, label: 'Q&A', icon: HelpCircle },
+        { type: 'fill_blank' as SlideType, label: 'Fill in the Blank', icon: TextCursorInput },
+        { type: 'whiteboard' as SlideType, label: 'Whiteboard', icon: PenTool },
+      ]
+    }
+  ];
+
   const slidesPanel = (
-    <div className="p-4 space-y-5 h-full overflow-auto">
-      <div>
-        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Slides</h3>
-        <div className="space-y-2">
+    <div className="h-full flex flex-col">
+      <div className="p-3 border-b">
+        <Button
+          className="w-full gap-2"
+          onClick={() => { setNewSlideModalOpen(true); setSlidesSheetOpen(false); }}
+          data-testid="button-new-slide"
+        >
+          <Plus className="h-4 w-4" />
+          New Slide
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-1.5">
           <AnimatePresence mode="popLayout">
-            {slides.map((slide, index) => (
-              <motion.div
-                key={slide.id}
-                ref={(el: HTMLDivElement | null) => {
-                  if (el) slideRefs.current.set(index, el);
-                  else slideRefs.current.delete(index);
-                }}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50, scale: 0.9 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 400, 
-                  damping: 25,
-                  delay: index * 0.03
-                }}
-                layout
-                whileHover={{ x: 4 }}
-              >
-                <Card 
-                  className={`p-3 cursor-pointer transition-smooth border-0 ${
-                    selectedSlideIndex === index 
-                      ? 'bg-primary/10 ring-2 ring-primary/50 shadow-md' 
-                      : 'bg-muted/40 hover:bg-muted/60'
-                  }`}
-                  onClick={() => {
-                    setSelectedSlideIndex(index);
-                    setSlidesSheetOpen(false);
+            {slides.map((slide, index) => {
+              const info = slideTypeInfo[slide.type];
+              const SlideIcon = info?.icon || Type;
+              return (
+                <motion.div
+                  key={slide.id}
+                  ref={(el: HTMLDivElement | null) => {
+                    if (el) slideRefs.current.set(index, el);
+                    else slideRefs.current.delete(index);
                   }}
-                  data-testid={`card-slide-${index}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: index * 0.02 }}
+                  layout
                 >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    {renameSlideId === slide.id ? (
-                      <Input
-                        value={renameSlideTitle}
-                        onChange={(e) => setRenameSlideTitle(e.target.value)}
-                        onBlur={() => {
-                          updateSlideMutation.mutate({
-                            id: slide.id,
-                            data: { title: renameSlideTitle.trim() || null }
-                          });
-                          setRenameSlideId(null);
-                          setRenameSlideTitle('');
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                  <div
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all group ${
+                      selectedSlideIndex === index
+                        ? 'bg-primary/10 ring-1 ring-primary/40'
+                        : 'hover-elevate'
+                    }`}
+                    onClick={() => {
+                      setSelectedSlideIndex(index);
+                      setSlidesSheetOpen(false);
+                    }}
+                    data-testid={`card-slide-${index}`}
+                  >
+                    <span className="text-xs font-bold text-muted-foreground w-5 text-center shrink-0" data-testid={`text-slide-number-${index}`}>
+                      {index + 1}
+                    </span>
+                    <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
+                      selectedSlideIndex === index ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <SlideIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {renameSlideId === slide.id ? (
+                        <Input
+                          value={renameSlideTitle}
+                          onChange={(e) => setRenameSlideTitle(e.target.value)}
+                          onBlur={() => {
                             updateSlideMutation.mutate({
                               id: slide.id,
                               data: { title: renameSlideTitle.trim() || null }
                             });
                             setRenameSlideId(null);
                             setRenameSlideTitle('');
-                          } else if (e.key === 'Escape') {
-                            setRenameSlideId(null);
-                            setRenameSlideTitle('');
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-6 text-sm"
-                        placeholder="Slide name"
-                        autoFocus
-                        data-testid={`input-inline-rename-slide-${index}`}
-                      />
-                    ) : (
-                      <div 
-                        className="text-sm font-medium truncate cursor-text hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRenameSlideId(slide.id);
-                          setRenameSlideTitle(slide.title || '');
-                        }}
-                        data-testid={`text-slide-name-${index}`}
-                      >
-                        {getSlideLabel(slide, index)}
-                      </div>
-                    )}
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              updateSlideMutation.mutate({
+                                id: slide.id,
+                                data: { title: renameSlideTitle.trim() || null }
+                              });
+                              setRenameSlideId(null);
+                              setRenameSlideTitle('');
+                            } else if (e.key === 'Escape') {
+                              setRenameSlideId(null);
+                              setRenameSlideTitle('');
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-6 text-xs"
+                          placeholder="Slide name"
+                          autoFocus
+                          data-testid={`input-inline-rename-slide-${index}`}
+                        />
+                      ) : (
+                        <span
+                          className="text-sm font-medium truncate block"
+                          data-testid={`text-slide-name-${index}`}
+                        >
+                          {getSlideLabel(slide, index)}
+                        </span>
+                      )}
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" data-testid={`button-slide-menu-${index}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0 invisible group-hover:visible"
+                          data-testid={`button-slide-menu-${index}`}
+                        >
                           <MoreVertical className="h-3 w-3" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -855,7 +932,7 @@ export default function Editor() {
                           <Copy className="mr-2 h-4 w-4" />
                           Duplicate
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteSlideMutation.mutate(slide.id);
@@ -869,98 +946,14 @@ export default function Editor() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  {getSlidePreview(slide, index)}
-                </Card>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
-      </div>
-      
-      <Separator className="opacity-50" />
-      
-      <div>
-        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Add Slide</h3>
-        <div className="space-y-2">
-          <motion.div 
-            onClick={() => { handleAddSlide('multiple_choice'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={BarChart3}
-              title="Multiple Choice"
-              description="Poll with options"
-            />
-          </motion.div>
-          <motion.div 
-            onClick={() => { handleAddSlide('word_cloud'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={Cloud}
-              title="Word Cloud"
-              description="Collect ideas"
-            />
-          </motion.div>
-          <motion.div 
-            onClick={() => { handleAddSlide('open_ended'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={MessageSquare}
-              title="Open Ended"
-              description="Free text responses"
-            />
-          </motion.div>
-          <motion.div 
-            onClick={() => { handleAddSlide('heading'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={Type}
-              title="Heading"
-              description="Title slide"
-            />
-          </motion.div>
-          <motion.div 
-            onClick={() => { handleAddSlide('spinner'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={CircleDot}
-              title="Spinner Wheel"
-              description="Random picker"
-            />
-          </motion.div>
-          <motion.div 
-            onClick={() => { handleAddSlide('fill_blank'); setSlidesSheetOpen(false); }}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <SlideTypeCard
-              icon={TextCursorInput}
-              title="Fill in the Blank"
-              description="Missing words activity"
-            />
-          </motion.div>
-        </div>
-      </div>
+      </ScrollArea>
 
-      <Separator className="opacity-50" />
-
-      <div>
-        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Import Slides</h3>
+      <div className="p-3 border-t">
         <input
           type="file"
           id="file-upload"
@@ -969,27 +962,15 @@ export default function Editor() {
           onChange={handleFileImport}
           data-testid="input-file-upload"
         />
-        <motion.label 
-          htmlFor="file-upload"
-          whileHover={{ x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="block"
-        >
-          <Card className="p-4 cursor-pointer bg-gradient-to-br from-primary/5 to-primary/10 border-dashed border-primary/30 hover:border-primary/50 transition-all" data-testid="button-import-slides">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Upload className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-sm font-medium">Import File</div>
-                <div className="text-xs text-muted-foreground">PPT, PPTX, or PDF</div>
-              </div>
-            </div>
-          </Card>
-        </motion.label>
+        <label htmlFor="file-upload" className="block">
+          <Button variant="outline" className="w-full gap-2 cursor-pointer" asChild data-testid="button-import-slides">
+            <span>
+              <Upload className="h-4 w-4" />
+              Import File
+            </span>
+          </Button>
+        </label>
       </div>
-
     </div>
   );
 
@@ -1044,7 +1025,7 @@ export default function Editor() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
+                <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
                   {slidesPanel}
                 </SheetContent>
               </Sheet>
@@ -1127,7 +1108,7 @@ export default function Editor() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="hidden lg:block w-72 border-r bg-muted/30 overflow-auto">
+        <aside className="hidden lg:flex lg:flex-col w-[280px] border-r bg-muted/30 overflow-hidden">
           {slidesPanel}
         </aside>
 
@@ -1326,7 +1307,7 @@ export default function Editor() {
                         <Plus className="w-8 h-8 text-primary" />
                       </div>
                       <p className="text-lg font-medium">No slides yet</p>
-                      <p className="text-sm">Add a slide from the sidebar to get started</p>
+                      <p className="text-sm">Click "+ New Slide" in the sidebar to get started</p>
                     </div>
                   </Card>
                 </motion.div>
@@ -1763,6 +1744,46 @@ export default function Editor() {
           </div>
         </main>
       </div>
+
+      <Dialog open={newSlideModalOpen} onOpenChange={setNewSlideModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose Slide Type</DialogTitle>
+            <DialogDescription>
+              Select the type of slide you want to add to your presentation.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-6 pr-3">
+              {slideTypeGroups.map((group) => (
+                <div key={group.title} className="space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider" data-testid={`text-group-${group.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {group.title}
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {group.types.map((item) => {
+                      const ItemIcon = item.icon;
+                      return (
+                        <button
+                          key={item.type}
+                          className="flex flex-col items-center gap-2 p-4 rounded-md border bg-card hover-elevate active-elevate-2 transition-all text-center"
+                          onClick={() => handleAddSlide(item.type)}
+                          data-testid={`tile-slide-type-${item.type}`}
+                        >
+                          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+                            <ItemIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <span className="text-xs font-medium leading-tight">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!renameSlideId} onOpenChange={(open) => {
         if (!open) {
