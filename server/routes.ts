@@ -246,6 +246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const pendingPayments = new Map<string, { userId: string; plan: string; createdAt: Date }>();
+
   // PayFast Payment Routes
   app.post('/api/payments/initiate', isAuthenticated, async (req: any, res) => {
     try {
@@ -287,6 +289,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         custom_str1: userId,
         custom_str2: 'basic',
       }, passphrase, true);
+
+      pendingPayments.set(paymentId, { userId, plan: 'basic', createdAt: new Date() });
 
       res.json({ paymentUrl, paymentId });
     } catch (error) {
@@ -338,8 +342,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ error: 'Not authenticated' });
       }
-      await storage.updateUserPlan(userId, 'basic');
-      res.json({ success: true, plan: 'basic' });
+      const { paymentId } = req.body;
+      if (!paymentId) {
+        return res.status(400).json({ error: 'Payment ID required' });
+      }
+      const pending = pendingPayments.get(paymentId);
+      if (!pending || pending.userId !== userId) {
+        return res.status(403).json({ error: 'Invalid or expired payment' });
+      }
+      const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (pending.createdAt < hourAgo) {
+        pendingPayments.delete(paymentId);
+        return res.status(403).json({ error: 'Payment session expired' });
+      }
+      await storage.updateUserPlan(userId, pending.plan);
+      pendingPayments.delete(paymentId);
+      res.json({ success: true, plan: pending.plan });
     } catch (error) {
       console.error('Payment confirmation error:', error);
       res.status(500).json({ error: 'Failed to confirm payment' });

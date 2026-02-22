@@ -29,9 +29,16 @@ export default function Checkout() {
     
     if (status === 'success') {
       setPaymentStatus('success');
-      apiRequest('POST', '/api/payments/confirm', {}).catch(err => {
-        console.error('Failed to confirm plan upgrade:', err);
-      });
+      const storedPaymentId = localStorage.getItem('slydar_payment_id');
+      if (storedPaymentId) {
+        apiRequest('POST', '/api/payments/confirm', { paymentId: storedPaymentId })
+          .then(() => {
+            localStorage.removeItem('slydar_payment_id');
+          })
+          .catch(err => {
+            console.error('Failed to confirm plan upgrade:', err);
+          });
+      }
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
     }
@@ -79,6 +86,9 @@ export default function Checkout() {
       const data = await response.json();
 
       if (data.paymentUrl) {
+        if (data.paymentId) {
+          localStorage.setItem('slydar_payment_id', data.paymentId);
+        }
         window.location.href = data.paymentUrl;
       } else {
         throw new Error('No payment URL received');
@@ -123,6 +133,9 @@ export default function Checkout() {
             </div>
             <Button asChild className="w-full" data-testid="button-go-dashboard">
               <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+            <Button variant="outline" asChild className="w-full" data-testid="button-view-plan">
+              <Link href="/my-plan">View My Plan</Link>
             </Button>
           </CardContent>
         </Card>
