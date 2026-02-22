@@ -27,6 +27,7 @@ export interface IStorage {
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserOnboarding(userId: string, data: { useCase?: string; explorationGoal?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined>;
+  updateUserPlan(userId: string, plan: string): Promise<User | undefined>;
 
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
   getPresentation(id: string): Promise<Presentation | undefined>;
@@ -182,6 +183,21 @@ export class MemStorage implements IStorage {
     const updatedUser: UserWithPassword = {
       ...existingUser,
       ...data,
+      updatedAt: new Date()
+    };
+    this.users.set(userId, updatedUser);
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  }
+
+  async updateUserPlan(userId: string, plan: string): Promise<User | undefined> {
+    const existingUser = this.users.get(userId);
+    if (!existingUser) return undefined;
+
+    const updatedUser: UserWithPassword = {
+      ...existingUser,
+      plan,
+      planUpdatedAt: new Date(),
       updatedAt: new Date()
     };
     this.users.set(userId, updatedUser);
@@ -589,6 +605,16 @@ export class DbStorage implements IStorage {
   async updateUserOnboarding(userId: string, data: { useCase?: string; organizationSize?: string; role?: string; industry?: string; onboardingComplete?: boolean }): Promise<User | undefined> {
     const [user] = await db.update(users)
       .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!user) return undefined;
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
+  }
+
+  async updateUserPlan(userId: string, plan: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ plan, planUpdatedAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     if (!user) return undefined;

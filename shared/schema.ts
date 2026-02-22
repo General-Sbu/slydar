@@ -49,6 +49,8 @@ export const users = pgTable("users", {
   organizationSize: varchar("organization_size"),
   role: varchar("role"),
   industry: varchar("industry"),
+  plan: varchar("plan").default("free").notNull(),
+  planUpdatedAt: timestamp("plan_updated_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
