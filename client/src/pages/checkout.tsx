@@ -29,6 +29,9 @@ export default function Checkout() {
     
     if (status === 'success') {
       setPaymentStatus('success');
+      apiRequest('POST', '/api/payments/confirm', {}).catch(err => {
+        console.error('Failed to confirm plan upgrade:', err);
+      });
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
     }

@@ -318,12 +318,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log(`Payment successful for user ${userId}, plan: ${plan}, payment_id: ${m_payment_id}`);
+        
+        if (userId && plan) {
+          await storage.updateUserPlan(userId, plan);
+          console.log(`Updated user ${userId} plan to ${plan}`);
+        }
       }
 
       res.status(200).send('OK');
     } catch (error) {
       console.error('ITN processing error:', error);
       res.status(500).send('Error processing notification');
+    }
+  });
+
+  app.post('/api/payments/confirm', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+      await storage.updateUserPlan(userId, 'basic');
+      res.json({ success: true, plan: 'basic' });
+    } catch (error) {
+      console.error('Payment confirmation error:', error);
+      res.status(500).json({ error: 'Failed to confirm payment' });
+    }
+  });
+
+  app.get('/api/user/plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      res.json({ plan: user.plan || 'free', planUpdatedAt: user.planUpdatedAt });
+    } catch (error) {
+      console.error('Get plan error:', error);
+      res.status(500).json({ error: 'Failed to get plan' });
     }
   });
 

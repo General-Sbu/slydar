@@ -49,7 +49,7 @@ const menuItems = [
   },
   {
     title: "My Plan",
-    url: "/pricing",
+    url: "/my-plan",
     icon: RandIcon,
   },
 ];

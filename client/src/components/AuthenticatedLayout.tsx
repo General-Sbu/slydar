@@ -21,7 +21,7 @@ const mobileMenuItems = [
   { title: "AI Generator", url: "/ai-generator", icon: Sparkles },
   { title: "Templates", url: "/templates", icon: LayoutTemplate },
   { title: "Report", url: "/report", icon: BarChart3 },
-  { title: "My Plan", url: "/pricing", icon: RandIcon },
+  { title: "My Plan", url: "/my-plan", icon: RandIcon },
 ];
 
 interface AuthenticatedLayoutProps {

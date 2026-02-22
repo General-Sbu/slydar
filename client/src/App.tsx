@@ -28,6 +28,7 @@ import Onboarding from "@/pages/onboarding";
 import Education from "@/pages/education";
 import Business from "@/pages/business";
 import Checkout from "@/pages/checkout";
+import MyPlan from "@/pages/my-plan";
 import Templates from "@/pages/templates";
 import AIGenerator from "@/pages/ai-generator";
 import AISlides from "@/pages/ai-slides";
@@ -108,6 +109,9 @@ function Router() {
         <ProtectedRouteWithSidebar component={SlideResponses} />
       </Route>
       <Route path="/pricing" component={Pricing} />
+      <Route path="/my-plan">
+        <ProtectedRouteWithSidebar component={MyPlan} />
+      </Route>
       <Route path="/editor/:id?">
         <ProtectedRoute component={Editor} />
       </Route>
