@@ -90,5 +90,5 @@ The checkout page (`/checkout`) integrates with PayFast for payment processing. 
 4. After payment, user returns to checkout with success/cancelled status
 5. PayFast sends ITN (Instant Transaction Notification) to `/api/payments/notify`
 
-**Testing:**
-Currently configured for PayFast sandbox mode. To switch to production, update the `sandbox` parameter in `server/routes.ts` payment initiation.
+**Mode:**
+Currently configured for PayFast production mode. Production credentials are stored as environment secrets (`PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`).
