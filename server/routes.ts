@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         item_description: 'Monthly subscription to Slydar Basic plan',
         custom_str1: userId,
         custom_str2: 'basic',
-      }, passphrase, true);
+      }, passphrase, false);
 
       pendingPayments.set(paymentId, { userId, plan: 'basic', createdAt: new Date() });
 
