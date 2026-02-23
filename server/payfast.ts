@@ -68,7 +68,7 @@ export function generatePayFastSignature(data: Record<string, string | number | 
   return crypto.createHash('md5').update(pfOutput).digest('hex');
 }
 
-export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: string, sandbox: boolean = false): string {
+export function createPayFastPaymentData(data: PayFastPaymentData, passphrase: string, sandbox: boolean = false): { url: string; fields: Record<string, string> } {
   const paymentData: Record<string, string | number | undefined> = {
     merchant_id: data.merchant_id,
     merchant_key: data.merchant_key,
@@ -93,16 +93,16 @@ export function createPayFastPaymentUrl(data: PayFastPaymentData, passphrase: st
   
   const baseUrl = sandbox ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process';
   
-  let htmlParams = '';
+  const fields: Record<string, string> = {};
   for (const key of PARAM_ORDER) {
     const value = paymentData[key];
     if (value !== undefined && value !== null && value !== '') {
-      htmlParams += `${key}=${encodeURIComponent(String(value).trim())}&`;
+      fields[key] = String(value).trim();
     }
   }
-  htmlParams += `signature=${signature}`;
+  fields['signature'] = signature;
   
-  return `${baseUrl}?${htmlParams}`;
+  return { url: baseUrl, fields };
 }
 
 export function verifyPayFastITN(data: Record<string, string>, passphrase: string): boolean {

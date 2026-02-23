@@ -85,11 +85,22 @@ export default function Checkout() {
 
       const data = await response.json();
 
-      if (data.paymentUrl) {
+      if (data.paymentUrl && data.paymentFields) {
         if (data.paymentId) {
           localStorage.setItem('slydar_payment_id', data.paymentId);
         }
-        window.location.href = data.paymentUrl;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.paymentUrl;
+        for (const [key, value] of Object.entries(data.paymentFields)) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value as string;
+          form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
       } else {
         throw new Error('No payment URL received');
       }

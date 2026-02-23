@@ -25,7 +25,7 @@ import bcrypt from "bcrypt";
 import { updateOnboardingSchema, registerSchema, loginSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, sql } from "drizzle-orm";
-import { createPayFastPaymentUrl, verifyPayFastITN, validatePayFastAmount } from "./payfast";
+import { createPayFastPaymentData, verifyPayFastITN, validatePayFastAmount } from "./payfast";
 import OpenAI from "openai";
 import { generateImageBuffer } from "./replit_integrations/image";
 
@@ -273,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? `https://${process.env.REPLIT_DEV_DOMAIN}`
         : `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
 
-      const paymentUrl = createPayFastPaymentUrl({
+      const paymentResult = createPayFastPaymentData({
         merchant_id: merchantId,
         merchant_key: merchantKey,
         return_url: `${baseUrl}/checkout?status=success`,
@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       pendingPayments.set(paymentId, { userId, plan: 'basic', createdAt: new Date() });
 
-      res.json({ paymentUrl, paymentId });
+      res.json({ paymentUrl: paymentResult.url, paymentFields: paymentResult.fields, paymentId });
     } catch (error) {
       console.error('Payment initiation error:', error);
       res.status(500).json({ error: 'Failed to initiate payment' });
