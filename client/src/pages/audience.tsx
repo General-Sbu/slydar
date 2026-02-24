@@ -467,7 +467,7 @@ export default function Audience() {
         ) : (
           <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
             <div className="space-y-6 sm:space-y-8 relative z-10">
-              {currentSlide.type === 'multiple_choice' && (
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && (
                 <div className="text-center mb-4">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
                   <p className="text-sm sm:text-base text-muted-foreground">Select one option</p>
@@ -480,7 +480,7 @@ export default function Audience() {
                 </div>
               )}
 
-              {currentSlide.type === 'multiple_choice' && currentSlide.options && (
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options && (
                 <div className="grid gap-3">
                   {currentSlide.options.map((option, index) => (
                     <AudienceAnswerButton
@@ -620,7 +620,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Check className="h-5 w-5 text-primary" />
@@ -653,13 +653,13 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
           <div className="mt-6">
             <AudienceQA sessionId={session.id} participantId={participantId} />
           </div>
         )}
 
-        {isAuthenticated && currentSlide && (
+        {isAuthenticated && currentSlide && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && (
           <Card className="mt-6 p-6" data-testid="card-notes-section">
             <div className="flex items-center gap-2 mb-4">
               <StickyNote className="h-5 w-5 text-primary" />
