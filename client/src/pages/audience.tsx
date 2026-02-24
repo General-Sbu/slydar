@@ -473,10 +473,16 @@ export default function Audience() {
                   <p className="text-sm sm:text-base text-muted-foreground">Select one option</p>
                 </div>
               )}
-              {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
+              {currentSlide.type === 'open_ended' && (
                 <div className="text-center">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
                   <p className="text-sm sm:text-base text-muted-foreground">Type your answer below</p>
+                </div>
+              )}
+              {currentSlide.type === 'word_cloud' && (
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Ask your question here'}</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">Enter a word or phrase</p>
                 </div>
               )}
 
