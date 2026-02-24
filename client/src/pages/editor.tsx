@@ -592,7 +592,17 @@ export default function Editor() {
     );
     
     const updatedConfig = { ...config, elements: updatedElements };
-    setEditingSlide({ ...editingSlide, config: updatedConfig });
+    const updatedSlide = { ...editingSlide, config: updatedConfig };
+
+    if (editingSlide.type === 'word_cloud' && 'content' in updates && updates.content !== undefined) {
+      const targetEl = elements.find(el => el.id === elementId);
+      if (targetEl?.type === 'text') {
+        updatedSlide.question = updates.content as string;
+        updateSlideMutation.mutate({ id: editingSlide.id, data: { question: updates.content as string } });
+      }
+    }
+
+    setEditingSlide(updatedSlide);
     
     debouncedUpdate(editingSlide.id, updatedConfig);
   };
@@ -2072,11 +2082,21 @@ export default function Editor() {
                         placeholder="What comes to mind when you think of innovation?"
                         value={editingSlide?.question || ''}
                         onChange={(e) => {
-                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                          if (editingSlide) {
+                            const newQuestion = e.target.value;
+                            const config = editingSlide.config || { elements: [] };
+                            const elements = (config.elements || []) as any[];
+                            const textEl = elements.find((el: any) => el.type === 'text');
+                            const updatedElements = textEl
+                              ? elements.map((el: any) => el.id === textEl.id ? { ...el, content: newQuestion } : el)
+                              : elements;
+                            setEditingSlide({ ...editingSlide, question: newQuestion, config: { ...config, elements: updatedElements } });
+                          }
                         }}
                         onBlur={() => {
                           if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
                             updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                            debouncedUpdate(editingSlide.id, editingSlide.config);
                           }
                         }}
                         data-testid="input-word-cloud-question"

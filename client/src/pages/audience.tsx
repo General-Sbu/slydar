@@ -479,12 +479,21 @@ export default function Audience() {
                   <p className="text-sm sm:text-base text-muted-foreground">Type your answer below</p>
                 </div>
               )}
-              {currentSlide.type === 'word_cloud' && (
-                <div className="text-center">
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Ask your question here'}</h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">Enter a word or phrase</p>
-                </div>
-              )}
+              {currentSlide.type === 'word_cloud' && (() => {
+                const wcQuestion = currentSlide.question
+                  || (currentSlide.config as any)?.elements?.find((el: any) => el.type === 'text')?.content
+                  || '';
+                const wcPlaceholders = ['Ask your question here', 'Your Word Cloud question here', 'Question', ''];
+                const showQuestion = wcQuestion && !wcPlaceholders.includes(wcQuestion.trim());
+                return (
+                  <div className="text-center">
+                    {showQuestion && (
+                      <h2 className="text-2xl md:text-3xl font-bold mb-2">{wcQuestion}</h2>
+                    )}
+                    <p className="text-sm sm:text-base text-muted-foreground">Enter a word or phrase</p>
+                  </div>
+                );
+              })()}
 
               {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options && (
                 <div className="grid gap-3">
