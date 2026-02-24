@@ -330,7 +330,7 @@ export default function Presenter() {
   }, [allFeedback, currentSlide]);
 
   const chartOptions = useMemo(() => {
-    if (!currentSlide || currentSlide.type !== 'multiple_choice' || !currentSlide.options) {
+    if (!currentSlide || (currentSlide.type !== 'multiple_choice' && currentSlide.type !== 'poll') || !currentSlide.options) {
       return [];
     }
 
@@ -548,7 +548,7 @@ export default function Presenter() {
                         <div className="text-center">
                           <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || currentSlide.title || ""}</h1>
                         </div>
-                      ) : currentSlide.type === 'multiple_choice' && currentSlide.options ? (
+                      ) : (currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options ? (
                         <LivePollChart
                           question={currentSlide.question || "Question"}
                           options={chartOptions}
