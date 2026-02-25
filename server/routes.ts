@@ -1606,8 +1606,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (format === "pptx") {
         const PptxGenJS = (await import("pptxgenjs")).default;
+        const pathModule = await import("path");
+        const fsModule = await import("fs");
         const pptx = new PptxGenJS();
         pptx.title = presentation.title;
+
+        const resolveImageSrc = (src: string): { path?: string; data?: string } | null => {
+          if (!src) return null;
+          if (src.startsWith("data:image")) {
+            const match = src.match(/^data:image\/\w+;base64,(.+)$/);
+            if (match) return { data: match[1] };
+            return null;
+          }
+          if (src.startsWith("http://") || src.startsWith("https://")) {
+            return { path: src };
+          }
+          const localPath = pathModule.join(process.cwd(), "public", src);
+          if (fsModule.existsSync(localPath)) {
+            return { path: localPath };
+          }
+          return null;
+        };
 
         for (const slide of slidesData) {
           const pptSlide = pptx.addSlide();
@@ -1619,7 +1638,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           if (slide.type === "image" && slide.question) {
-            pptSlide.addImage({ path: slide.question, x: 0, y: 0, w: "100%", h: "100%", sizing: { type: "contain", w: 10, h: 5.63 } });
+            const imgRef = resolveImageSrc(slide.question);
+            if (imgRef) {
+              pptSlide.addImage({ ...imgRef, x: 0, y: 0, w: "100%", h: "100%", sizing: { type: "contain", w: 10, h: 5.63 } } as any);
+            }
           } else if (slide.config?.elements && slide.config.elements.length > 0) {
             for (const el of slide.config.elements) {
               if (el.type === "text" && el.content) {
@@ -1636,14 +1658,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   wrap: true,
                 });
               } else if (el.type === "image" && el.src) {
-                pptSlide.addImage({
-                  path: el.src,
-                  x: (el.x / 100) * 10,
-                  y: (el.y / 100) * 5.63,
-                  w: (el.width / 100) * 10,
-                  h: ((el.height || 30) / 100) * 5.63,
-                  sizing: { type: "contain", w: (el.width / 100) * 10, h: ((el.height || 30) / 100) * 5.63 },
-                });
+                const imgRef = resolveImageSrc(el.src);
+                if (imgRef) {
+                  pptSlide.addImage({
+                    ...imgRef,
+                    x: (el.x / 100) * 10,
+                    y: (el.y / 100) * 5.63,
+                    w: (el.width / 100) * 10,
+                    h: ((el.height || 30) / 100) * 5.63,
+                    sizing: { type: "contain", w: (el.width / 100) * 10, h: ((el.height || 30) / 100) * 5.63 },
+                  } as any);
+                }
               }
             }
           } else {
