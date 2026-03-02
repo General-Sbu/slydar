@@ -24,7 +24,7 @@ export default function RoomCodeDisplay({ code, participantCount = 0 }: RoomCode
     <Card className="p-3 sm:p-4 md:p-6">
       <div className="text-center space-y-2 sm:space-y-3 md:space-y-4">
         <div>
-          <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Join at slidr.app</div>
+          <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Join at Slydar.app</div>
           <div className="flex items-center justify-center gap-1 sm:gap-2">
             <div 
               className="font-mono text-2xl sm:text-3xl md:text-5xl font-bold tracking-wider" 
