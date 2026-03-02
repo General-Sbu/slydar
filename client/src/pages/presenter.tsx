@@ -94,7 +94,6 @@ export default function Presenter() {
       setCurrentSlideIndex(0);
       setAllResponses([]);
       setParticipantCount(0);
-      setAnnotations([]);
       setFloatingEmojis([]);
       setActiveSpinnerEntries(null);
       if (slides.length > 0) {
@@ -150,7 +149,6 @@ export default function Presenter() {
     onSlideChanged: (data) => {
       setCurrentSlideIndex(data.slideIndex);
       setCurrentSlide(data.slide);
-      setAnnotations([]);
       setActiveSpinnerEntries(null);
     },
     onNewResponse: (data) => {
