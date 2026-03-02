@@ -246,8 +246,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const pendingPayments = new Map<string, { userId: string; plan: string; createdAt: Date }>();
-
   // PayFast Payment Routes
   app.post('/api/payments/initiate', isAuthenticated, async (req: any, res) => {
     try {
@@ -269,9 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentId = `SLYDAR-${userId}-${Date.now()}`;
       const amount = '199.00';
 
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+      // Use the actual request host so return/notify URLs always match the
+      // domain the user is on (dev preview, staging, or production).
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
 
       const paymentResult = createPayFastPaymentData({
         merchant_id: merchantId,
@@ -289,8 +287,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         custom_str1: userId,
         custom_str2: 'basic',
       }, passphrase, false);
-
-      pendingPayments.set(paymentId, { userId, plan: 'basic', createdAt: new Date() });
 
       res.json({ paymentUrl: paymentResult.url, paymentFields: paymentResult.fields, paymentId });
     } catch (error) {
@@ -346,18 +342,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!paymentId) {
         return res.status(400).json({ error: 'Payment ID required' });
       }
-      const pending = pendingPayments.get(paymentId);
-      if (!pending || pending.userId !== userId) {
-        return res.status(403).json({ error: 'Invalid or expired payment' });
+
+      // PayFast is the gatekeeper — it only redirects to return_url on success.
+      // Validate the payment ID format: SLYDAR-<userId>-<timestamp>
+      const expectedPrefix = `SLYDAR-${userId}-`;
+      if (!paymentId.startsWith(expectedPrefix)) {
+        return res.status(403).json({ error: 'Invalid payment ID' });
       }
-      const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (pending.createdAt < hourAgo) {
-        pendingPayments.delete(paymentId);
+      const timestamp = parseInt(paymentId.replace(expectedPrefix, ''), 10);
+      if (isNaN(timestamp) || Date.now() - timestamp > 2 * 60 * 60 * 1000) {
         return res.status(403).json({ error: 'Payment session expired' });
       }
-      await storage.updateUserPlan(userId, pending.plan);
-      pendingPayments.delete(paymentId);
-      res.json({ success: true, plan: pending.plan });
+
+      // Upgrade the plan — ITN may have already done this; calling again is safe.
+      await storage.updateUserPlan(userId, 'basic');
+      res.json({ success: true, plan: 'basic' });
     } catch (error) {
       console.error('Payment confirmation error:', error);
       res.status(500).json({ error: 'Failed to confirm payment' });

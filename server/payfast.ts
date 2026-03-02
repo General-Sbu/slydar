@@ -110,16 +110,31 @@ export function verifyPayFastITN(data: Record<string, string>, passphrase: strin
   if (!receivedSignature) {
     return false;
   }
-  
-  const dataWithoutSignature: Record<string, string | number | undefined> = {};
+
+  // Build the signature string from ALL received fields in received order,
+  // excluding the signature field itself. PayFast sends many more fields
+  // than PARAM_ORDER (e.g. payment_status, amount_gross, etc.) and ALL of
+  // them must be included in the exact received order.
+  let pfOutput = '';
   for (const key of Object.keys(data)) {
-    if (key !== 'signature') {
-      dataWithoutSignature[key] = data[key];
+    if (key === 'signature') continue;
+    const value = data[key];
+    if (value !== undefined && value !== null && value !== '') {
+      pfOutput += `${key}=${encodeURIComponent(String(value).trim()).replace(/%20/g, '+')}&`;
     }
   }
-  
-  const calculatedSignature = generatePayFastSignature(dataWithoutSignature, passphrase);
-  
+
+  pfOutput = pfOutput.slice(0, -1);
+
+  if (passphrase && passphrase.trim() !== '') {
+    pfOutput += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
+  }
+
+  const calculatedSignature = crypto.createHash('md5').update(pfOutput).digest('hex');
+
+  console.log('[PayFast ITN] Received signature:', receivedSignature);
+  console.log('[PayFast ITN] Calculated signature:', calculatedSignature);
+
   return receivedSignature === calculatedSignature;
 }
 
