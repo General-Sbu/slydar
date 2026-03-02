@@ -436,14 +436,14 @@ export default function Presenter() {
               {session && (
                 <Button
                   variant={session.allowDownload ? "default" : "outline"}
-                  size="icon"
+                  size="sm"
                   onClick={() => toggleDownloadMutation.mutate()}
                   disabled={toggleDownloadMutation.isPending}
                   data-testid="button-toggle-download"
-                  title={session.allowDownload ? "Downloads enabled for audience" : "Enable audience downloads"}
                   className={`toggle-elevate ${session.allowDownload ? "toggle-elevated" : ""}`}
                 >
                   <Download className="h-4 w-4" />
+                  {session.allowDownload ? "Disable download" : "Enable download"}
                 </Button>
               )}
               {session && (
