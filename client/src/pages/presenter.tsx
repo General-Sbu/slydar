@@ -152,7 +152,7 @@ export default function Presenter() {
     }
   });
 
-  const { isConnected, joinSession, navigateSlide, addAnnotation, clearAnnotations: clearAnnotationsSocket } = useWebSocket({
+  const { isConnected, joinSession, navigateSlide, addAnnotation, clearAnnotations: clearAnnotationsSocket, spinWheel } = useWebSocket({
     onSessionJoined: (data) => {
       setCurrentSlide(data.currentSlide);
     },
@@ -584,6 +584,9 @@ export default function Presenter() {
                           <SpinnerWheel
                             entries={activeSpinnerEntries || currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
                             isInteractive={true}
+                            onSpinStart={({ winnerIdx, targetRotation, entries }) => {
+                              spinWheel(winnerIdx, targetRotation, entries);
+                            }}
                             onRemoveWinner={(winner) => {
                               const currentEntries = activeSpinnerEntries || currentSlide.config?.spinnerEntries || defaultSpinnerEntries;
                               const filteredEntries = currentEntries.filter(e => e.id !== winner.id);

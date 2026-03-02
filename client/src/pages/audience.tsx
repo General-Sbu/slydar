@@ -45,6 +45,7 @@ export default function Audience() {
   const [fillBlankAnswers, setFillBlankAnswers] = useState<Record<string, string[]>>({});
   const [fillBlankSubmitted, setFillBlankSubmitted] = useState(false);
   const [allowDownload, setAllowDownload] = useState(false);
+  const [externalSpin, setExternalSpin] = useState<{ winnerIdx: number; targetRotation: number; entries: any[] } | null>(null);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -170,6 +171,7 @@ export default function Audience() {
       setAnnotations([]);
       setFillBlankAnswers({});
       setFillBlankSubmitted(false);
+      setExternalSpin(null);
     },
     onReactionsUpdated: (data: { slideId: string; reactions: Reaction[] }) => {
       if (currentSlide?.id && session?.id) {
@@ -206,6 +208,9 @@ export default function Audience() {
     },
     onDownloadToggle: (data: { allowDownload: boolean }) => {
       setAllowDownload(data.allowDownload);
+    },
+    onSpinnerSpin: (data: { winnerIdx: number; targetRotation: number; entries: any[] }) => {
+      setExternalSpin({ ...data });
     },
     onError: (error: string) => {
       showNotification(error, "error");
@@ -536,10 +541,13 @@ export default function Audience() {
                   <SpinnerWheel
                     entries={currentSlide.config?.spinnerEntries || defaultSpinnerEntries}
                     isInteractive={false}
+                    externalSpin={externalSpin}
                   />
-                  <p className="text-muted-foreground mt-4 text-center">
-                    The presenter will spin the wheel
-                  </p>
+                  {!externalSpin && (
+                    <p className="text-muted-foreground mt-4 text-center">
+                      The presenter will spin the wheel
+                    </p>
+                  )}
                 </div>
               )}
 

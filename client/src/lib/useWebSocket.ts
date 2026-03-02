@@ -14,6 +14,7 @@ interface UseWebSocketOptions {
   onAnnotationAdded?: (data: { annotation: AnnotationData }) => void;
   onAnnotationsCleared?: () => void;
   onDownloadToggle?: (data: { allowDownload: boolean }) => void;
+  onSpinnerSpin?: (data: { winnerIdx: number; targetRotation: number; entries: any[] }) => void;
   onError?: (error: string) => void;
 }
 
@@ -109,6 +110,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       optionsRef.current.onDownloadToggle?.(data);
     });
 
+    socket.on('spinner_spin', (data: { winnerIdx: number; targetRotation: number; entries: any[] }) => {
+      console.log('[Socket.IO] Spinner spin:', data);
+      optionsRef.current.onSpinnerSpin?.(data);
+    });
+
     socket.on('error', (data: { message: string }) => {
       console.error('[Socket.IO] Error:', data.message);
       optionsRef.current.onError?.(data.message);
@@ -156,6 +162,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, []);
 
+  const spinWheel = useCallback((winnerIdx: number, targetRotation: number, entries: any[]) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('spinner_spin', { winnerIdx, targetRotation, entries });
+    }
+  }, []);
+
   return {
     isConnected,
     participantId,
@@ -164,6 +176,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     navigateSlide,
     sendEmoji,
     addAnnotation,
-    clearAnnotations
+    clearAnnotations,
+    spinWheel
   };
 }

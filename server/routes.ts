@@ -2192,6 +2192,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    socket.on('spinner_spin', async ({ winnerIdx, targetRotation, entries }: { winnerIdx: number; targetRotation: number; entries: any[] }) => {
+      try {
+        if (!clientData.sessionId || clientData.role !== 'presenter') {
+          socket.emit('error', { message: 'Unauthorized' });
+          return;
+        }
+        io.to(clientData.sessionId).emit('spinner_spin', { winnerIdx, targetRotation, entries });
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to broadcast spin' });
+      }
+    });
+
     socket.on('disconnect', async () => {
       if (clientData.sessionId) {
         const sockets = await io.in(clientData.sessionId).fetchSockets();

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Play, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SpinnerEntry } from "@shared/schema";
@@ -8,8 +8,8 @@ interface SpinnerWheelProps {
   isInteractive?: boolean;
   onSpinComplete?: (winner: SpinnerEntry) => void;
   onRemoveWinner?: (winner: SpinnerEntry) => void;
-  isSpinning?: boolean;
-  winningIndex?: number | null;
+  onSpinStart?: (data: { winnerIdx: number; targetRotation: number; entries: SpinnerEntry[] }) => void;
+  externalSpin?: { winnerIdx: number; targetRotation: number; entries: SpinnerEntry[] } | null;
 }
 
 function Confetti({ isActive }: { isActive: boolean }) {
@@ -64,25 +64,53 @@ function Confetti({ isActive }: { isActive: boolean }) {
 }
 
 export default function SpinnerWheel({ 
-  entries, 
+  entries: propEntries, 
   isInteractive = false,
   onSpinComplete,
   onRemoveWinner,
-  isSpinning: externalSpinning,
-  winningIndex: externalWinningIndex
+  onSpinStart,
+  externalSpin,
 }: SpinnerWheelProps) {
-  const [internalSpinning, setInternalSpinning] = useState(false);
+  const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<SpinnerEntry | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [displayEntries, setDisplayEntries] = useState(propEntries);
+  const prevExternalSpinRef = useRef<typeof externalSpin>(null);
 
-  const isSpinning = externalSpinning !== undefined ? externalSpinning : internalSpinning;
-
-  const segmentCount = entries.length || 8;
+  const segmentCount = displayEntries.length || 8;
   const segmentAngle = 360 / segmentCount;
   const radius = 120;
   const centerX = 150;
   const centerY = 150;
+
+  useEffect(() => {
+    if (!isInteractive) {
+      setDisplayEntries(propEntries);
+    }
+  }, [propEntries, isInteractive]);
+
+  useEffect(() => {
+    if (!externalSpin) return;
+    if (prevExternalSpinRef.current === externalSpin) return;
+    prevExternalSpinRef.current = externalSpin;
+
+    setDisplayEntries(externalSpin.entries);
+    setSpinning(true);
+    setWinner(null);
+    setShowConfetti(false);
+    setRotation(externalSpin.targetRotation);
+
+    setTimeout(() => {
+      setSpinning(false);
+      const selectedEntry = externalSpin.entries[externalSpin.winnerIdx];
+      if (selectedEntry) {
+        setWinner(selectedEntry);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+    }, 4000);
+  }, [externalSpin]);
 
   const polarToCartesian = (angle: number, r: number) => {
     const radians = ((angle - 90) * Math.PI) / 180;
@@ -106,9 +134,9 @@ export default function SpinnerWheel({
   };
 
   const handleSpin = useCallback(() => {
-    if (isSpinning || !isInteractive) return;
+    if (spinning || !isInteractive) return;
 
-    setInternalSpinning(true);
+    setSpinning(true);
     setWinner(null);
     setShowConfetti(false);
 
@@ -121,12 +149,15 @@ export default function SpinnerWheel({
     let additionalRotation = targetMod - currentMod;
     if (additionalRotation <= 0) additionalRotation += 360;
     const totalRotation = spins * 360 + additionalRotation;
+    const targetRotation = rotation + totalRotation;
 
-    setRotation(rotation + totalRotation);
+    setRotation(targetRotation);
+
+    onSpinStart?.({ winnerIdx, targetRotation, entries: displayEntries });
 
     setTimeout(() => {
-      setInternalSpinning(false);
-      const selectedEntry = entries[winnerIdx];
+      setSpinning(false);
+      const selectedEntry = displayEntries[winnerIdx];
       setWinner(selectedEntry);
       setShowConfetti(true);
       onSpinComplete?.(selectedEntry);
@@ -135,7 +166,7 @@ export default function SpinnerWheel({
         setShowConfetti(false);
       }, 4000);
     }, 4000);
-  }, [isSpinning, isInteractive, segmentCount, segmentAngle, entries, onSpinComplete, rotation]);
+  }, [spinning, isInteractive, segmentCount, segmentAngle, displayEntries, onSpinComplete, onSpinStart, rotation]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -158,11 +189,11 @@ export default function SpinnerWheel({
           className="drop-shadow-lg"
           style={{
             transform: `rotate(${rotation}deg)`,
-            transition: isSpinning ? "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)" : "none",
+            transition: spinning ? "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)" : "none",
           }}
           data-testid="spinner-wheel"
         >
-          {entries.map((entry, index) => {
+          {displayEntries.map((entry, index) => {
             const startAngle = index * segmentAngle;
             const endAngle = startAngle + segmentAngle;
             const midAngle = startAngle + segmentAngle / 2;
@@ -208,7 +239,7 @@ export default function SpinnerWheel({
         {isInteractive && (
           <button
             onClick={handleSpin}
-            disabled={isSpinning}
+            disabled={spinning}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg border border-border"
             data-testid="button-spin"
           >
@@ -223,7 +254,7 @@ export default function SpinnerWheel({
         )}
       </div>
 
-      {winner && !isSpinning && (
+      {winner && !spinning && (
         <div 
           className="text-center p-6 rounded-lg bg-card border-2"
           style={{ borderColor: winner.color }}
@@ -233,7 +264,7 @@ export default function SpinnerWheel({
           <p className="text-3xl font-bold mb-4" style={{ color: winner.color }}>
             {winner.label}
           </p>
-          {isInteractive && onRemoveWinner && entries.length > 2 && (
+          {isInteractive && onRemoveWinner && displayEntries.length > 2 && (
             <Button
               variant="outline"
               size="sm"
