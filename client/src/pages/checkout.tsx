@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, Check, Sparkles, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Lock, Check, Sparkles, CheckCircle, XCircle, Loader2, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,19 @@ export default function Checkout() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'cancelled' | 'error'>('idle');
+  const [isSandbox, setIsSandbox] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
   });
+
+  useEffect(() => {
+    fetch('/api/payments/config')
+      .then(r => r.json())
+      .then(data => setIsSandbox(data.sandbox === true))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
@@ -206,9 +214,17 @@ export default function Checkout() {
               </Button>
               <Logo showText={true} />
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Lock className="h-4 w-4" />
-              Secure checkout
+            <div className="flex items-center gap-3">
+              {isSandbox && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-semibold border border-amber-300 dark:border-amber-700">
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Sandbox Mode
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                Secure checkout
+              </div>
             </div>
           </div>
         </div>
@@ -322,10 +338,17 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                      <p>
-                        You'll be redirected to PayFast's secure payment page to complete your purchase.
-                      </p>
+                    <div className={`rounded-lg p-4 text-sm ${isSandbox ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : 'bg-muted/50 text-muted-foreground'}`}>
+                      {isSandbox ? (
+                        <p className="flex items-center gap-2">
+                          <FlaskConical className="h-4 w-4 flex-shrink-0" />
+                          <span><strong>Sandbox mode:</strong> No real payments will be charged. Use PayFast test card details to complete the flow.</span>
+                        </p>
+                      ) : (
+                        <p>
+                          You'll be redirected to PayFast's secure payment page to complete your purchase.
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col gap-4">

@@ -247,6 +247,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PayFast Payment Routes
+  app.get('/api/payments/config', (_req, res) => {
+    const isSandbox = process.env.PAYFAST_SANDBOX === 'true';
+    res.json({ sandbox: isSandbox });
+  });
+
   app.post('/api/payments/initiate', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -271,6 +276,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // domain the user is on (dev preview, staging, or production).
       const baseUrl = `${req.protocol}://${req.get('host')}`;
 
+      const isSandbox = process.env.PAYFAST_SANDBOX === 'true';
+      console.log(`[PayFast] Mode: ${isSandbox ? 'SANDBOX' : 'PRODUCTION'}`);
+
       const paymentResult = createPayFastPaymentData({
         merchant_id: merchantId,
         merchant_key: merchantKey,
@@ -286,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         item_description: 'Monthly subscription to Slydar Basic plan',
         custom_str1: userId,
         custom_str2: 'basic',
-      }, passphrase, false);
+      }, passphrase, isSandbox);
 
       res.json({ paymentUrl: paymentResult.url, paymentFields: paymentResult.fields, paymentId });
     } catch (error) {

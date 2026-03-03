@@ -41,3 +41,11 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_websocket:1.0.0", "javascript_mem_db:1.0.0", "javascript_log_in_with_replit:2.0.0", "javascript_openai_ai_integrations:2.0.0"]
+
+[userenv]
+
+[userenv.development]
+PAYFAST_SANDBOX = "true"
+
+[userenv.production]
+PAYFAST_SANDBOX = "false"
