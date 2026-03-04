@@ -69,6 +69,11 @@ export default function Landing() {
                   Business
                 </Button>
               </Link>
+              <Link href="/ai-features">
+                <Button variant="ghost" className="transition-smooth" data-testid="button-ai-features">
+                  AI Features
+                </Button>
+              </Link>
               <Link href="/library">
                 <Button variant="ghost" className="transition-smooth" data-testid="button-library">
                   Library
@@ -121,6 +126,17 @@ export default function Landing() {
                       >
                         <Briefcase className="h-4 w-4" />
                         Business
+                      </Button>
+                    </Link>
+                    <Link href="/ai-features">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start gap-2" 
+                        data-testid="button-ai-features-mobile"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        AI Features
                       </Button>
                     </Link>
                     <Link href="/library">

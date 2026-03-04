@@ -32,6 +32,7 @@ import MyPlan from "@/pages/my-plan";
 import Templates from "@/pages/templates";
 import AIGenerator from "@/pages/ai-generator";
 import AISlides from "@/pages/ai-slides";
+import AIFeatures from "@/pages/ai-features";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -134,6 +135,7 @@ function Router() {
       <Route path="/education" component={Education} />
       <Route path="/business" component={Business} />
       <Route path="/ai-slides" component={AISlides} />
+      <Route path="/ai-features" component={AIFeatures} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/templates">
         <ProtectedRouteWithSidebar component={Templates} />
