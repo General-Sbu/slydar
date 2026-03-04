@@ -92,6 +92,7 @@ export default function AIGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [events, setEvents] = useState<GenerationEvent[]>([]);
   const [completedPresentation, setCompletedPresentation] = useState<{ id: string; count: number } | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -120,6 +121,7 @@ export default function AIGenerator() {
     setIsGenerating(true);
     setEvents([]);
     setCompletedPresentation(null);
+    setQuotaExceeded(false);
 
     abortRef.current = new AbortController();
 
@@ -133,6 +135,7 @@ export default function AIGenerator() {
 
       if (!response.ok) {
         const err = await response.json();
+        if (err.quotaExceeded) setQuotaExceeded(true);
         setEvents([{ type: "error", message: err.error || "Generation failed" }]);
         setIsGenerating(false);
         return;
@@ -367,9 +370,17 @@ export default function AIGenerator() {
               )}
 
               {hasError && (
-                <p className="text-sm text-destructive" data-testid="text-ai-error">
-                  {errorMessage}
-                </p>
+                <div className="space-y-3" data-testid="text-ai-error">
+                  <p className="text-sm text-destructive">{errorMessage}</p>
+                  {quotaExceeded && (
+                    <a href="/pricing">
+                      <Button variant="outline" size="sm" className="gap-2 w-full" data-testid="button-upgrade-quota">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Upgrade to Basic for unlimited access
+                      </Button>
+                    </a>
+                  )}
+                </div>
               )}
 
               {completedPresentation && (

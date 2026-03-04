@@ -2255,6 +2255,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Topic must be under 500 characters" });
       }
 
+      const user = await storage.getUser(userId);
+      if (user?.plan === "free") {
+        const usedToday = await storage.countAiGenerationsToday(userId);
+        if (usedToday >= 2) {
+          return res.status(429).json({
+            error: "You've used your 2 free AI generations for today. Upgrade to Basic for unlimited access, or try again tomorrow.",
+            quotaExceeded: true,
+          });
+        }
+      }
+
       const systemPrompt = `Your job is to automatically generate a complete, ready-to-teach slide deck from any topic provided.
 
 When given a topic, create structured slides that:
@@ -2365,6 +2376,7 @@ For the "imagePrompt" field:
       const presentation = await storage.createPresentation({
         userId,
         title: topic.trim(),
+        isAiGenerated: true,
       });
 
       const slidesWithImages: { slideId: string; imagePrompt: string; slideTitle: string }[] = [];

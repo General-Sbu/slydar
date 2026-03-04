@@ -16,7 +16,7 @@ import { db } from "./db";
 import { 
   users, presentations, slides, presentationSessions, responses, notes, feedback, reactions, questions, questionVotes, templates
 } from "@shared/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte } from "drizzle-orm";
 
 type UserWithPassword = User & { password: string | null };
 
@@ -30,6 +30,7 @@ export interface IStorage {
   updateUserPlan(userId: string, plan: string): Promise<User | undefined>;
 
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
+  countAiGenerationsToday(userId: string): Promise<number>;
   getPresentation(id: string): Promise<Presentation | undefined>;
   getAllPresentations(): Promise<Presentation[]>;
   getPresentationsByUser(userId: string): Promise<Presentation[]>;
@@ -205,6 +206,14 @@ export class MemStorage implements IStorage {
     return userWithoutPassword;
   }
 
+  async countAiGenerationsToday(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from(this.presentations.values()).filter(
+      p => p.userId === userId && p.isAiGenerated && p.createdAt >= today
+    ).length;
+  }
+
   async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {
     const id = randomUUID();
     const now = new Date();
@@ -212,6 +221,7 @@ export class MemStorage implements IStorage {
       ...insertPresentation, 
       id,
       published: false,
+      isAiGenerated: insertPresentation.isAiGenerated ?? false,
       createdAt: now,
       updatedAt: now
     };
@@ -620,6 +630,21 @@ export class DbStorage implements IStorage {
     if (!user) return undefined;
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
+  }
+
+  async countAiGenerationsToday(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await db.select({ count: sql<number>`count(*)::int` })
+      .from(presentations)
+      .where(
+        and(
+          eq(presentations.userId, userId),
+          eq(presentations.isAiGenerated, true),
+          gte(presentations.createdAt, today)
+        )
+      );
+    return result[0]?.count ?? 0;
   }
 
   async createPresentation(insertPresentation: InsertPresentation): Promise<Presentation> {

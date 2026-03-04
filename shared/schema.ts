@@ -114,6 +114,7 @@ export const presentations = pgTable("presentations", {
   title: text("title").notNull(),
   templateId: varchar("template_id").references(() => templates.id),
   published: boolean("published").notNull().default(false),
+  isAiGenerated: boolean("is_ai_generated").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
