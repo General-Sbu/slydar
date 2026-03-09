@@ -501,23 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: "multiple_choice", 
             question: "Enter the Poll Question here", 
             options: ["Option 1", "Option 2", "Option 3"],
-            config: {
-              elements: [
-                {
-                  id: crypto.randomUUID(),
-                  type: "text" as const,
-                  x: 10,
-                  y: 15,
-                  width: 80,
-                  content: "Enter the Poll Question here",
-                  fontSize: 36,
-                  fontWeight: "bold" as const,
-                  textAlign: "center" as const,
-                  rotation: 0,
-                  zIndex: 1
-                }
-              ]
-            }
+            config: { elements: [] }
           },
           multiple_choice_quiz: { type: "multiple_choice", question: "Test your knowledge", options: ["Answer A", "Answer B", "Answer C"] },
           open_ended: { type: "open_ended", question: "Share your thoughts" },

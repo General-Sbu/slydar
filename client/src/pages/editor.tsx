@@ -1346,7 +1346,7 @@ export default function Editor() {
                   >
                   <div className="absolute inset-0">
                     <SlideCanvas
-                      elements={editingSlide?.config?.elements || []}
+                      elements={currentSlide?.type === 'multiple_choice' || currentSlide?.type === 'poll' ? [] : (editingSlide?.config?.elements || [])}
                       onElementUpdate={handleElementUpdate}
                       isEditable={true}
                     />
