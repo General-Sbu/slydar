@@ -100,6 +100,7 @@ export default function Checkout() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = data.paymentUrl;
+        form.target = '_top';
         for (const [key, value] of Object.entries(data.paymentFields)) {
           const input = document.createElement('input');
           input.type = 'hidden';
