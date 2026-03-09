@@ -278,6 +278,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const isSandbox = process.env.PAYFAST_SANDBOX === 'true';
       console.log(`[PayFast] Mode: ${isSandbox ? 'SANDBOX' : 'PRODUCTION'}`);
+      console.log(`[PayFast] merchant_id: ${merchantId}`);
+      console.log(`[PayFast] baseUrl: ${baseUrl}`);
+      console.log(`[PayFast] notify_url: ${baseUrl}/api/payments/notify`);
+      console.log(`[PayFast] passphrase set: ${!!passphrase}`);
 
       const paymentResult = createPayFastPaymentData({
         merchant_id: merchantId,
@@ -295,6 +299,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         custom_str1: userId,
         custom_str2: 'basic',
       }, passphrase, isSandbox);
+
+      console.log(`[PayFast] Sending to: ${paymentResult.url}`);
+      console.log(`[PayFast] Fields (safe):`, {
+        merchant_id: paymentResult.fields.merchant_id,
+        return_url: paymentResult.fields.return_url,
+        notify_url: paymentResult.fields.notify_url,
+        amount: paymentResult.fields.amount,
+        item_name: paymentResult.fields.item_name,
+        signature: paymentResult.fields.signature,
+      });
 
       res.json({ paymentUrl: paymentResult.url, paymentFields: paymentResult.fields, paymentId });
     } catch (error) {
