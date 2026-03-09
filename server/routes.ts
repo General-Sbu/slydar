@@ -1080,6 +1080,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/presentations/:id/export/:format", isAuthenticated, async (req: any, res) => {
+    try {
+      const presentation = await storage.getPresentation(req.params.id);
+      if (!presentation) return res.status(404).json({ error: "Presentation not found" });
+
+      const userId = req.user?.claims?.sub;
+      if (presentation.userId !== userId) return res.status(403).json({ error: "Forbidden" });
+
+      const slidesData = await storage.getSlidesByPresentation(req.params.id);
+      const format = req.params.format;
+      if (format !== "pptx" && format !== "pdf") {
+        return res.status(400).json({ error: "Unsupported format. Use 'pptx' or 'pdf'." });
+      }
+
+      const PptxGenJS = (await import("pptxgenjs")).default;
+      const pathModule = await import("path");
+      const fsModule = await import("fs");
+      const pptx = new PptxGenJS();
+      pptx.title = presentation.title;
+
+      const resolveImageSrc = (src: string): { path?: string; data?: string } | null => {
+        if (!src) return null;
+        if (src.startsWith("data:image")) {
+          const match = src.match(/^data:image\/\w+;base64,(.+)$/);
+          if (match) return { data: match[1] };
+          return null;
+        }
+        if (src.startsWith("http://") || src.startsWith("https://")) return { path: src };
+        const localPath = pathModule.join(process.cwd(), "public", src);
+        if (fsModule.existsSync(localPath)) return { path: localPath };
+        return null;
+      };
+
+      for (const slide of slidesData) {
+        const pptSlide = pptx.addSlide();
+        const bgColor = typeof slide.config?.background === "string"
+          ? slide.config.background.replace("#", "")
+          : "FFFFFF";
+        if (bgColor && /^[0-9a-fA-F]{6}$/.test(bgColor)) {
+          pptSlide.background = { color: bgColor };
+        }
+
+        if (slide.type === "image" && slide.question) {
+          const imgRef = resolveImageSrc(slide.question);
+          if (imgRef) {
+            pptSlide.addImage({ ...imgRef, x: 0, y: 0, w: "100%", h: "100%", sizing: { type: "contain", w: 10, h: 5.63 } } as any);
+          }
+        } else if (slide.config?.elements && slide.config.elements.length > 0) {
+          for (const el of slide.config.elements) {
+            if (el.type === "text" && el.content) {
+              pptSlide.addText(el.content, {
+                x: (el.x / 100) * 10,
+                y: (el.y / 100) * 5.63,
+                w: (el.width / 100) * 10,
+                fontSize: Math.max(8, Math.min(44, Math.round((el.fontSize || 24) * 0.6))),
+                bold: el.fontWeight === "bold",
+                italic: el.fontStyle === "italic",
+                color: el.color?.replace("#", "") || "333333",
+                fontFace: el.fontFamily || "Arial",
+                valign: "top",
+                wrap: true,
+              });
+            } else if (el.type === "image" && el.src) {
+              const imgRef = resolveImageSrc(el.src);
+              if (imgRef) {
+                pptSlide.addImage({
+                  ...imgRef,
+                  x: (el.x / 100) * 10,
+                  y: (el.y / 100) * 5.63,
+                  w: (el.width / 100) * 10,
+                  h: ((el.height || 30) / 100) * 5.63,
+                  sizing: { type: "contain", w: (el.width / 100) * 10, h: ((el.height || 30) / 100) * 5.63 },
+                } as any);
+              }
+            }
+          }
+        } else {
+          const title = slide.title || slide.question || "";
+          if (title) {
+            pptSlide.addText(title, { x: 0.5, y: 1.5, w: 9, fontSize: 32, bold: true, color: "333333", align: "center" });
+          }
+          if (slide.type === "multiple_choice" && slide.options) {
+            slide.options.forEach((opt: string, i: number) => {
+              pptSlide.addText(`${String.fromCharCode(65 + i)}. ${opt}`, {
+                x: 1, y: 3 + i * 0.5, w: 8, fontSize: 18, color: "555555",
+              });
+            });
+          }
+        }
+      }
+
+      if (format === "pptx") {
+        const buffer = await pptx.write({ outputType: "nodebuffer" }) as Buffer;
+        const filename = `${presentation.title.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        return res.send(buffer);
+      }
+
+      if (format === "pdf") {
+        const os = await import("os");
+        const { execFile } = await import("child_process");
+        const { promisify } = await import("util");
+        const execFileAsync = promisify(execFile);
+
+        const tmpDir = await fsModule.promises.mkdtemp(pathModule.join(os.tmpdir(), "slydar-export-"));
+        const pptxPath = pathModule.join(tmpDir, "presentation.pptx");
+        const pptxBuffer = await pptx.write({ outputType: "nodebuffer" }) as Buffer;
+        await fsModule.promises.writeFile(pptxPath, pptxBuffer);
+
+        await execFileAsync("libreoffice", [
+          "--headless", "--convert-to", "pdf", "--outdir", tmpDir, pptxPath,
+        ], { timeout: 60000 });
+
+        const pdfPath = pathModule.join(tmpDir, "presentation.pdf");
+        const pdfBuffer = await fsModule.promises.readFile(pdfPath);
+        const filename = `${presentation.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+        fsModule.promises.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+        return res.send(pdfBuffer);
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      res.status(500).json({ error: "Export failed" });
+    }
+  });
+
   app.post("/api/slides", isAuthenticated, async (req: any, res) => {
     try {
       const data = insertSlideSchema.parse(req.body);

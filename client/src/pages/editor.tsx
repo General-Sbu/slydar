@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput,
-  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare
+  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare, Download, FileText, Presentation
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,6 +51,7 @@ export default function Editor() {
   const [presentationTitle, setPresentationTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newSlideModalOpen, setNewSlideModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   // Debounce ref must be declared before any conditional returns
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -438,6 +439,28 @@ export default function Editor() {
   const handleDuplicateSlide = () => {
     if (currentSlide) {
       duplicateSlideMutation.mutate({ slide: currentSlide, insertAfterIndex: selectedSlideIndex });
+    }
+  };
+
+  const handleExport = async (format: "pptx" | "pdf") => {
+    if (!presentationId || isExporting) return;
+    setIsExporting(true);
+    try {
+      const res = await fetch(`/api/presentations/${presentationId}/export/${format}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${presentationTitle || "presentation"}.${format === "pptx" ? "pptx" : "pdf"}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showNotification("Export failed. Please try again.", "error");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -1293,6 +1316,39 @@ export default function Editor() {
                           <span className="hidden sm:inline">Duplicate</span>
                         </Button>
                       </motion.div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isExporting}
+                            className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
+                            data-testid="toolbar-export"
+                          >
+                            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                            <span className="hidden sm:inline">Export</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => handleExport("pptx")}
+                            className="gap-2 cursor-pointer"
+                            data-testid="export-pptx"
+                          >
+                            <Presentation className="h-4 w-4 text-primary" />
+                            PowerPoint (.pptx)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleExport("pdf")}
+                            className="gap-2 cursor-pointer"
+                            data-testid="export-pdf"
+                          >
+                            <FileText className="h-4 w-4 text-red-500" />
+                            PDF (.pdf)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Button
