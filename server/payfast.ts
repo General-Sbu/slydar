@@ -49,22 +49,53 @@ const PARAM_ORDER = [
   'payment_method',
 ];
 
-export function generatePayFastSignature(data: Record<string, string | number | undefined>, passphrase: string = ''): string {
+/**
+ * Matches PHP's urlencode() exactly:
+ * - Spaces → '+'
+ * - Encodes all chars except A-Za-z0-9 and '-_.'
+ * - Uses UPPERCASE hex digits
+ * JavaScript's encodeURIComponent does NOT encode ! ~ * ' ( ) — PHP urlencode DOES.
+ */
+function phpUrlencode(str: string): string {
+  return encodeURIComponent(str)
+    .replace(/%20/g, '+')
+    .replace(/!/g, '%21')
+    .replace(/~/g, '%7E')
+    .replace(/\*/g, '%2A')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29');
+}
+
+export function generatePayFastSignature(
+  data: Record<string, string | number | undefined>,
+  passphrase: string = '',
+  debug = false
+): string {
   let pfOutput = '';
-  
+
   for (const key of PARAM_ORDER) {
     const value = data[key];
     if (value !== undefined && value !== null && value !== '') {
-      pfOutput += `${key}=${encodeURIComponent(String(value).trim()).replace(/%20/g, '+')}&`;
+      pfOutput += `${key}=${phpUrlencode(String(value).trim())}&`;
     }
   }
-  
+
   pfOutput = pfOutput.slice(0, -1);
-  
+
   if (passphrase && passphrase.trim() !== '') {
-    pfOutput += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
+    pfOutput += `&passphrase=${phpUrlencode(passphrase.trim())}`;
   }
-  
+
+  if (debug) {
+    // Log safe version — mask passphrase value but show structure
+    const safePfOutput = pfOutput.replace(
+      /(&passphrase=)[^&]*/,
+      '$1***'
+    );
+    console.log('[PayFast] Pre-hash string:', safePfOutput);
+  }
+
   return crypto.createHash('md5').update(pfOutput).digest('hex');
 }
 
@@ -89,10 +120,10 @@ export function createPayFastPaymentData(data: PayFastPaymentData, passphrase: s
     custom_int2: data.custom_int2,
   };
 
-  const signature = generatePayFastSignature(paymentData, passphrase);
-  
+  const signature = generatePayFastSignature(paymentData, passphrase, true);
+
   const baseUrl = sandbox ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process';
-  
+
   const fields: Record<string, string> = {};
   for (const key of PARAM_ORDER) {
     const value = paymentData[key];
@@ -101,7 +132,7 @@ export function createPayFastPaymentData(data: PayFastPaymentData, passphrase: s
     }
   }
   fields['signature'] = signature;
-  
+
   return { url: baseUrl, fields };
 }
 
@@ -111,23 +142,19 @@ export function verifyPayFastITN(data: Record<string, string>, passphrase: strin
     return false;
   }
 
-  // Build the signature string from ALL received fields in received order,
-  // excluding the signature field itself. PayFast sends many more fields
-  // than PARAM_ORDER (e.g. payment_status, amount_gross, etc.) and ALL of
-  // them must be included in the exact received order.
   let pfOutput = '';
   for (const key of Object.keys(data)) {
     if (key === 'signature') continue;
     const value = data[key];
     if (value !== undefined && value !== null && value !== '') {
-      pfOutput += `${key}=${encodeURIComponent(String(value).trim()).replace(/%20/g, '+')}&`;
+      pfOutput += `${key}=${phpUrlencode(String(value).trim())}&`;
     }
   }
 
   pfOutput = pfOutput.slice(0, -1);
 
   if (passphrase && passphrase.trim() !== '') {
-    pfOutput += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
+    pfOutput += `&passphrase=${phpUrlencode(passphrase.trim())}`;
   }
 
   const calculatedSignature = crypto.createHash('md5').update(pfOutput).digest('hex');
@@ -141,6 +168,6 @@ export function verifyPayFastITN(data: Record<string, string>, passphrase: strin
 export function validatePayFastAmount(receivedAmount: string, expectedAmount: string): boolean {
   const received = parseFloat(receivedAmount);
   const expected = parseFloat(expectedAmount);
-  
+
   return Math.abs(received - expected) < 0.01;
 }
