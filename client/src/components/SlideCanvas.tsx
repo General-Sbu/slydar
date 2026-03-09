@@ -44,8 +44,21 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
   const [rotateState, setRotateState] = useState<RotateState | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextContent, setEditingTextContent] = useState<string>('');
+  const [canvasWidth, setCanvasWidth] = useState<number>(1000);
   const canvasRef = useRef<HTMLDivElement>(null);
   const isToolbarInteractionRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setCanvasWidth(w);
+    });
+    observer.observe(el);
+    setCanvasWidth(el.offsetWidth || 1000);
+    return () => observer.disconnect();
+  }, []);
 
   const handlePointerDown = (clientX: number, clientY: number, elementId: string) => {
     if (!isEditable || !canvasRef.current) return;
@@ -398,12 +411,11 @@ export function SlideCanvas({ elements = [], onElementUpdate, isEditable = false
           const isEditingThis = editingTextId === element.id;
           // Ensure text elements always render in foreground with high z-index
           const textZIndex = Math.max(element.zIndex || 0, 1000);
-          // Use responsive font size with aggressive mobile scaling
-          // Formula: scales from ~40% at 320px to 100% at 1024px+
+          // Scale font relative to actual canvas container width (design base = 800px)
           const baseFontSize = element.fontSize || 16;
-          const minFontSize = Math.max(baseFontSize * 0.4, 10); // Min 40% of original or 10px
-          // Scale based on viewport width: grows from min at 320px to max at 1024px
-          const responsiveFontSize = `clamp(${minFontSize}px, ${baseFontSize / 16}vw + ${minFontSize * 0.5}px, ${baseFontSize}px)`;
+          const scale = Math.min(canvasWidth / 800, 1);
+          const scaledFontSize = Math.max(Math.round(baseFontSize * scale), 8);
+          const responsiveFontSize = `${scaledFontSize}px`;
           
           return (
             <div
