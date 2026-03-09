@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput,
-  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare, Download, FileText, Presentation
+  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare, Download, FileText, Presentation as PresentationIcon
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1336,7 +1336,7 @@ export default function Editor() {
                             className="gap-2 cursor-pointer"
                             data-testid="export-pptx"
                           >
-                            <Presentation className="h-4 w-4 text-primary" />
+                            <PresentationIcon className="h-4 w-4 text-primary" />
                             PowerPoint (.pptx)
                           </DropdownMenuItem>
                           <DropdownMenuItem
