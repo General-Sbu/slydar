@@ -82,7 +82,9 @@ export default function Checkout() {
     }
 
     setIsProcessing(true);
-    
+
+    const paymentWindow = window.open('', '_blank');
+
     try {
       const response = await apiRequest('POST', '/api/payments/initiate', {
         plan: 'basic',
@@ -97,23 +99,41 @@ export default function Checkout() {
         if (data.paymentId) {
           localStorage.setItem('slydar_payment_id', data.paymentId);
         }
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = data.paymentUrl;
-        form.target = '_top';
-        for (const [key, value] of Object.entries(data.paymentFields)) {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value as string;
-          form.appendChild(input);
+
+        if (paymentWindow) {
+          const doc = paymentWindow.document;
+          doc.open();
+          doc.write('<html><body>');
+          doc.write(`<form id="pf" method="POST" action="${data.paymentUrl}">`);
+          for (const [key, value] of Object.entries(data.paymentFields)) {
+            doc.write(`<input type="hidden" name="${key}" value="${String(value).replace(/"/g, '&quot;')}">`);
+          }
+          doc.write('</form>');
+          doc.write('<script>document.getElementById("pf").submit();<\/script>');
+          doc.write('</body></html>');
+          doc.close();
+        } else {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = data.paymentUrl;
+          form.target = '_blank';
+          for (const [key, value] of Object.entries(data.paymentFields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value as string;
+            form.appendChild(input);
+          }
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
         }
-        document.body.appendChild(form);
-        form.submit();
       } else {
+        paymentWindow?.close();
         throw new Error('No payment URL received');
       }
     } catch (error) {
+      paymentWindow?.close();
       console.error('Payment error:', error);
       toast({
         title: "Payment failed",
