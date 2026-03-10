@@ -47,6 +47,11 @@ function generateRoomCode(): string {
   return code;
 }
 
+// Works for both Replit OAuth (claims.sub) and local username/password auth (user.id)
+function getUserId(req: any): string | undefined {
+  return req.user?.claims?.sub ?? req.user?.id;
+}
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupOIDCAuth(app);
@@ -254,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/payments/initiate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const { plan, email, firstName, lastName } = req.body;
       
       if (!plan || plan !== 'basic') {
@@ -356,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/payments/confirm', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: 'Not authenticated' });
       }
@@ -387,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/user/plan', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: 'Not authenticated' });
       }
@@ -405,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/onboarding', isAuthenticated, async (req: any, res) => {
     try {
       const data = updateOnboardingSchema.parse(req.body);
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       
       const updatedUser = await storage.updateUserOnboarding(userId, data);
       if (!updatedUser) {
@@ -444,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const presentations = await storage.getPresentationsByUser(userId);
       
       const presentationsWithCounts = await Promise.all(
@@ -465,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/presentations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const { firstSlideType, ...presentationData } = req.body;
       const data = insertPresentationSchema.parse({
         ...presentationData,
@@ -574,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/presentations/from-template", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const { templateId } = req.body;
       
       if (!templateId) {
@@ -653,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -669,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -686,7 +691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -703,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -720,7 +725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -737,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -815,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/sessions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       
       const userPresentations = await db
         .select()
@@ -867,7 +872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/sessions/:id/details", isAuthenticated, async (req: any, res) => {
     try {
       const sessionId = req.params.id;
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       
       const session = await storage.getSession(sessionId);
       if (!session) {
@@ -924,7 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/sessions/:sessionId/slides/:slideId/responses", isAuthenticated, async (req: any, res) => {
     try {
       const { sessionId, slideId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       
       const session = await storage.getSession(sessionId);
       if (!session) {
@@ -1069,7 +1074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1085,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const presentation = await storage.getPresentation(req.params.id);
       if (!presentation) return res.status(404).json({ error: "Presentation not found" });
 
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) return res.status(403).json({ error: "Forbidden" });
 
       const slidesData = await storage.getSlidesByPresentation(req.params.id);
@@ -1216,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1237,7 +1242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1258,7 +1263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1506,7 +1511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1583,7 +1588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1625,7 +1630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1672,7 +1677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1699,7 +1704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!presentation) {
         return res.status(404).json({ error: "Presentation not found" });
       }
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -1875,7 +1880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/notes", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const data = insertNoteSchema.parse({
         ...req.body,
         userId
@@ -1897,7 +1902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notes", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const notes = await storage.getNotesByUser(userId);
       res.json(notes);
     } catch (error) {
@@ -1907,7 +1912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notes/presentation/:presentationId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const notesResult = await storage.getNotesByPresentation(userId, req.params.presentationId);
       res.json(notesResult);
     } catch (error) {
@@ -1917,7 +1922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notes/slide/:slideId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const note = await storage.getNotesBySlide(userId, req.params.slideId);
       res.json(note || null);
     } catch (error) {
@@ -1927,7 +1932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/notes/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const { content } = req.body;
       
       if (!content || typeof content !== 'string') {
@@ -1990,7 +1995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Presentation not found" });
       }
       
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (presentation.userId !== userId) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -2174,7 +2179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return;
           }
           
-          const userId = req.user?.claims?.sub;
+          const userId = getUserId(req);
           if (!userId) {
             socket.emit('error', { message: 'User ID not found in session' });
             return;
@@ -2359,7 +2364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ai/generate-slides", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const { topic, depth = "Beginner", theme = "classic" } = req.body;
 
       const themeColors: Record<string, { background: string; text: string; primary: string; accent: string }> = {
