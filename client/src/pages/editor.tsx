@@ -1067,6 +1067,9 @@ export default function Editor() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Slides Panel</SheetTitle>
+                  </SheetHeader>
                   {slidesPanel}
                 </SheetContent>
               </Sheet>
