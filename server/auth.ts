@@ -5,12 +5,17 @@ import type { Express } from "express";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 
+const PgSession = connectPgSimple(session);
 const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-const MemoryStoreSession = MemoryStore(session);
-const sessionStore = new MemoryStoreSession({
-  checkPeriod: sessionTtl,
+
+const sessionStore = new PgSession({
+  pool,
+  tableName: "user_sessions",
+  createTableIfMissing: true,
+  ttl: sessionTtl / 1000,
 });
 
 export function getSessionStore() {
