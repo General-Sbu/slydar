@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { 
   BarChart3, Cloud, MessageSquare, Type, Image as ImageIcon,
   ChevronLeft, Save, Play, Trash2, Plus, Upload, Menu, Globe, Copy, Palette, Check, CircleDot, MoreVertical, Pencil, Loader2, TextCursorInput,
-  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare, Download, FileText, Presentation as PresentationIcon
+  Trophy, Puzzle, Keyboard, Link2, HelpCircle, PenTool, CheckSquare, Download, FileText, Presentation as PresentationIcon, ClipboardList
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -410,6 +410,12 @@ export default function Editor() {
         question: "",
         options: [],
         config: { elements: [createTextElement("Whiteboard", 40, 30, "bold", "center")] }
+      },
+      attendance: {
+        type: 'attendance',
+        question: "Please Confirm Your Attendance",
+        options: [],
+        config: { elements: [] }
       }
     };
     
@@ -776,6 +782,7 @@ export default function Editor() {
     'poll': { label: 'Poll', icon: BarChart3 },
     'q_a': { label: 'Q&A', icon: HelpCircle },
     'whiteboard': { label: 'Whiteboard', icon: PenTool },
+    'attendance': { label: 'Attendance Sheet', icon: ClipboardList },
   };
 
   const getSlideLabel = (slide: Slide, index: number) => {
@@ -849,6 +856,7 @@ export default function Editor() {
         { type: 'heading' as SlideType, label: 'Heading', icon: Type },
         { type: 'image' as SlideType, label: 'Image', icon: ImageIcon },
         { type: 'multiple_choice' as SlideType, label: 'Multiple Choice', icon: BarChart3 },
+        { type: 'attendance' as SlideType, label: 'Attendance Sheet', icon: ClipboardList },
       ]
     }
   ];
@@ -1649,6 +1657,22 @@ export default function Editor() {
                         <p className="text-sm text-muted-foreground">Interactive drawing canvas during presentation</p>
                       </div>
                     )}
+                    {currentSlide?.type === 'attendance' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-8">
+                        <ClipboardList className="h-10 w-10 text-primary/40 mb-3" />
+                        <h2 className="text-2xl font-bold mb-5 text-center">
+                          {editingSlide?.question || currentSlide.question || 'Please Confirm Your Attendance'}
+                        </h2>
+                        <div className="w-full max-w-sm space-y-3">
+                          <div className="rounded-md border bg-background/60 px-3 py-2 text-sm text-muted-foreground">First Name</div>
+                          <div className="rounded-md border bg-background/60 px-3 py-2 text-sm text-muted-foreground">Last Name / Surname</div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="h-4 w-4 rounded border border-muted-foreground/40" />
+                            <span className="text-xs text-muted-foreground">I certify that the above information is correct</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {currentSlide?.type === 'spinner' && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <SpinnerWheel 
@@ -2446,6 +2470,42 @@ export default function Editor() {
                         data-testid="input-whiteboard-title"
                       />
                       <p className="text-xs text-muted-foreground">The drawing tools will be available during the presentation</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+              {currentSlide?.type === 'attendance' && (
+                <Card className="p-6" data-testid="attendance-editor-panel">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">Attendance Sheet</h3>
+                      <p className="text-sm text-muted-foreground">Audience members enter their name and confirm attendance</p>
+                    </div>
+                    <Separator />
+                    <div className="space-y-1">
+                      <Label>Heading</Label>
+                      <Input
+                        placeholder="Please Confirm Your Attendance"
+                        value={editingSlide?.question || ''}
+                        onChange={(e) => {
+                          if (editingSlide) setEditingSlide({ ...editingSlide, question: e.target.value });
+                        }}
+                        onBlur={() => {
+                          if (editingSlide?.id && editingSlide.question !== currentSlide?.question) {
+                            updateSlideMutation.mutate({ id: editingSlide.id, data: { question: editingSlide.question } });
+                          }
+                        }}
+                        data-testid="input-attendance-heading"
+                      />
+                      <p className="text-xs text-muted-foreground">This heading is shown at the top of the attendance form</p>
+                    </div>
+                    <div className="rounded-md border bg-muted/30 p-4 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Form fields (fixed)</p>
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /><span>First Name</span></div>
+                        <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /><span>Last Name / Surname</span></div>
+                        <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /><span>Certification checkbox</span></div>
+                      </div>
                     </div>
                   </div>
                 </Card>

@@ -45,6 +45,10 @@ export default function Audience() {
   const [fillBlankAnswers, setFillBlankAnswers] = useState<Record<string, string[]>>({});
   const [fillBlankSubmitted, setFillBlankSubmitted] = useState(false);
   const [allowDownload, setAllowDownload] = useState(false);
+  const [attendanceName, setAttendanceName] = useState("");
+  const [attendanceSurname, setAttendanceSurname] = useState("");
+  const [attendanceCertified, setAttendanceCertified] = useState(false);
+  const [attendanceSubmitted, setAttendanceSubmitted] = useState(false);
   const [externalSpin, setExternalSpin] = useState<{ winnerIdx: number; targetRotation: number; entries: any[] } | null>(null);
 
   const { user, isAuthenticated } = useAuth();
@@ -172,6 +176,10 @@ export default function Audience() {
       setFillBlankAnswers({});
       setFillBlankSubmitted(false);
       setExternalSpin(null);
+      setAttendanceName("");
+      setAttendanceSurname("");
+      setAttendanceCertified(false);
+      setAttendanceSubmitted(false);
     },
     onReactionsUpdated: (data: { slideId: string; reactions: Reaction[] }) => {
       if (currentSlide?.id && session?.id) {
@@ -315,6 +323,13 @@ export default function Audience() {
       }
     }
     return true;
+  };
+
+  const handleAttendanceSubmit = () => {
+    if (!currentSlide || attendanceSubmitted || !attendanceName.trim() || !attendanceSurname.trim() || !attendanceCertified) return;
+    const record = JSON.stringify({ firstName: attendanceName.trim(), lastName: attendanceSurname.trim(), certified: true });
+    submitResponse(currentSlide.id, record);
+    setAttendanceSubmitted(true);
   };
 
   const handleReaction = (reactionType: ReactionType) => {
@@ -607,6 +622,73 @@ export default function Audience() {
                   )}
                 </div>
               )}
+
+              {currentSlide.type === 'attendance' && (
+                <div className="space-y-6">
+                  <div className="text-center mb-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">
+                      {currentSlide.question || 'Please Confirm Your Attendance'}
+                    </h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">Enter your details below</p>
+                  </div>
+
+                  {attendanceSubmitted ? (
+                    <div className="text-center py-10">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Check className="w-8 h-8 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">Attendance Confirmed!</h3>
+                      <p className="text-muted-foreground">Your attendance has been recorded. Thank you!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium" htmlFor="attendance-first-name">First Name</label>
+                        <Input
+                          id="attendance-first-name"
+                          value={attendanceName}
+                          onChange={(e) => setAttendanceName(e.target.value)}
+                          placeholder="Enter your first name"
+                          className="text-base h-12"
+                          data-testid="input-attendance-name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium" htmlFor="attendance-surname">Last Name / Surname</label>
+                        <Input
+                          id="attendance-surname"
+                          value={attendanceSurname}
+                          onChange={(e) => setAttendanceSurname(e.target.value)}
+                          placeholder="Enter your last name / surname"
+                          className="text-base h-12"
+                          data-testid="input-attendance-surname"
+                        />
+                      </div>
+                      <label className="flex items-start gap-3 cursor-pointer mt-2" data-testid="label-attendance-certified">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                          checked={attendanceCertified}
+                          onChange={(e) => setAttendanceCertified(e.target.checked)}
+                          data-testid="checkbox-attendance-certified"
+                        />
+                        <span className="text-sm text-muted-foreground leading-snug">
+                          I certify that the above information is correct and that I am attending this session.
+                        </span>
+                      </label>
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        onClick={handleAttendanceSubmit}
+                        disabled={!attendanceName.trim() || !attendanceSurname.trim() || !attendanceCertified}
+                        data-testid="button-submit-attendance"
+                      >
+                        Confirm Attendance
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <DrawingCanvas
               annotations={annotations}
@@ -618,7 +700,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && session && participantId && (
           <div className="mt-6">
             <SlideReactions
               slideId={currentSlide.id}
@@ -630,7 +712,7 @@ export default function Audience() {
           </div>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && session && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && session && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">🎉</span>
@@ -643,7 +725,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Check className="h-5 w-5 text-primary" />
@@ -676,7 +758,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
           <div className="mt-6">
             <AudienceQA sessionId={session.id} participantId={participantId} />
           </div>
