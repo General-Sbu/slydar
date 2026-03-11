@@ -9,7 +9,7 @@ packages = ["libreoffice", "python311Packages.python-pptx"]
 [deployment]
 deploymentTarget = "autoscale"
 build = ["bash", "build.sh"]
-run = ["node", "dist/index.js"]
+run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
 
 [[ports]]
 localPort = 5000
