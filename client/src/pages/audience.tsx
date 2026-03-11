@@ -571,7 +571,6 @@ export default function Audience() {
               {currentSlide.type === 'open_ended' && (
                 <div className="text-center">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">Type your answer below</p>
                 </div>
               )}
               {currentSlide.type === 'word_cloud' && (() => {
