@@ -464,7 +464,7 @@ export default function Audience() {
             </Card>
           </PinchZoomContainer>
         ) : currentSlide.type === 'attendance' ? (
-          <Card className="p-4 sm:p-6" data-testid="card-slide">
+          <Card className="p-4 sm:p-6 min-h-[60vh] sm:min-h-0" data-testid="card-slide">
             <div className="space-y-4 sm:space-y-5">
               <div>
                 <h2 className="text-sm sm:text-base md:text-lg font-semibold sm:font-bold mb-0.5 leading-snug">
