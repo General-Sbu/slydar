@@ -12,24 +12,31 @@ interface PlanFeature {
 }
 
 const features: PlanFeature[] = [
-  { category: "Participants", name: "Participants per session", free: "Up to 50", basic: "Up to 200" },
-  { category: "Participants", name: "Unlimited presentations", free: true, basic: true },
-  { category: "Content", name: "PDF & PPTX import", free: true, basic: true },
-  { category: "Content", name: "All slide types (polls, quizzes, word clouds)", free: true, basic: true },
-  { category: "Content", name: "Spinner wheel", free: true, basic: true },
-  { category: "Content", name: "Q&A sessions", free: true, basic: true },
-  { category: "Content", name: "Custom templates", free: false, basic: true },
-  { category: "Branding", name: "Slydar watermark", free: "Included", basic: "Removable" },
+  { category: "Presentations", name: "Participants per session", free: "Up to 50", basic: "Up to 200" },
+  { category: "Presentations", name: "Unlimited presentations", free: true, basic: true },
+  { category: "Presentations", name: "PDF & PPTX import", free: true, basic: true },
+  { category: "Presentations", name: "All slide types (polls, quizzes, word clouds)", free: true, basic: true },
+  { category: "Presentations", name: "Spinner wheel", free: true, basic: true },
+  { category: "Presentations", name: "Q&A sessions", free: true, basic: true },
+  { category: "Presentations", name: "Slydar watermark", free: "Shown", basic: "Removed" },
+  { category: "AI Slide Generator", name: "AI-generated slide decks", free: true, basic: true },
+  { category: "AI Slide Generator", name: "AI generations per day", free: "2 per day", basic: "Unlimited" },
+  { category: "AI Slide Generator", name: "Slides per deck", free: "10–20 slides", basic: "10–20 slides" },
+  { category: "AI Slide Generator", name: "Depth levels (Beginner / Intermediate / Advanced)", free: true, basic: true },
+  { category: "AI Slide Generator", name: "AI-generated images on key slides", free: true, basic: true },
+  { category: "AI Slide Generator", name: "Theme selection for AI decks", free: true, basic: true },
   { category: "Branding", name: "Custom color schemes", free: "5 presets", basic: "Unlimited" },
   { category: "Branding", name: "Custom logo on presentations", free: false, basic: true },
-  { category: "Analytics", name: "Session analytics", free: "Basic", basic: "Advanced" },
-  { category: "Analytics", name: "Export response data", free: false, basic: true },
-  { category: "Analytics", name: "Engagement reports", free: false, basic: true },
+  { category: "Analytics & Exports", name: "Session analytics", free: "Basic", basic: "Advanced" },
+  { category: "Analytics & Exports", name: "Export to PPTX", free: true, basic: true },
+  { category: "Analytics & Exports", name: "Export to PDF", free: true, basic: true },
+  { category: "Analytics & Exports", name: "Per-slide response drill-down", free: true, basic: true },
+  { category: "Analytics & Exports", name: "Engagement reports", free: false, basic: true },
   { category: "Support", name: "Community support", free: true, basic: true },
   { category: "Support", name: "Priority email support", free: false, basic: true },
 ];
 
-const categories = ["Participants", "Content", "Branding", "Analytics", "Support"];
+const categories = ["Presentations", "AI Slide Generator", "Branding", "Analytics & Exports", "Support"];
 
 function FeatureValue({ value }: { value: boolean | string }) {
   if (typeof value === "boolean") {
@@ -105,6 +112,10 @@ export default function Pricing() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>AI slide generator — 2 per day</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
                   <span>Basic analytics</span>
                 </li>
                 <li className="flex items-center gap-2">
@@ -142,6 +153,10 @@ export default function Pricing() {
                 <li className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-primary flex-shrink-0" />
                   <span>Everything in Free</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Unlimited AI generations</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-primary flex-shrink-0" />
