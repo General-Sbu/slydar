@@ -1129,38 +1129,40 @@ export default function Editor() {
                   <span className="hidden sm:inline">Save</span>
                 </Button>
               </motion.div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isExporting}
-                    className="gap-2 transition-smooth"
-                    data-testid="toolbar-export"
-                  >
-                    {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                    <span className="hidden sm:inline">Export</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() => handleExport("pptx")}
-                    className="gap-2 cursor-pointer"
-                    data-testid="export-pptx"
-                  >
-                    <PresentationIcon className="h-4 w-4 text-primary" />
-                    PowerPoint (.pptx)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleExport("pdf")}
-                    className="gap-2 cursor-pointer"
-                    data-testid="export-pdf"
-                  >
-                    <FileText className="h-4 w-4 text-red-500" />
-                    PDF (.pdf)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {currentSlide?.type !== 'attendance' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isExporting}
+                      className="gap-2 transition-smooth"
+                      data-testid="toolbar-export"
+                    >
+                      {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                      <span className="hidden sm:inline">Export</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => handleExport("pptx")}
+                      className="gap-2 cursor-pointer"
+                      data-testid="export-pptx"
+                    >
+                      <PresentationIcon className="h-4 w-4 text-primary" />
+                      PowerPoint (.pptx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleExport("pdf")}
+                      className="gap-2 cursor-pointer"
+                      data-testid="export-pdf"
+                    >
+                      <FileText className="h-4 w-4 text-red-500" />
+                      PDF (.pdf)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   variant={presentation?.published ? "secondary" : "default"}
@@ -1208,40 +1210,46 @@ export default function Editor() {
                 >
                   <Card className="p-3 glass border-0 shadow-lg">
                     <div className="flex items-center justify-center gap-3 flex-wrap">
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAddText}
-                          className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
-                          data-testid="toolbar-add-text"
-                        >
-                          <Type className="h-4 w-4" />
-                          <span className="hidden sm:inline">Add Text</span>
-                        </Button>
-                      </motion.div>
+                      {currentSlide?.type !== 'attendance' && (
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddText}
+                            className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted"
+                            data-testid="toolbar-add-text"
+                          >
+                            <Type className="h-4 w-4" />
+                            <span className="hidden sm:inline">Add Text</span>
+                          </Button>
+                        </motion.div>
+                      )}
 
-                      <input
-                        type="file"
-                        id="toolbar-image-upload"
-                        className="hidden"
-                        accept="image/jpeg,image/png,image/gif,image/webp"
-                        onChange={handleImageUpload}
-                      />
-                      <motion.label htmlFor="toolbar-image-upload" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted cursor-pointer"
-                          data-testid="toolbar-upload-image"
-                        >
-                          <span>
-                            <ImageIcon className="h-4 w-4" />
-                            <span className="hidden sm:inline">Add Image</span>
-                          </span>
-                        </Button>
-                      </motion.label>
+                      {currentSlide?.type !== 'attendance' && (
+                        <>
+                          <input
+                            type="file"
+                            id="toolbar-image-upload"
+                            className="hidden"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={handleImageUpload}
+                          />
+                          <motion.label htmlFor="toolbar-image-upload" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="gap-2 transition-smooth border-0 bg-muted/50 hover:bg-muted cursor-pointer"
+                              data-testid="toolbar-upload-image"
+                            >
+                              <span>
+                                <ImageIcon className="h-4 w-4" />
+                                <span className="hidden sm:inline">Add Image</span>
+                              </span>
+                            </Button>
+                          </motion.label>
+                        </>
+                      )}
 
                       <Popover>
                         <PopoverTrigger asChild>
