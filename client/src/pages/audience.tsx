@@ -464,13 +464,13 @@ export default function Audience() {
             </Card>
           </PinchZoomContainer>
         ) : currentSlide.type === 'attendance' ? (
-          <Card className="p-4 sm:p-6 min-h-[600px] sm:min-h-0" data-testid="card-slide">
+          <Card className="p-4 sm:p-6 min-h-[800px] sm:min-h-0" data-testid="card-slide">
             <div className="space-y-4 sm:space-y-5">
               <div>
-                <h2 className="text-sm sm:text-base md:text-lg font-semibold sm:font-bold mb-0.5 leading-snug">
+                <h2 className="text-xs sm:text-base md:text-lg font-semibold sm:font-bold mb-0.5 leading-snug">
                   {currentSlide.question || 'Please Confirm Your Attendance'}
                 </h2>
-                <p className="text-xs text-muted-foreground">Enter your details below</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Enter your details below</p>
               </div>
 
               {attendanceSubmitted ? (
