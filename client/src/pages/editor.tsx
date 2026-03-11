@@ -329,7 +329,7 @@ export default function Editor() {
         type: 'open_ended', 
         question: "", 
         options: [],
-        config: { elements: [createTextElement("Share your thoughts...", 40, 30, "bold", "center")] }
+        config: { elements: [] }
       },
       heading: { 
         type: 'heading', 
@@ -403,7 +403,7 @@ export default function Editor() {
         type: 'q_a',
         question: "",
         options: [],
-        config: { elements: [createTextElement("Ask me anything", 40, 30, "bold", "center")] }
+        config: { elements: [] }
       },
       whiteboard: {
         type: 'whiteboard',
