@@ -33,6 +33,8 @@ import Templates from "@/pages/templates";
 import AIGenerator from "@/pages/ai-generator";
 import AISlides from "@/pages/ai-slides";
 import AIFeatures from "@/pages/ai-features";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, path }: { component: any; path?: string }) {
@@ -143,6 +145,8 @@ function Router() {
       <Route path="/ai-generator">
         <ProtectedRouteWithSidebar component={AIGenerator} />
       </Route>
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -611,9 +611,15 @@ export default function Landing() {
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground">
-              © 2024 Slydar. All rights reserved.
-            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <p className="text-sm text-muted-foreground">
+                © 2025 Slydar. All rights reserved.
+              </p>
+              <div className="flex gap-4 text-sm text-muted-foreground">
+                <Link href="/privacy" className="hover:text-foreground transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-foreground transition-colors" data-testid="link-footer-terms">Terms of Service</Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
