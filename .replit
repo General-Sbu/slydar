@@ -7,9 +7,9 @@ channel = "stable-24_05"
 packages = ["libreoffice", "python311Packages.python-pptx"]
 
 [deployment]
-deploymentTarget = "vm"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+deploymentTarget = "autoscale"
+build = ["bash", "-c", "npm install && npm run build"]
+run = ["node", "dist/index.js"]
 
 [[ports]]
 localPort = 5000
