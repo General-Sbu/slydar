@@ -467,10 +467,10 @@ export default function Audience() {
           <Card className="p-4 sm:p-6" data-testid="card-slide">
             <div className="space-y-4 sm:space-y-5">
               <div>
-                <h2 className="text-base sm:text-lg md:text-xl font-bold mb-0.5 leading-snug">
+                <h2 className="text-sm sm:text-base md:text-lg font-semibold sm:font-bold mb-0.5 leading-snug">
                   {currentSlide.question || 'Please Confirm Your Attendance'}
                 </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground">Enter your details below</p>
+                <p className="text-xs text-muted-foreground">Enter your details below</p>
               </div>
 
               {attendanceSubmitted ? (
