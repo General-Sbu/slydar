@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Check, Crown, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Crown, Sparkles, ArrowRight, Loader2, X, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,46 +73,19 @@ export default function MyPlan() {
             </p>
           )}
 
-          <div className="space-y-3 pt-2">
-            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              {isBasic ? "Your features" : "Included features"}
-            </h4>
-            {isBasic ? (
-              <>
-                <PlanFeature text="Up to 200 participants per session" />
-                <PlanFeature text="Unlimited presentations" />
-                <PlanFeature text="All slide types (polls, quizzes, word clouds)" />
-                <PlanFeature text="PDF & PPTX import" />
-                <PlanFeature text="Remove Slydar watermark" />
-                <PlanFeature text="Advanced analytics & exports" />
-                <PlanFeature text="Custom branding & logo" />
-                <PlanFeature text="Priority email support" />
-              </>
-            ) : (
-              <>
-                <PlanFeature text="Up to 50 participants per session" />
-                <PlanFeature text="Unlimited presentations" />
-                <PlanFeature text="All slide types (polls, quizzes, word clouds)" />
-                <PlanFeature text="PDF & PPTX import" />
-                <PlanFeature text="Basic analytics" />
-                <PlanFeature text="5 color presets" />
-              </>
-            )}
-          </div>
-
           {!isBasic && (
-            <div className="pt-4 border-t">
+            <div className="pt-2 border-t">
               <div className="bg-primary/5 border border-primary/20 rounded-md p-4">
                 <div className="flex items-start gap-3">
                   <Crown className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                   <div className="space-y-2">
                     <p className="font-medium">Upgrade to Basic for more features</p>
                     <p className="text-sm text-muted-foreground">
-                      Get up to 200 participants, remove watermarks, advanced analytics, and more.
+                      Get unlimited AI generations, up to 200 participants, remove watermarks, advanced analytics, and more.
                     </p>
                     <Button asChild className="gap-2" data-testid="button-upgrade">
                       <Link href="/checkout">
-                        Upgrade to Basic - R199/month
+                        Upgrade to Basic — R199/month
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>
@@ -124,20 +97,109 @@ export default function MyPlan() {
         </CardContent>
       </Card>
 
+      {/* Feature comparison table */}
+      <Card className="mt-6" data-testid="card-feature-comparison">
+        <CardHeader>
+          <CardTitle className="text-base">Plan Comparison</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" data-testid="table-comparison">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground w-1/2">Feature</th>
+                  <th className="text-center px-4 py-3 font-medium w-1/4">
+                    <span className={!isBasic ? "text-primary font-semibold" : ""}>Free</span>
+                  </th>
+                  <th className="text-center px-4 py-3 font-medium w-1/4">
+                    <span className={isBasic ? "text-primary font-semibold" : ""}>Basic</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <SectionRow label="Presentations" />
+                <CompareRow feature="Presentations" free="Unlimited" basic="Unlimited" />
+                <CompareRow feature="Participants per session" free="Up to 50" basic="Up to 200" highlight />
+                <CompareRow feature="Slide types (polls, quizzes, word clouds)" free="check" basic="check" />
+                <CompareRow feature="PDF & PPTX import" free="check" basic="check" />
+                <CompareRow feature="Slydar watermark" free="Shown" basic="Removed" highlight />
+
+                <SectionRow label="AI Slide Generator" />
+                <CompareRow feature="AI-generated slide decks" free="check" basic="check" />
+                <CompareRow feature="AI generations per day" free="2 per day" basic="Unlimited" highlight />
+                <CompareRow feature="Slides per deck" free="10–20 slides" basic="10–20 slides" />
+                <CompareRow feature="Depth levels (Beginner / Intermediate / Advanced)" free="check" basic="check" />
+                <CompareRow feature="AI-generated images on key slides" free="check" basic="check" />
+                <CompareRow feature="Theme selection for AI decks" free="check" basic="check" />
+
+                <SectionRow label="Analytics & Exports" />
+                <CompareRow feature="Session analytics" free="Basic" basic="Advanced" highlight />
+                <CompareRow feature="Export to PPTX" free="check" basic="check" />
+                <CompareRow feature="Export to PDF" free="check" basic="check" />
+                <CompareRow feature="Per-slide response drill-down" free="check" basic="check" />
+
+                <SectionRow label="Support" />
+                <CompareRow feature="Email support" free="cross" basic="check" highlight />
+                <CompareRow feature="Priority support" free="cross" basic="check" highlight />
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="mt-6 text-center">
         <Button variant="ghost" asChild data-testid="button-view-pricing">
-          <Link href="/pricing">View full plan comparison</Link>
+          <Link href="/pricing">View full pricing page</Link>
         </Button>
       </div>
     </div>
   );
 }
 
-function PlanFeature({ text }: { text: string }) {
+function SectionRow({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <Check className="h-4 w-4 text-primary shrink-0" />
-      <span className="text-sm">{text}</span>
-    </div>
+    <tr className="bg-muted/20">
+      <td colSpan={3} className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </td>
+    </tr>
+  );
+}
+
+function CompareRow({
+  feature,
+  free,
+  basic,
+  highlight = false,
+}: {
+  feature: string;
+  free: string;
+  basic: string;
+  highlight?: boolean;
+}) {
+  return (
+    <tr className={highlight ? "bg-primary/[0.03]" : ""}>
+      <td className="px-4 py-3 text-sm">{feature}</td>
+      <td className="px-4 py-3 text-center">
+        <CellValue value={free} />
+      </td>
+      <td className="px-4 py-3 text-center">
+        <CellValue value={basic} isBasicCol />
+      </td>
+    </tr>
+  );
+}
+
+function CellValue({ value, isBasicCol = false }: { value: string; isBasicCol?: boolean }) {
+  if (value === "check") {
+    return <Check className={`h-4 w-4 mx-auto ${isBasicCol ? "text-primary" : "text-muted-foreground"}`} />;
+  }
+  if (value === "cross") {
+    return <X className="h-4 w-4 mx-auto text-muted-foreground/40" />;
+  }
+  return (
+    <span className={`text-sm ${isBasicCol ? "font-medium text-primary" : "text-muted-foreground"}`}>
+      {value}
+    </span>
   );
 }
