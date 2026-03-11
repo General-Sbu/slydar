@@ -379,7 +379,7 @@ export default function Editor() {
         type: 'type_answer',
         question: "Type your answer",
         options: [],
-        config: { elements: [createTextElement("Type Your Answer", 40, 20, "bold", "center")] }
+        config: { elements: [] }
       },
       match_pair: {
         type: 'match_pair',
