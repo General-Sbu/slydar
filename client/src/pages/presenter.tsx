@@ -11,7 +11,7 @@ import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
 import WordCloud from "@/components/WordCloud";
 import SpinnerWheel from "@/components/SpinnerWheel";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download, UserCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download, UserCheck, Check } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -604,6 +604,32 @@ export default function Presenter() {
                                 </Table>
                               </div>
                             </>
+                          )}
+                        </div>
+                      ) : currentSlide.type === 'select_answer' ? (
+                        <div className="flex flex-col w-full gap-6">
+                          <div className="text-center">
+                            <h2 className="text-2xl sm:text-3xl font-bold">{currentSlide.question || 'Select the correct answer'}</h2>
+                          </div>
+                          {currentSlide.options && currentSlide.options.length > 0 && (
+                            <div className="grid gap-3 w-full max-w-2xl mx-auto">
+                              {currentSlide.options.map((option, index) => {
+                                const correctIdx = currentSlide.config?.correctAnswer ?? 0;
+                                const isCorrect = index === correctIdx;
+                                return (
+                                  <div
+                                    key={index}
+                                    className={`flex items-center gap-3 rounded-md border px-4 py-3 text-base font-medium transition-colors ${isCorrect ? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' : 'border-border bg-muted/40 text-foreground'}`}
+                                    data-testid={`option-${index}`}
+                                  >
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isCorrect ? 'border-green-500 bg-green-500' : 'border-muted-foreground/40'}`}>
+                                      {isCorrect && <Check className="h-3.5 w-3.5 text-white" />}
+                                    </div>
+                                    <span>{option}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       ) : currentSlide?.config?.elements?.length ? (
