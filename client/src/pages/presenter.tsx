@@ -613,22 +613,16 @@ export default function Presenter() {
                           </div>
                           {currentSlide.options && currentSlide.options.length > 0 && (
                             <div className="grid gap-3 w-full max-w-2xl mx-auto">
-                              {currentSlide.options.map((option, index) => {
-                                const correctIdx = currentSlide.config?.correctAnswer ?? 0;
-                                const isCorrect = index === correctIdx;
-                                return (
-                                  <div
-                                    key={index}
-                                    className={`flex items-center gap-3 rounded-md border px-4 py-3 text-base font-medium transition-colors ${isCorrect ? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' : 'border-border bg-muted/40 text-foreground'}`}
-                                    data-testid={`option-${index}`}
-                                  >
-                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isCorrect ? 'border-green-500 bg-green-500' : 'border-muted-foreground/40'}`}>
-                                      {isCorrect && <Check className="h-3.5 w-3.5 text-white" />}
-                                    </div>
-                                    <span>{option}</span>
-                                  </div>
-                                );
-                              })}
+                              {currentSlide.options.map((option, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 text-base font-medium text-foreground"
+                                  data-testid={`option-${index}`}
+                                >
+                                  <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/40 shrink-0" />
+                                  <span>{option}</span>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
