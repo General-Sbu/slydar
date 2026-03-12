@@ -735,7 +735,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'select_answer' && session && participantId && (
           <div className="mt-6">
             <SlideReactions
               slideId={currentSlide.id}
@@ -747,7 +747,7 @@ export default function Audience() {
           </div>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && session && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'select_answer' && session && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">🎉</span>
@@ -760,7 +760,7 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && currentSlide.type !== 'select_answer' && session && participantId && (
           <Card className="mt-6 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Check className="h-5 w-5 text-primary" />
@@ -793,13 +793,13 @@ export default function Audience() {
           </Card>
         )}
 
-        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && session && participantId && (
+        {currentSlide && currentSlide.type !== 'word_cloud' && currentSlide.type !== 'spinner' && currentSlide.type !== 'attendance' && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && currentSlide.type !== 'select_answer' && session && participantId && (
           <div className="mt-6">
             <AudienceQA sessionId={session.id} participantId={participantId} />
           </div>
         )}
 
-        {isAuthenticated && currentSlide && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && (
+        {isAuthenticated && currentSlide && currentSlide.type !== 'poll' && currentSlide.type !== 'multiple_choice' && currentSlide.type !== 'select_answer' && (
           <Card className="mt-6 p-6" data-testid="card-notes-section">
             <div className="flex items-center gap-2 mb-4">
               <StickyNote className="h-5 w-5 text-primary" />
