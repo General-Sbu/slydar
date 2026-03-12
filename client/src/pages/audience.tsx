@@ -13,7 +13,7 @@ import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import PinchZoomContainer from "@/components/PinchZoomContainer";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
-import { Check, Loader2, StickyNote, Save, FileText, Trash2, Download } from "lucide-react";
+import { Check, X, Loader2, StickyNote, Save, FileText, Trash2, Download } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
 import { defaultSpinnerEntries } from "@shared/schema";
@@ -540,17 +540,44 @@ export default function Audience() {
           </Card>
         ) : submitted ? (
           <Card className="p-8 sm:p-12 text-center relative overflow-visible min-h-[50vh] md:min-h-[60vh] flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4 relative z-10">
-              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                <Check className="h-8 w-8 text-green-500" />
+            {currentSlide.type === 'select_answer' ? (() => {
+              const correctIdx = currentSlide.config?.correctAnswer ?? 0;
+              const correctOption = currentSlide.options?.[correctIdx as number] ?? '';
+              const isCorrect = selectedAnswer === correctOption;
+              return (
+                <div className="flex flex-col items-center gap-4 relative z-10">
+                  <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isCorrect ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                    {isCorrect
+                      ? <Check className="h-10 w-10 text-green-500" />
+                      : <X className="h-10 w-10 text-red-500" />
+                    }
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className={`text-2xl sm:text-3xl font-bold ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {isCorrect ? 'Correct!' : 'Wrong!'}
+                    </h2>
+                    {!isCorrect && (
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        The correct answer was: <span className="font-semibold text-foreground">{correctOption}</span>
+                      </p>
+                    )}
+                    <p className="text-sm text-muted-foreground mt-2">Waiting for the next question...</p>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="flex flex-col items-center gap-4 relative z-10">
+                <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <Check className="h-8 w-8 text-green-500" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl font-bold">Response Submitted!</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    Waiting for the next question...
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-bold">Response Submitted!</h2>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Waiting for the next question...
-                </p>
-              </div>
-            </div>
+            )}
             <DrawingCanvas
               annotations={annotations}
               activeTool="pen"
@@ -562,10 +589,10 @@ export default function Audience() {
         ) : (
           <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
             <div className="space-y-6 sm:space-y-8 relative z-10">
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && (
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll' || currentSlide.type === 'select_answer') && (
                 <div className="text-center mb-4">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">Select one option</p>
+                  <p className="text-sm sm:text-base text-muted-foreground">Select the correct answer</p>
                 </div>
               )}
               {currentSlide.type === 'open_ended' && (
@@ -589,7 +616,7 @@ export default function Audience() {
                 );
               })()}
 
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options && (
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll' || currentSlide.type === 'select_answer') && currentSlide.options && (
                 <div className="grid gap-3">
                   {currentSlide.options.map((option, index) => (
                     <AudienceAnswerButton

@@ -436,7 +436,7 @@ export default function Presenter() {
                   <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
                 </Button>
               )}
-              {session && (
+              {session && currentSlide?.type !== 'select_answer' && (
                 <Button
                   variant={session.allowDownload ? "default" : "outline"}
                   size="sm"
