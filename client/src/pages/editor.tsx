@@ -829,17 +829,6 @@ export default function Editor() {
 
   const slideTypeGroups = [
     {
-      title: "Quiz & Game Competitions",
-      types: [
-        { type: 'select_answer' as SlideType, label: 'Select Answer', icon: CheckSquare },
-        { type: 'puzzle' as SlideType, label: 'Puzzle', icon: Puzzle },
-        { type: 'type_answer' as SlideType, label: 'Type Answer', icon: Keyboard },
-        { type: 'match_pair' as SlideType, label: 'Match Pair', icon: Link2 },
-        { type: 'leaderboard' as SlideType, label: 'Leaderboard', icon: Trophy },
-        { type: 'spinner' as SlideType, label: 'Spinner Wheel', icon: CircleDot },
-      ]
-    },
-    {
       title: "Interactive Questions",
       types: [
         { type: 'poll' as SlideType, label: 'Poll', icon: BarChart3 },
@@ -857,6 +846,15 @@ export default function Editor() {
         { type: 'image' as SlideType, label: 'Image', icon: ImageIcon },
         { type: 'multiple_choice' as SlideType, label: 'Multiple Choice', icon: BarChart3 },
         { type: 'attendance' as SlideType, label: 'Attendance Sheet', icon: ClipboardList },
+      ]
+    },
+    {
+      title: "Quiz & Game Competitions",
+      types: [
+        { type: 'select_answer' as SlideType, label: 'Select Answer', icon: CheckSquare },
+        { type: 'type_answer' as SlideType, label: 'Type Answer', icon: Keyboard },
+        { type: 'match_pair' as SlideType, label: 'Match Pair', icon: Link2 },
+        { type: 'spinner' as SlideType, label: 'Spinner Wheel', icon: CircleDot },
       ]
     }
   ];
