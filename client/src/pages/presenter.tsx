@@ -11,7 +11,8 @@ import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
 import WordCloud from "@/components/WordCloud";
 import SpinnerWheel from "@/components/SpinnerWheel";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download, UserCheck } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -422,17 +423,19 @@ export default function Presenter() {
                 <span className="sm:hidden">{currentSlideIndex + 1}/{slides.length}</span>
                 <span className="hidden sm:inline">Slide {currentSlideIndex + 1} / {slides.length}</span>
               </span>
-              <Button 
-                variant="outline" 
-                size="sm"
-                data-testid="button-next-slide"
-                onClick={handleNextSlide}
-                disabled={currentSlideIndex === slides.length - 1}
-                className="h-9 w-9 sm:w-auto sm:px-3"
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
-              </Button>
+              {currentSlide?.type !== 'attendance' && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  data-testid="button-next-slide"
+                  onClick={handleNextSlide}
+                  disabled={currentSlideIndex === slides.length - 1}
+                  className="h-9 w-9 sm:w-auto sm:px-3"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
+                </Button>
+              )}
               {session && (
                 <Button
                   variant={session.allowDownload ? "default" : "outline"}
@@ -558,6 +561,51 @@ export default function Presenter() {
                             }}
                           />
                         </div>
+                      ) : currentSlide.type === 'attendance' ? (
+                        <div className="flex flex-col w-full">
+                          <div className="flex items-center gap-3 mb-6">
+                            <UserCheck className="h-7 w-7 text-primary flex-shrink-0" />
+                            <h2 className="text-2xl sm:text-3xl font-bold">{currentSlide.question || currentSlide.title || 'Attendance'}</h2>
+                          </div>
+                          {slideResponses.length === 0 ? (
+                            <p className="text-muted-foreground text-center py-8">Waiting for attendees to sign in...</p>
+                          ) : (
+                            <>
+                              <p className="text-sm text-muted-foreground mb-3">{slideResponses.length} attendee{slideResponses.length !== 1 ? 's' : ''} signed in</p>
+                              <div className="overflow-y-auto max-h-[50vh] rounded-md border">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead className="w-12">#</TableHead>
+                                      <TableHead>First Name</TableHead>
+                                      <TableHead>Last Name</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {slideResponses.map((response, index) => {
+                                      let firstName = '';
+                                      let lastName = '';
+                                      try {
+                                        const parsed = JSON.parse(response.answer || '{}');
+                                        firstName = parsed.firstName || '';
+                                        lastName = parsed.lastName || '';
+                                      } catch {
+                                        firstName = response.answer || '';
+                                      }
+                                      return (
+                                        <TableRow key={response.id || index} data-testid={`row-attendee-${index}`}>
+                                          <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                                          <TableCell className="font-medium" data-testid={`text-firstname-${index}`}>{firstName}</TableCell>
+                                          <TableCell data-testid={`text-lastname-${index}`}>{lastName}</TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       ) : currentSlide?.config?.elements?.length ? (
                         null
                       ) : (
@@ -587,7 +635,7 @@ export default function Presenter() {
               </Card>
             )}
             
-            {currentSlide?.type !== 'word_cloud' && currentSlide?.type !== 'multiple_choice' && currentSlide?.type !== 'open_ended' && currentSlide?.type !== 'spinner' && (
+            {currentSlide?.type !== 'word_cloud' && currentSlide?.type !== 'multiple_choice' && currentSlide?.type !== 'open_ended' && currentSlide?.type !== 'spinner' && currentSlide?.type !== 'attendance' && (
               <>
                 <PresentationTimer />
                 
