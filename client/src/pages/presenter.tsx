@@ -607,20 +607,20 @@ export default function Presenter() {
                           )}
                         </div>
                       ) : currentSlide.type === 'select_answer' ? (
-                        <div className="flex flex-col w-full gap-6">
+                        <div className="flex flex-col w-full gap-3 sm:gap-5">
                           <div className="text-center">
-                            <h2 className="text-2xl sm:text-3xl font-bold">{currentSlide.question || 'Select the correct answer'}</h2>
+                            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold leading-snug">{currentSlide.question || 'Select the correct answer'}</h2>
                           </div>
                           {currentSlide.options && currentSlide.options.length > 0 && (
-                            <div className="grid gap-3 w-full max-w-2xl mx-auto">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
                               {currentSlide.options.map((option, index) => (
                                 <div
                                   key={index}
-                                  className="flex items-center gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 text-base font-medium text-foreground"
+                                  className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-2 sm:px-3 sm:py-2.5 text-sm sm:text-base font-medium text-foreground"
                                   data-testid={`option-${index}`}
                                 >
-                                  <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/40 shrink-0" />
-                                  <span>{option}</span>
+                                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-muted-foreground/40 shrink-0" />
+                                  <span className="truncate">{option}</span>
                                 </div>
                               ))}
                             </div>

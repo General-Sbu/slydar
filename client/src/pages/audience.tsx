@@ -617,12 +617,13 @@ export default function Audience() {
               })()}
 
               {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll' || currentSlide.type === 'select_answer') && currentSlide.options && (
-                <div className="grid gap-3">
+                <div className={currentSlide.type === 'select_answer' ? 'grid grid-cols-2 gap-2 sm:gap-3' : 'grid gap-3'}>
                   {currentSlide.options.map((option, index) => (
                     <AudienceAnswerButton
                       key={index}
                       label={option}
                       selected={selectedAnswer === option}
+                      compact={currentSlide.type === 'select_answer'}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
                     />
