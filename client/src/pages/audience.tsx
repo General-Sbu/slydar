@@ -405,7 +405,7 @@ export default function Audience() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        {(currentSlide.config as any)?.isJoinSlide ? (
+        {((currentSlide.config as any)?.isJoinSlide || currentSlide.title === '__join_slide__') ? (
           <div className="flex flex-col items-center justify-center text-center py-16 sm:py-24 gap-4">
             <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
               <Users className="h-7 w-7 text-primary" />

@@ -144,16 +144,19 @@ export default function Presenter() {
     }
   });
 
-  const joinSlide = slides.find(s => (s.config as any)?.isJoinSlide === true);
+  const joinSlides = slides.filter(s => (s.config as any)?.isJoinSlide === true || s.title === '__join_slide__');
+  const joinSlide = joinSlides[0] ?? null;
 
   const addJoinSlideMutation = useMutation({
     mutationFn: async () => {
+      if (joinSlides.length > 0) return null;
       const res = await fetch('/api/slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           presentationId,
           type: 'heading',
+          title: '__join_slide__',
           question: 'Join the Presentation',
           order: -1,
           config: { isJoinSlide: true }
@@ -171,13 +174,22 @@ export default function Presenter() {
   });
 
   const removeJoinSlideMutation = useMutation({
-    mutationFn: async (slideId: string) => {
-      const res = await fetch(`/api/slides/${slideId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove join slide');
-      return res.json();
+    mutationFn: async (slideIds: string[]) => {
+      await Promise.all(slideIds.map(id =>
+        fetch(`/api/slides/${id}`, { method: 'DELETE' }).then(r => {
+          if (!r.ok) throw new Error(`Failed to delete slide ${id}`);
+        })
+      ));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      if (joinSlides.some(s => s.id === currentSlide?.id)) {
+        const firstRegular = slides.find(s => !(s.config as any)?.isJoinSlide && s.title !== '__join_slide__');
+        if (firstRegular) {
+          setCurrentSlide(firstRegular);
+          setCurrentSlideIndex(slides.filter(s => !(s.config as any)?.isJoinSlide && s.title !== '__join_slide__').indexOf(firstRegular));
+        }
+      }
     },
     onError: () => {
       showNotification("Failed to remove join slide", "error");
@@ -552,7 +564,7 @@ export default function Presenter() {
                       />
                     </div>
                     <div className="relative z-10">
-                      {(currentSlide.config as any)?.isJoinSlide && session ? (
+                      {((currentSlide.config as any)?.isJoinSlide || currentSlide.title === '__join_slide__') && session ? (
                         <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 md:gap-8 text-center py-4">
                           <div>
                             <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-1">Join at</p>
@@ -712,8 +724,8 @@ export default function Presenter() {
                   variant={joinSlide ? "default" : "outline"}
                   className={`w-full gap-2 toggle-elevate ${joinSlide ? 'toggle-elevated' : ''}`}
                   onClick={() => {
-                    if (joinSlide) {
-                      removeJoinSlideMutation.mutate(joinSlide.id);
+                    if (joinSlides.length > 0) {
+                      removeJoinSlideMutation.mutate(joinSlides.map(s => s.id));
                     } else {
                       addJoinSlideMutation.mutate();
                     }
