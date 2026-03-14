@@ -165,8 +165,13 @@ export default function Presenter() {
       if (!res.ok) throw new Error('Failed to add join slide');
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+      const slideToShow = data ?? joinSlide;
+      if (slideToShow) {
+        setCurrentSlide(slideToShow);
+        setCurrentSlideIndex(0);
+      }
     },
     onError: () => {
       showNotification("Failed to add join slide", "error");
