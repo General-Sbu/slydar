@@ -11,7 +11,8 @@ import PresenterQA from "@/components/PresenterQA";
 import FloatingEmojis from "@/components/FloatingEmojis";
 import WordCloud from "@/components/WordCloud";
 import SpinnerWheel from "@/components/SpinnerWheel";
-import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download, UserCheck, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Users, MessageSquare, ThumbsUp, Heart, ThumbsDown, ArrowLeft, StopCircle, Download, UserCheck, Check, Monitor } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation, Link } from "wouter";
@@ -140,6 +141,46 @@ export default function Presenter() {
       if (updatedSession) {
         setSession(updatedSession);
       }
+    }
+  });
+
+  const joinSlide = slides.find(s => (s.config as any)?.isJoinSlide === true);
+
+  const addJoinSlideMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presentationId,
+          type: 'heading',
+          question: 'Join the Presentation',
+          order: -1,
+          config: { isJoinSlide: true }
+        })
+      });
+      if (!res.ok) throw new Error('Failed to add join slide');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+    },
+    onError: () => {
+      showNotification("Failed to add join slide", "error");
+    }
+  });
+
+  const removeJoinSlideMutation = useMutation({
+    mutationFn: async (slideId: string) => {
+      const res = await fetch(`/api/slides/${slideId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to remove join slide');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/presentations', presentationId, 'slides'] });
+    },
+    onError: () => {
+      showNotification("Failed to remove join slide", "error");
     }
   });
 
@@ -511,7 +552,27 @@ export default function Presenter() {
                       />
                     </div>
                     <div className="relative z-10">
-                      {currentSlide.type === 'heading' && !currentSlide?.config?.elements?.length ? (
+                      {(currentSlide.config as any)?.isJoinSlide && session ? (
+                        <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 md:gap-8 text-center py-4">
+                          <div>
+                            <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-1">Join at</p>
+                            <p className="font-bold text-xl sm:text-2xl md:text-4xl tracking-wide">slydar.app/join</p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 md:gap-12">
+                            <div className="p-3 sm:p-4 bg-white rounded-xl shadow-md">
+                              <QRCodeSVG
+                                value={`${window.location.origin}/audience/${session.code}`}
+                                size={typeof window !== 'undefined' && window.innerWidth < 640 ? 120 : 160}
+                                level="M"
+                              />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm sm:text-sm text-muted-foreground mb-1">Room Code</p>
+                              <p className="font-mono font-bold text-3xl sm:text-4xl md:text-6xl tracking-widest">{session.code}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : currentSlide.type === 'heading' && !currentSlide?.config?.elements?.length ? (
                         <div className="text-center">
                           <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold">{currentSlide.question || currentSlide.title || ""}</h1>
                         </div>
@@ -645,7 +706,25 @@ export default function Presenter() {
         <aside className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-muted/30 overflow-y-auto max-h-[40vh] md:max-h-none flex-shrink-0">
           <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {session ? (
-              <RoomCodeDisplay code={session.code} participantCount={participantCount} />
+              <>
+                <RoomCodeDisplay code={session.code} participantCount={participantCount} />
+                <Button
+                  variant={joinSlide ? "default" : "outline"}
+                  className={`w-full gap-2 toggle-elevate ${joinSlide ? 'toggle-elevated' : ''}`}
+                  onClick={() => {
+                    if (joinSlide) {
+                      removeJoinSlideMutation.mutate(joinSlide.id);
+                    } else {
+                      addJoinSlideMutation.mutate();
+                    }
+                  }}
+                  disabled={addJoinSlideMutation.isPending || removeJoinSlideMutation.isPending}
+                  data-testid="button-toggle-join-slide"
+                >
+                  <Monitor className="h-4 w-4" />
+                  {joinSlide ? "Remove from Slides" : "Add to Slides"}
+                </Button>
+              </>
             ) : (
               <Card className="p-4 md:p-6">
                 <div className="text-center space-y-3">

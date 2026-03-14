@@ -13,7 +13,7 @@ import FloatingEmojis, { EmojiSelector } from "@/components/FloatingEmojis";
 import PinchZoomContainer from "@/components/PinchZoomContainer";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
-import { Check, X, Loader2, StickyNote, Save, FileText, Trash2, Download } from "lucide-react";
+import { Check, X, Loader2, StickyNote, Save, FileText, Trash2, Download, Users } from "lucide-react";
 import { useWebSocket } from "@/lib/useWebSocket";
 import type { Slide, PresentationSession, Note, Feedback, Reaction, ReactionType, AnnotationData } from "@shared/schema";
 import { defaultSpinnerEntries } from "@shared/schema";
@@ -405,7 +405,17 @@ export default function Audience() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        {currentSlide.type === 'heading' ? (
+        {(currentSlide.config as any)?.isJoinSlide ? (
+          <div className="flex flex-col items-center justify-center text-center py-16 sm:py-24 gap-4">
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <Users className="h-7 w-7 text-primary" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold">You're in!</h2>
+            <p className="text-muted-foreground text-base sm:text-lg max-w-sm">
+              The presenter will begin shortly. Sit tight!
+            </p>
+          </div>
+        ) : currentSlide.type === 'heading' ? (
           <PinchZoomContainer className="relative rounded-xl">
             <div 
               className="rounded-xl border shadow-sm text-center relative overflow-visible aspect-video"
