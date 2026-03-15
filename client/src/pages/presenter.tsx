@@ -537,7 +537,7 @@ export default function Presenter() {
               </Card>
             ) : (
               <Card 
-                className={`cursor-grab active:cursor-grabbing relative overflow-visible w-full ${currentSlide.type === 'image' ? 'aspect-video p-0' : currentSlide.type === 'heading' ? 'aspect-video p-4 sm:p-6 md:p-12' : 'min-h-[50vh] md:min-h-[60vh] p-4 sm:p-6 md:p-12'}`}
+                className={`cursor-grab active:cursor-grabbing relative overflow-visible w-full ${currentSlide.type === 'image' ? 'aspect-video p-0' : currentSlide.type === 'heading' ? 'aspect-video p-4 sm:p-6 md:p-12' : currentSlide.type === 'select_answer' ? 'min-h-[82vh] p-4 sm:p-5 md:p-8' : 'min-h-[50vh] md:min-h-[60vh] p-4 sm:p-6 md:p-12'}`}
                 style={{
                   backgroundColor: (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                   color: (typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined)
@@ -685,15 +685,15 @@ export default function Presenter() {
                           )}
                         </div>
                       ) : currentSlide.type === 'select_answer' ? (
-                        <div className="flex flex-col w-full gap-4">
-                          <div className="rounded-xl border bg-card/90 backdrop-blur px-5 py-4 text-center shadow-sm">
-                            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold leading-snug">
+                        <div className="flex flex-col w-full gap-4" style={{ minHeight: 'calc(82vh - 6rem)' }}>
+                          <div className="rounded-xl border bg-card/90 backdrop-blur px-5 py-5 text-center shadow-sm shrink-0">
+                            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">
                               {currentSlide.question || 'Select the correct answer'}
                             </h2>
-                            <p className="text-xs text-muted-foreground mt-1">Audience is selecting an answer</p>
+                            <p className="text-sm text-muted-foreground mt-1">Audience is selecting an answer</p>
                           </div>
                           {currentSlide.options && currentSlide.options.length > 0 && (
-                            <div className="grid grid-cols-2 gap-3 w-full">
+                            <div className="grid grid-cols-2 gap-4 w-full flex-1">
                               {currentSlide.options.map((option, index) => {
                                 const correctIdx = (currentSlide.config as any)?.correctAnswer ?? 0;
                                 const isCorrect = index === correctIdx;
@@ -711,9 +711,8 @@ export default function Presenter() {
                                   <div
                                     key={index}
                                     data-testid={`option-${index}`}
-                                    style={{ minHeight: '90px' }}
                                     className={[
-                                      'flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 text-center',
+                                      'flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 text-center h-full',
                                       'font-semibold text-sm sm:text-base',
                                       isCorrect
                                         ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
@@ -721,7 +720,7 @@ export default function Presenter() {
                                     ].join(' ')}
                                   >
                                     <span className={[
-                                      'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0',
+                                      'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0',
                                       isCorrect ? 'bg-green-500' : c.badge,
                                     ].join(' ')}>
                                       {isCorrect ? <Check className="h-4 w-4" /> : letters[index]}

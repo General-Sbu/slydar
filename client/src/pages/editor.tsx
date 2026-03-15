@@ -1410,7 +1410,7 @@ export default function Editor() {
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <Card 
-                    className="aspect-video flex items-center justify-center p-12 relative overflow-hidden shadow-2xl border-0 ring-1 ring-black/5 dark:ring-white/10"
+                    className={`${currentSlide?.type === 'select_answer' ? 'min-h-[560px]' : 'aspect-video'} flex items-center justify-center p-12 relative overflow-hidden shadow-2xl border-0 ring-1 ring-black/5 dark:ring-white/10`}
                     style={{
                       backgroundColor: typeof editingSlide?.config?.background === 'string' ? editingSlide.config.background : (typeof currentSlide?.config?.background === 'string' ? currentSlide.config.background : undefined),
                       color: typeof currentSlide?.config?.textColor === 'string' ? currentSlide.config.textColor : undefined

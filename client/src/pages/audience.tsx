@@ -625,7 +625,7 @@ export default function Audience() {
                       key={index}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
-                      style={{ minHeight: '160px' }}
+                      style={{ minHeight: '185px' }}
                       className={[
                         'flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 w-full',
                         'font-semibold text-base sm:text-lg text-center transition-all duration-150 active:scale-95',
