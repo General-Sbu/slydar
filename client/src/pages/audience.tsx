@@ -597,27 +597,59 @@ export default function Audience() {
             />
           </Card>
         ) : currentSlide.type === 'select_answer' ? (
-          <Card className="p-4 sm:p-6 md:p-8 relative overflow-visible" data-testid="card-slide">
-            <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
-              <div className="text-center">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">{currentSlide.question || 'Select the correct answer'}</h2>
-                <p className="text-sm sm:text-base text-muted-foreground mt-1">Tap to select your answer</p>
-              </div>
-              {currentSlide.options && currentSlide.options.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-                  {currentSlide.options.map((option, index) => (
-                    <AudienceAnswerButton
+          <div className="flex flex-col gap-3" data-testid="card-slide">
+            <div className="rounded-xl border bg-card p-4 sm:p-5 shadow-sm">
+              <h2 className="text-lg sm:text-2xl font-bold leading-snug text-center">
+                {currentSlide.question || 'Select the correct answer'}
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground text-center mt-1">
+                Tap to select your answer
+              </p>
+            </div>
+            {currentSlide.options && currentSlide.options.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {currentSlide.options.map((option, index) => {
+                  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                  const isSelected = selectedAnswer === option;
+                  const colorMap = [
+                    { bg: 'bg-blue-500/10', border: 'border-blue-400', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-500' },
+                    { bg: 'bg-orange-500/10', border: 'border-orange-400', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-500' },
+                    { bg: 'bg-purple-500/10', border: 'border-purple-400', text: 'text-purple-700 dark:text-purple-300', badge: 'bg-purple-500' },
+                    { bg: 'bg-green-500/10', border: 'border-green-400', text: 'text-green-700 dark:text-green-300', badge: 'bg-green-500' },
+                    { bg: 'bg-pink-500/10', border: 'border-pink-400', text: 'text-pink-700 dark:text-pink-300', badge: 'bg-pink-500' },
+                    { bg: 'bg-yellow-500/10', border: 'border-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-500' },
+                  ];
+                  const c = colorMap[index % colorMap.length];
+                  return (
+                    <button
                       key={index}
-                      label={option}
-                      selected={selectedAnswer === option}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </Card>
+                      style={{ minHeight: '120px' }}
+                      className={[
+                        'flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 w-full',
+                        'font-medium text-sm sm:text-base text-center transition-all duration-150 active:scale-95',
+                        isSelected
+                          ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
+                          : `${c.bg} ${c.border} ${c.text}`,
+                      ].join(' ')}
+                    >
+                      <span
+                        className={[
+                          'w-8 h-8 rounded-full flex items-center justify-center',
+                          'text-sm font-bold text-white shrink-0',
+                          isSelected ? 'bg-green-500' : c.badge,
+                        ].join(' ')}
+                      >
+                        {letters[index]}
+                      </span>
+                      <span className="leading-snug break-words w-full">{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
           <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
             <div className="space-y-6 sm:space-y-8 relative z-10">
