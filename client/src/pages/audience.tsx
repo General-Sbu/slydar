@@ -596,10 +596,32 @@ export default function Audience() {
               onAnnotationAdd={() => {}}
             />
           </Card>
+        ) : currentSlide.type === 'select_answer' ? (
+          <Card className="p-4 sm:p-6 md:p-8 relative overflow-visible" data-testid="card-slide">
+            <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
+              <div className="text-center">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">{currentSlide.question || 'Select the correct answer'}</h2>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1">Tap to select your answer</p>
+              </div>
+              {currentSlide.options && currentSlide.options.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                  {currentSlide.options.map((option, index) => (
+                    <AudienceAnswerButton
+                      key={index}
+                      label={option}
+                      selected={selectedAnswer === option}
+                      onClick={() => handleMultipleChoiceAnswer(option)}
+                      data-testid={`button-option-${index}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
         ) : (
           <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
             <div className="space-y-6 sm:space-y-8 relative z-10">
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll' || currentSlide.type === 'select_answer') && (
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && (
                 <div className="text-center mb-4">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
                   <p className="text-sm sm:text-base text-muted-foreground">Select the correct answer</p>
@@ -626,14 +648,13 @@ export default function Audience() {
                 );
               })()}
 
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll' || currentSlide.type === 'select_answer') && currentSlide.options && (
-                <div className={currentSlide.type === 'select_answer' ? 'grid grid-cols-2 gap-2 sm:gap-3' : 'grid gap-3'}>
+              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options && (
+                <div className="grid gap-3">
                   {currentSlide.options.map((option, index) => (
                     <AudienceAnswerButton
                       key={index}
                       label={option}
                       selected={selectedAnswer === option}
-                      compact={currentSlide.type === 'select_answer'}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
                     />
