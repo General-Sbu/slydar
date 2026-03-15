@@ -597,17 +597,17 @@ export default function Audience() {
             />
           </Card>
         ) : currentSlide.type === 'select_answer' ? (
-          <div className="flex flex-col gap-3" data-testid="card-slide">
-            <div className="rounded-xl border bg-card p-4 sm:p-5 shadow-sm">
-              <h2 className="text-lg sm:text-2xl font-bold leading-snug text-center">
+          <div className="flex flex-col gap-4 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-5 lg:px-6" data-testid="card-slide">
+            <div className="rounded-xl border bg-card px-5 py-5 sm:px-7 sm:py-6 shadow-sm text-center">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">
                 {currentSlide.question || 'Select the correct answer'}
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground text-center mt-1">
+              <p className="text-sm text-muted-foreground mt-1.5">
                 Tap to select your answer
               </p>
             </div>
             {currentSlide.options && currentSlide.options.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {currentSlide.options.map((option, index) => {
                   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
                   const isSelected = selectedAnswer === option;
@@ -625,10 +625,10 @@ export default function Audience() {
                       key={index}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
-                      style={{ minHeight: '120px' }}
+                      style={{ minHeight: '160px' }}
                       className={[
-                        'flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 w-full',
-                        'font-medium text-sm sm:text-base text-center transition-all duration-150 active:scale-95',
+                        'flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 w-full',
+                        'font-semibold text-base sm:text-lg text-center transition-all duration-150 active:scale-95',
                         isSelected
                           ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
                           : `${c.bg} ${c.border} ${c.text}`,
@@ -636,8 +636,8 @@ export default function Audience() {
                     >
                       <span
                         className={[
-                          'w-8 h-8 rounded-full flex items-center justify-center',
-                          'text-sm font-bold text-white shrink-0',
+                          'w-10 h-10 rounded-full flex items-center justify-center',
+                          'text-base font-bold text-white shrink-0',
                           isSelected ? 'bg-green-500' : c.badge,
                         ].join(' ')}
                       >
