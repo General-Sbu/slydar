@@ -685,22 +685,51 @@ export default function Presenter() {
                           )}
                         </div>
                       ) : currentSlide.type === 'select_answer' ? (
-                        <div className="flex flex-col w-full gap-3 sm:gap-5">
-                          <div className="text-center">
-                            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold leading-snug">{currentSlide.question || 'Select the correct answer'}</h2>
+                        <div className="flex flex-col w-full gap-4">
+                          <div className="rounded-xl border bg-card/90 backdrop-blur px-5 py-4 text-center shadow-sm">
+                            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold leading-snug">
+                              {currentSlide.question || 'Select the correct answer'}
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-1">Audience is selecting an answer</p>
                           </div>
                           {currentSlide.options && currentSlide.options.length > 0 && (
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-                              {currentSlide.options.map((option, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-2 sm:px-3 sm:py-2.5 text-sm sm:text-base font-medium text-foreground"
-                                  data-testid={`option-${index}`}
-                                >
-                                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-muted-foreground/40 shrink-0" />
-                                  <span className="truncate">{option}</span>
-                                </div>
-                              ))}
+                            <div className="grid grid-cols-2 gap-3 w-full">
+                              {currentSlide.options.map((option, index) => {
+                                const correctIdx = (currentSlide.config as any)?.correctAnswer ?? 0;
+                                const isCorrect = index === correctIdx;
+                                const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                                const colorMap = [
+                                  { bg: 'bg-blue-500/10', border: 'border-blue-400', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-500' },
+                                  { bg: 'bg-orange-500/10', border: 'border-orange-400', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-500' },
+                                  { bg: 'bg-purple-500/10', border: 'border-purple-400', text: 'text-purple-700 dark:text-purple-300', badge: 'bg-purple-500' },
+                                  { bg: 'bg-green-500/10', border: 'border-green-400', text: 'text-green-700 dark:text-green-300', badge: 'bg-green-500' },
+                                  { bg: 'bg-pink-500/10', border: 'border-pink-400', text: 'text-pink-700 dark:text-pink-300', badge: 'bg-pink-500' },
+                                  { bg: 'bg-yellow-500/10', border: 'border-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-500' },
+                                ];
+                                const c = colorMap[index % colorMap.length];
+                                return (
+                                  <div
+                                    key={index}
+                                    data-testid={`option-${index}`}
+                                    style={{ minHeight: '90px' }}
+                                    className={[
+                                      'flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 text-center',
+                                      'font-semibold text-sm sm:text-base',
+                                      isCorrect
+                                        ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
+                                        : `${c.bg} ${c.border} ${c.text}`,
+                                    ].join(' ')}
+                                  >
+                                    <span className={[
+                                      'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0',
+                                      isCorrect ? 'bg-green-500' : c.badge,
+                                    ].join(' ')}>
+                                      {isCorrect ? <Check className="h-4 w-4" /> : letters[index]}
+                                    </span>
+                                    <span className="leading-snug break-words w-full">{option}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>

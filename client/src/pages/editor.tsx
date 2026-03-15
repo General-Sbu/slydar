@@ -1562,26 +1562,48 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'select_answer' && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
-                        <div className="text-center mb-8">
-                          <h2 className="text-3xl font-bold px-4">
+                      <div className="absolute inset-0 flex flex-col pointer-events-none p-5 gap-4 overflow-hidden">
+                        <div className="rounded-xl border bg-card/90 backdrop-blur px-5 py-4 text-center shadow-sm shrink-0">
+                          <h2 className="text-xl sm:text-2xl font-bold leading-snug">
                             {editingSlide?.question || currentSlide.question || 'Select the correct answer'}
                           </h2>
+                          <p className="text-xs text-muted-foreground mt-1">Tap to select your answer</p>
                         </div>
-                        <div className="w-full max-w-xl mx-auto px-4">
-                          <div className="grid grid-cols-2 gap-3">
-                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
-                              const correctIdx = editingSlide?.config?.correctAnswer ?? currentSlide.config?.correctAnswer ?? 0;
-                              const isCorrect = index === correctIdx;
-                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
-                              return (
-                                <div key={index} className={`bg-background/90 backdrop-blur rounded-lg px-4 py-3 text-center border-2 ${isCorrect ? 'border-green-500 bg-green-500/10' : ''}`} style={{ borderLeftColor: colors[index % colors.length], borderLeftWidth: '4px' }}>
-                                  <span className="font-medium text-sm">{option}</span>
-                                  {isCorrect && <Check className="inline-block ml-2 h-4 w-4 text-green-500" />}
-                                </div>
-                              );
-                            })}
-                          </div>
+                        <div className="grid grid-cols-2 gap-3 flex-1">
+                          {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                            const correctIdx = editingSlide?.config?.correctAnswer ?? currentSlide.config?.correctAnswer ?? 0;
+                            const isCorrect = index === correctIdx;
+                            const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                            const colorMap = [
+                              { bg: 'bg-blue-500/10', border: 'border-blue-400', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-500' },
+                              { bg: 'bg-orange-500/10', border: 'border-orange-400', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-500' },
+                              { bg: 'bg-purple-500/10', border: 'border-purple-400', text: 'text-purple-700 dark:text-purple-300', badge: 'bg-purple-500' },
+                              { bg: 'bg-green-500/10', border: 'border-green-400', text: 'text-green-700 dark:text-green-300', badge: 'bg-green-500' },
+                              { bg: 'bg-pink-500/10', border: 'border-pink-400', text: 'text-pink-700 dark:text-pink-300', badge: 'bg-pink-500' },
+                              { bg: 'bg-yellow-500/10', border: 'border-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-500' },
+                            ];
+                            const c = colorMap[index % colorMap.length];
+                            return (
+                              <div
+                                key={index}
+                                className={[
+                                  'flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 h-full',
+                                  'font-semibold text-sm text-center',
+                                  isCorrect
+                                    ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
+                                    : `${c.bg} ${c.border} ${c.text}`,
+                                ].join(' ')}
+                              >
+                                <span className={[
+                                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0',
+                                  isCorrect ? 'bg-green-500' : c.badge,
+                                ].join(' ')}>
+                                  {isCorrect ? <Check className="h-4 w-4" /> : letters[index]}
+                                </span>
+                                <span className="leading-snug break-words w-full">{option}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
