@@ -596,6 +596,60 @@ export default function Audience() {
               onAnnotationAdd={() => {}}
             />
           </Card>
+        ) : (currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') ? (
+          <div className="flex flex-col gap-4 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-5 lg:px-6" data-testid="card-slide">
+            <div className="rounded-xl border bg-card px-5 py-5 sm:px-7 sm:py-6 shadow-sm text-center">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">
+                {currentSlide.question || 'Your question here'}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                {currentSlide.type === 'poll' ? 'Cast your vote' : 'Select the correct answer'}
+              </p>
+            </div>
+            {currentSlide.options && currentSlide.options.length > 0 && (
+              <div className="grid grid-cols-2 gap-4">
+                {currentSlide.options.map((option, index) => {
+                  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                  const isSelected = selectedAnswer === option;
+                  const colorMap = [
+                    { bg: 'bg-blue-500/10', border: 'border-blue-400', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-500' },
+                    { bg: 'bg-orange-500/10', border: 'border-orange-400', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-500' },
+                    { bg: 'bg-purple-500/10', border: 'border-purple-400', text: 'text-purple-700 dark:text-purple-300', badge: 'bg-purple-500' },
+                    { bg: 'bg-green-500/10', border: 'border-green-400', text: 'text-green-700 dark:text-green-300', badge: 'bg-green-500' },
+                    { bg: 'bg-pink-500/10', border: 'border-pink-400', text: 'text-pink-700 dark:text-pink-300', badge: 'bg-pink-500' },
+                    { bg: 'bg-yellow-500/10', border: 'border-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-500' },
+                  ];
+                  const c = colorMap[index % colorMap.length];
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleMultipleChoiceAnswer(option)}
+                      data-testid={`button-option-${index}`}
+                      style={{ minHeight: '185px' }}
+                      className={[
+                        'flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 w-full',
+                        'font-semibold text-base sm:text-lg text-center transition-all duration-150 active:scale-95',
+                        isSelected
+                          ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
+                          : `${c.bg} ${c.border} ${c.text}`,
+                      ].join(' ')}
+                    >
+                      <span
+                        className={[
+                          'w-10 h-10 rounded-full flex items-center justify-center',
+                          'text-base font-bold text-white shrink-0',
+                          isSelected ? 'bg-green-500' : c.badge,
+                        ].join(' ')}
+                      >
+                        {letters[index]}
+                      </span>
+                      <span className="leading-snug break-words w-full">{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : currentSlide.type === 'select_answer' ? (
           <div className="flex flex-col gap-4 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-5 lg:px-6" data-testid="card-slide">
             <div className="rounded-xl border bg-card px-5 py-5 sm:px-7 sm:py-6 shadow-sm text-center">
@@ -653,12 +707,6 @@ export default function Audience() {
         ) : (
           <Card className="p-6 sm:p-8 relative overflow-visible min-h-[50vh] md:min-h-[60vh]" data-testid="card-slide">
             <div className="space-y-6 sm:space-y-8 relative z-10">
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && (
-                <div className="text-center mb-4">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">Select the correct answer</p>
-                </div>
-              )}
               {currentSlide.type === 'open_ended' && (
                 <div className="text-center">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentSlide.question || 'Your question here'}</h2>
@@ -679,20 +727,6 @@ export default function Audience() {
                   </div>
                 );
               })()}
-
-              {(currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') && currentSlide.options && (
-                <div className="grid gap-3">
-                  {currentSlide.options.map((option, index) => (
-                    <AudienceAnswerButton
-                      key={index}
-                      label={option}
-                      selected={selectedAnswer === option}
-                      onClick={() => handleMultipleChoiceAnswer(option)}
-                      data-testid={`button-option-${index}`}
-                    />
-                  ))}
-                </div>
-              )}
 
               {(currentSlide.type === 'open_ended' || currentSlide.type === 'word_cloud') && (
                 <div className="space-y-4">
