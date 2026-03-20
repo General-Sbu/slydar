@@ -597,12 +597,15 @@ export default function Audience() {
             />
           </Card>
         ) : (currentSlide.type === 'multiple_choice' || currentSlide.type === 'poll') ? (
-          <div className="flex flex-col gap-4 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-5 lg:px-6" data-testid="card-slide">
-            <div className="rounded-xl border bg-card px-5 py-5 sm:px-7 sm:py-6 shadow-sm text-center">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-snug">
+          <div className="flex flex-col gap-5 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-5 lg:px-6 -mt-2" data-testid="card-slide">
+            <div className="rounded-xl border bg-card px-5 py-6 sm:px-7 sm:py-7 shadow-sm text-center">
+              <h2
+                className="font-bold leading-tight break-words hyphens-auto"
+                style={{ fontSize: 'clamp(1rem, 4.5vw, 1.5rem)' }}
+              >
                 {currentSlide.question || 'Your question here'}
               </h2>
-              <p className="text-sm text-muted-foreground mt-1.5">
+              <p className="text-sm text-muted-foreground mt-2">
                 {currentSlide.type === 'poll' ? 'Cast your vote' : 'Select the correct answer'}
               </p>
             </div>
@@ -625,10 +628,10 @@ export default function Audience() {
                       key={index}
                       onClick={() => handleMultipleChoiceAnswer(option)}
                       data-testid={`button-option-${index}`}
-                      style={{ minHeight: '185px' }}
+                      style={{ minHeight: '160px' }}
                       className={[
                         'flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 w-full',
-                        'font-semibold text-base sm:text-lg text-center transition-all duration-150 active:scale-95',
+                        'font-semibold text-sm sm:text-base text-center transition-all duration-150 active:scale-95',
                         isSelected
                           ? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
                           : `${c.bg} ${c.border} ${c.text}`,
