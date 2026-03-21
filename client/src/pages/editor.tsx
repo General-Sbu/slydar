@@ -1436,32 +1436,39 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'multiple_choice' && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
-                        <div className="text-center mb-4">
-                          <h2 className="text-2xl font-bold px-4">
+                      <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden" style={{ padding: '16px 16px 12px' }}>
+                        <div className="rounded-xl border bg-card/90 backdrop-blur px-4 py-3 text-center shadow-sm shrink-0 mb-4">
+                          <h2 className="font-bold leading-tight break-words hyphens-auto" style={{ fontSize: 'clamp(0.85rem, 3vw, 1.25rem)' }}>
                             {editingSlide?.question || currentSlide.question || 'Your question here'}
                           </h2>
+                          <p className="text-muted-foreground mt-1" style={{ fontSize: '10px' }}>0 responses</p>
                         </div>
-                        <div className="flex items-end justify-center gap-3 w-full max-w-xl mx-auto px-4" style={{ height: '120px' }}>
-                          {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
-                            const colors = [
-                              "hsl(var(--chart-1))",
-                              "hsl(var(--chart-2))",
-                              "hsl(var(--chart-3))",
-                              "hsl(var(--chart-4))",
-                              "hsl(var(--chart-5))"
-                            ];
-                            const barHeight = 30 + (index % 3) * 25;
-                            return (
-                              <div key={index} className="flex flex-col items-center flex-1 max-w-[100px] min-w-[40px]">
-                                <div className="text-[10px] font-bold mb-1" style={{ color: colors[index % colors.length] }}>0</div>
-                                <div className="w-full flex items-end" style={{ height: '80px' }}>
-                                  <div className="w-full rounded-t-md" style={{ height: `${barHeight}%`, backgroundColor: colors[index % colors.length], opacity: 0.7 }} />
+                        <div className="flex flex-col flex-1 min-h-0">
+                          <div className="flex items-end flex-1 min-h-0" style={{ gap: '8px', paddingBottom: '8px' }}>
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+                              const previewHeights = [55, 80, 35, 65, 50];
+                              return (
+                                <div key={index} className="flex flex-col items-center flex-1">
+                                  <div className="font-bold mb-1" style={{ color: colors[index % colors.length], fontSize: '10px' }}>0</div>
+                                  <div className="w-full rounded-lg overflow-hidden flex items-end" style={{ flex: 1, backgroundColor: 'hsl(var(--muted))' }}>
+                                    <div className="w-full rounded-lg" style={{ height: `${previewHeights[index % previewHeights.length]}%`, backgroundColor: colors[index % colors.length], opacity: 0.85 }} />
+                                  </div>
                                 </div>
-                                <p className="text-[10px] font-medium mt-1 text-center leading-tight line-clamp-2 w-full">{option}</p>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
+                          <div className="flex" style={{ gap: '8px', marginTop: '8px' }}>
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+                              return (
+                                <div key={index} className="flex-1 flex flex-col items-center text-center">
+                                  <p className="font-medium leading-tight break-words w-full" style={{ fontSize: '9px' }}>{option}</p>
+                                  <p className="font-semibold mt-0.5" style={{ color: colors[index % colors.length], fontSize: '8px' }}>0%</p>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1538,26 +1545,39 @@ export default function Editor() {
                       </div>
                     )}
                     {currentSlide?.type === 'poll' && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
-                        <div className="text-center mb-4">
-                          <h2 className="text-2xl font-bold px-4">
+                      <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden" style={{ padding: '16px 16px 12px' }}>
+                        <div className="rounded-xl border bg-card/90 backdrop-blur px-4 py-3 text-center shadow-sm shrink-0 mb-4">
+                          <h2 className="font-bold leading-tight break-words hyphens-auto" style={{ fontSize: 'clamp(0.85rem, 3vw, 1.25rem)' }}>
                             {editingSlide?.question || currentSlide.question || 'What do you think?'}
                           </h2>
+                          <p className="text-muted-foreground mt-1" style={{ fontSize: '10px' }}>0 responses</p>
                         </div>
-                        <div className="flex items-end justify-center gap-3 w-full max-w-xl mx-auto px-4" style={{ height: '120px' }}>
-                          {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
-                            const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
-                            const barHeight = 30 + (index % 3) * 25;
-                            return (
-                              <div key={index} className="flex flex-col items-center flex-1 max-w-[100px] min-w-[40px]">
-                                <div className="text-[10px] font-bold mb-1" style={{ color: colors[index % colors.length] }}>0</div>
-                                <div className="w-full flex items-end" style={{ height: '80px' }}>
-                                  <div className="w-full rounded-t-md" style={{ height: `${barHeight}%`, backgroundColor: colors[index % colors.length], opacity: 0.7 }} />
+                        <div className="flex flex-col flex-1 min-h-0">
+                          <div className="flex items-end flex-1 min-h-0" style={{ gap: '8px', paddingBottom: '8px' }}>
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+                              const previewHeights = [55, 80, 35, 65, 50];
+                              return (
+                                <div key={index} className="flex flex-col items-center flex-1">
+                                  <div className="font-bold mb-1" style={{ color: colors[index % colors.length], fontSize: '10px' }}>0</div>
+                                  <div className="w-full rounded-lg overflow-hidden flex items-end" style={{ flex: 1, backgroundColor: 'hsl(var(--muted))' }}>
+                                    <div className="w-full rounded-lg" style={{ height: `${previewHeights[index % previewHeights.length]}%`, backgroundColor: colors[index % colors.length], opacity: 0.85 }} />
+                                  </div>
                                 </div>
-                                <p className="text-[10px] font-medium mt-1 text-center leading-tight line-clamp-2 w-full">{option}</p>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
+                          <div className="flex" style={{ gap: '8px', marginTop: '8px' }}>
+                            {(editingSlide?.options || currentSlide.options || []).map((option, index) => {
+                              const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+                              return (
+                                <div key={index} className="flex-1 flex flex-col items-center text-center">
+                                  <p className="font-medium leading-tight break-words w-full" style={{ fontSize: '9px' }}>{option}</p>
+                                  <p className="font-semibold mt-0.5" style={{ color: colors[index % colors.length], fontSize: '8px' }}>0%</p>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     )}
