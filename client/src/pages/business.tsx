@@ -315,7 +315,7 @@ export default function Business() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                Why businesses choose <span className="gradient-text">Slydar</span>
+                Why businesses choose <span className="text-primary">Slyd</span><span>ar</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Purpose-built for corporate environments with the features teams need to succeed.

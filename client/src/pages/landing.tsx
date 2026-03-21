@@ -209,7 +209,7 @@ export default function Landing() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-8 relative z-10">
               <div className="text-center space-y-4 animate-fade-in">
                 <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
-                  Welcome to <span className="gradient-text">Slydar</span>
+                  Welcome to <span className="text-primary">Slyd</span><span>ar</span>
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   Sign in or create an account to get started
