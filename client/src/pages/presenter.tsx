@@ -601,7 +601,6 @@ export default function Presenter() {
                         />
                       ) : currentSlide.type === 'word_cloud' ? (
                         <WordCloud
-                          question={currentSlide.question || "Question"}
                           responses={allWordCloudResponses.length > 0 ? allWordCloudResponses : slideResponses}
                         />
                       ) : currentSlide.type === 'open_ended' ? (

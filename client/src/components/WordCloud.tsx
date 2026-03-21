@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 
 interface WordCloudProps {
-  question: string;
   responses: Array<{ answer: string }>;
 }
 
@@ -34,13 +33,6 @@ const COLORS = [
   "#f97316", // orange
   "#6366f1", // indigo
   "#14b8a6", // teal
-];
-
-const DEFAULT_PLACEHOLDERS = [
-  "Ask your question here",
-  "Your Word Cloud question here",
-  "Question",
-  "",
 ];
 
 function estimateTextDimensions(text: string, fontSize: number): { width: number; height: number } {
@@ -126,10 +118,8 @@ function findPositionSpiral(
   return null;
 }
 
-export default function WordCloud({ question, responses }: WordCloudProps) {
+export default function WordCloud({ responses }: WordCloudProps) {
   const [words, setWords] = useState<PositionedWord[]>([]);
-
-  const isUserFilledQuestion = question && !DEFAULT_PLACEHOLDERS.includes(question.trim());
 
   const wordData = useMemo(() => {
     if (responses.length === 0) return [];
@@ -204,10 +194,6 @@ export default function WordCloud({ question, responses }: WordCloudProps) {
 
   return (
     <div className="text-center space-y-6">
-      {isUserFilledQuestion && (
-        <h2 className="text-2xl md:text-3xl font-bold">{question}</h2>
-      )}
-      
       {responses.length === 0 ? (
         <div className="relative w-full min-h-[30vh]">
           <div className="absolute inset-0 flex items-center justify-center">
