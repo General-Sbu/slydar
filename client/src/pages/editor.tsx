@@ -1392,13 +1392,17 @@ export default function Editor() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="aspect-video flex items-center justify-center p-12 border-dashed border-2 bg-muted/20">
+                  <Card
+                    className="aspect-video flex items-center justify-center p-12 border-dashed border-2 bg-muted/20 cursor-pointer hover-elevate"
+                    onClick={() => setNewSlideModalOpen(true)}
+                    data-testid="button-empty-add-slide"
+                  >
                     <div className="text-center text-muted-foreground space-y-3">
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                         <Plus className="w-8 h-8 text-primary" />
                       </div>
                       <p className="text-lg font-medium">No slides yet</p>
-                      <p className="text-sm">Click "+ New Slide" in the sidebar to get started</p>
+                      <p className="text-sm">Click here or "+ New Slide" to get started</p>
                     </div>
                   </Card>
                 </motion.div>
