@@ -329,51 +329,6 @@ export default function AISlides() {
           </div>
         </section>
 
-        {/* Theme Showcase */}
-        <section className="py-24 lg:py-32 relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-4 mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold tracking-tight" data-testid="heading-themes">
-                Beautiful themes included
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-light">
-                Each theme applies coordinated colors across all your slides
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: "Classic", bg: "#ffffff", text: "#1e293b", primary: "#2563eb", accent: "#dbeafe" },
-                { name: "Midnight", bg: "#0f172a", text: "#f1f5f9", primary: "#818cf8", accent: "#1e293b" },
-                { name: "Sunset", bg: "#fef2f2", text: "#7f1d1d", primary: "#ef4444", accent: "#fecaca" },
-                { name: "Forest", bg: "#f0fdf4", text: "#14532d", primary: "#22c55e", accent: "#bbf7d0" },
-                { name: "Ocean", bg: "#ecfeff", text: "#164e63", primary: "#06b6d4", accent: "#a5f3fc" },
-                { name: "Royal", bg: "#faf5ff", text: "#3b0764", primary: "#a855f7", accent: "#e9d5ff" },
-                { name: "Charcoal", bg: "#1c1917", text: "#fafaf9", primary: "#f97316", accent: "#292524" },
-                { name: "Rose", bg: "#fff1f2", text: "#881337", primary: "#f43f5e", accent: "#fecdd3" },
-              ].map((theme) => (
-                <div key={theme.name} className="rounded-xl border border-border/50 overflow-hidden" data-testid={`theme-preview-${theme.name.toLowerCase()}`}>
-                  <div className="aspect-[16/10] p-4 flex flex-col justify-between" style={{ backgroundColor: theme.bg }}>
-                    <div className="space-y-1.5">
-                      <div className="h-2.5 rounded-full w-3/4" style={{ backgroundColor: theme.primary }} />
-                      <div className="h-1.5 rounded-full w-1/2 opacity-60" style={{ backgroundColor: theme.text }} />
-                      <div className="h-1.5 rounded-full w-2/3 opacity-40" style={{ backgroundColor: theme.text }} />
-                    </div>
-                    <div className="flex gap-1.5">
-                      <div className="h-1.5 rounded-full flex-1" style={{ backgroundColor: theme.accent }} />
-                      <div className="h-1.5 rounded-full flex-1" style={{ backgroundColor: theme.accent }} />
-                      <div className="h-1.5 rounded-full flex-1" style={{ backgroundColor: theme.primary, opacity: 0.5 }} />
-                    </div>
-                  </div>
-                  <div className="py-2.5 px-3 text-center border-t border-border/50">
-                    <span className="text-sm font-medium">{theme.name}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Use Cases */}
         <section className="py-24 lg:py-32 relative">
           <div className="absolute inset-0 gradient-hero pointer-events-none" />
