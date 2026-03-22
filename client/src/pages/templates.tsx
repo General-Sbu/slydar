@@ -5,55 +5,45 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotification } from "@/hooks/useNotification";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { BarChart3, MessageSquare, Users, HelpCircle, GraduationCap, Briefcase, Layers, Star, Eye, Plus, Sparkles } from "lucide-react";
 import type { Template, TemplateSlide } from "@shared/schema";
 
-const categoryIcons: Record<string, typeof BarChart3> = {
-  polls: BarChart3,
-  quizzes: HelpCircle,
-  feedback: MessageSquare,
-  icebreakers: Users,
-  education: GraduationCap,
-  business: Briefcase,
-  general: Layers,
+const categoryConfig: Record<string, { label: string; icon: typeof BarChart3 }> = {
+  all:          { label: "All",          icon: Layers },
+  polls:        { label: "Polls",        icon: BarChart3 },
+  quizzes:      { label: "Quizzes",      icon: HelpCircle },
+  feedback:     { label: "Feedback",     icon: MessageSquare },
+  icebreakers:  { label: "Ice Breakers", icon: Users },
+  education:    { label: "Education",    icon: GraduationCap },
+  business:     { label: "Business",     icon: Briefcase },
+  general:      { label: "General",      icon: Layers },
 };
 
-const categoryLabels: Record<string, string> = {
-  all: "All Templates",
-  polls: "Polls",
-  quizzes: "Quizzes",
-  feedback: "Feedback",
-  icebreakers: "Icebreakers",
-  education: "Education",
-  business: "Business",
-  general: "General",
-};
-
-function TemplateCard({ 
-  template, 
-  onPreview, 
-  onUse 
-}: { 
-  template: Template; 
-  onPreview: () => void; 
+function TemplateCard({
+  template,
+  onPreview,
+  onUse,
+}: {
+  template: Template;
+  onPreview: () => void;
   onUse: () => void;
 }) {
-  const Icon = categoryIcons[template.category || "general"] || Layers;
-  
+  const cfg = categoryConfig[template.category || "general"] || categoryConfig.general;
+  const Icon = cfg.icon;
+
   return (
-    <Card 
+    <Card
       className="group relative overflow-hidden hover-elevate transition-all duration-300"
       data-testid={`template-card-${template.id}`}
     >
-      <div 
+      <div
         className="h-32 w-full flex items-center justify-center relative"
         style={{ backgroundColor: template.colorScheme?.background || "#f8fafc" }}
       >
-        <div 
+        <div
           className="w-16 h-16 rounded-xl flex items-center justify-center"
           style={{ backgroundColor: template.colorScheme?.primary || "#3b82f6" }}
         >
@@ -66,17 +56,17 @@ function TemplateCard({
           </Badge>
         )}
       </div>
-      
+
       <div className="p-4 space-y-3">
         <div>
           <h3 className="font-semibold text-foreground line-clamp-1">{template.name}</h3>
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">
             <Icon className="w-3 h-3 mr-1" />
-            {categoryLabels[template.category || "general"]}
+            {cfg.label}
           </Badge>
           {template.slides && template.slides.length > 0 && (
             <Badge variant="outline" className="text-xs">
@@ -84,11 +74,11 @@ function TemplateCard({
             </Badge>
           )}
         </div>
-        
+
         <div className="flex gap-2 pt-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={onPreview}
             data-testid={`preview-template-${template.id}`}
@@ -96,8 +86,8 @@ function TemplateCard({
             <Eye className="w-4 h-4 mr-1" />
             Preview
           </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="flex-1"
             onClick={onUse}
             data-testid={`use-template-${template.id}`}
@@ -111,28 +101,29 @@ function TemplateCard({
   );
 }
 
-function TemplatePreviewDialog({ 
-  template, 
-  open, 
+function TemplatePreviewDialog({
+  template,
+  open,
   onClose,
-  onUse 
-}: { 
-  template: Template | null; 
-  open: boolean; 
+  onUse,
+}: {
+  template: Template | null;
+  open: boolean;
   onClose: () => void;
   onUse: () => void;
 }) {
   if (!template) return null;
-  
-  const Icon = categoryIcons[template.category || "general"] || Layers;
+
+  const cfg = categoryConfig[template.category || "general"] || categoryConfig.general;
+  const Icon = cfg.icon;
   const slides = (template.slides as TemplateSlide[]) || [];
-  
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div 
+            <div
               className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: template.colorScheme?.primary || "#3b82f6" }}
             >
@@ -142,25 +133,25 @@ function TemplatePreviewDialog({
           </DialogTitle>
           <DialogDescription>{template.description}</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Badge variant="secondary">
               <Icon className="w-3 h-3 mr-1" />
-              {categoryLabels[template.category || "general"]}
+              {cfg.label}
             </Badge>
             {slides.length > 0 && (
               <Badge variant="outline">{slides.length} pre-built slides</Badge>
             )}
           </div>
-          
+
           {slides.length > 0 && (
             <div className="space-y-3">
               <h4 className="font-medium text-sm text-muted-foreground">Included Slides</h4>
               <div className="grid gap-2">
                 {slides.map((slide, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                   >
                     <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
@@ -180,23 +171,26 @@ function TemplatePreviewDialog({
               </div>
             </div>
           )}
-          
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-muted-foreground">Color Scheme</h4>
             <div className="flex gap-2">
-              {template.colorScheme && Object.entries(template.colorScheme).slice(0, 4).map(([key, color]) => (
-                <div key={key} className="text-center">
-                  <div 
-                    className="w-10 h-10 rounded-lg border"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-[10px] text-muted-foreground capitalize">{key}</span>
-                </div>
-              ))}
+              {template.colorScheme &&
+                Object.entries(template.colorScheme)
+                  .slice(0, 4)
+                  .map(([key, color]) => (
+                    <div key={key} className="text-center">
+                      <div
+                        className="w-10 h-10 rounded-lg border"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-[10px] text-muted-foreground capitalize">{key}</span>
+                    </div>
+                  ))}
             </div>
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close
@@ -216,11 +210,11 @@ export default function Templates() {
   const { showNotification } = useNotification();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
-  
+
   const { data: templates = [], isLoading } = useQuery<Template[]>({
     queryKey: ["/api/templates"],
   });
-  
+
   const createFromTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
       const response = await apiRequest("POST", "/api/presentations/from-template", {
@@ -237,87 +231,107 @@ export default function Templates() {
       showNotification(error.message || "Failed to create presentation", "error");
     },
   });
-  
-  const filteredTemplates = selectedCategory === "all" 
-    ? templates 
-    : templates.filter(t => t.category === selectedCategory);
-  
-  const featuredTemplates = templates.filter(t => t.featured);
-  
+
   const handleUseTemplate = (template: Template) => {
     createFromTemplateMutation.mutate(template.id);
   };
-  
+
+  const categoriesWithCounts = Object.keys(categoryConfig).filter((key) => {
+    if (key === "all") return true;
+    return templates.some((t) => t.category === key);
+  }).map((key) => ({
+    key,
+    count: key === "all" ? templates.length : templates.filter((t) => t.category === key).length,
+  }));
+
+  const filteredTemplates =
+    selectedCategory === "all"
+      ? templates
+      : templates.filter((t) => t.category === selectedCategory);
+
+  const featuredTemplates =
+    selectedCategory === "all" ? templates.filter((t) => t.featured) : [];
+
+  const browseTemplates =
+    selectedCategory === "all"
+      ? templates.filter((t) => !t.featured)
+      : filteredTemplates;
+
   return (
     <div className="min-h-screen p-6 space-y-8">
+      {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Template Library</h1>
         <p className="text-muted-foreground">
           Choose from pre-built templates to get started quickly with polls, quizzes, feedback, and more.
         </p>
       </div>
-      
+
+      {/* Category Selector */}
+      <div className="flex flex-wrap gap-2" data-testid="category-selector">
+        {isLoading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-24 rounded-md" />
+            ))
+          : categoriesWithCounts.map(({ key, count }) => {
+              const cfg = categoryConfig[key];
+              const Icon = cfg.icon;
+              const isActive = selectedCategory === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedCategory(key)}
+                  data-testid={`category-filter-${key}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border transition-colors hover-elevate ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {cfg.label}
+                  <span
+                    className={`ml-0.5 text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                      isActive
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+      </div>
+
+      {/* Featured Templates (only shown on "All") */}
       {featuredTemplates.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Star className="w-5 h-5 text-amber-500" />
-            Featured Templates
+            Featured
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-32 w-full" />
-                  <div className="p-4 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 flex-1" />
-                      <Skeleton className="h-8 flex-1" />
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              featuredTemplates.map((template) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  onPreview={() => setPreviewTemplate(template)}
-                  onUse={() => handleUseTemplate(template)}
-                />
-              ))
-            )}
+            {featuredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onPreview={() => setPreviewTemplate(template)}
+                onUse={() => handleUseTemplate(template)}
+              />
+            ))}
           </div>
         </div>
       )}
-      
+
+      {/* Main Grid */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-semibold">All Templates</h2>
-          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-            <TabsList className="flex-wrap h-auto gap-1">
-              <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-              <TabsTrigger value="polls" className="text-xs">
-                <BarChart3 className="w-3 h-3 mr-1" />
-                Polls
-              </TabsTrigger>
-              <TabsTrigger value="quizzes" className="text-xs">
-                <HelpCircle className="w-3 h-3 mr-1" />
-                Quizzes
-              </TabsTrigger>
-              <TabsTrigger value="feedback" className="text-xs">
-                <MessageSquare className="w-3 h-3 mr-1" />
-                Feedback
-              </TabsTrigger>
-              <TabsTrigger value="icebreakers" className="text-xs">
-                <Users className="w-3 h-3 mr-1" />
-                Icebreakers
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        
+        <h2 className="text-xl font-semibold">
+          {selectedCategory === "all"
+            ? "All Templates"
+            : `${categoryConfig[selectedCategory]?.label ?? selectedCategory} Templates`}
+        </h2>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isLoading ? (
             Array.from({ length: 8 }).map((_, i) => (
@@ -333,12 +347,12 @@ export default function Templates() {
                 </div>
               </Card>
             ))
-          ) : filteredTemplates.length === 0 ? (
+          ) : browseTemplates.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">No templates found in this category.</p>
             </div>
           ) : (
-            filteredTemplates.map((template) => (
+            browseTemplates.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
@@ -349,7 +363,7 @@ export default function Templates() {
           )}
         </div>
       </div>
-      
+
       <TemplatePreviewDialog
         template={previewTemplate}
         open={!!previewTemplate}
