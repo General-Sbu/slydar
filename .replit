@@ -54,3 +54,4 @@ integrations = ["javascript_websocket:1.0.0", "javascript_mem_db:1.0.0", "javasc
 
 [userenv.shared]
 PAYFAST_SANDBOX = "false"
+RESEND_API_KEY = "re_fRkpgk4A_CwW625qjZYPwHC1ua4imVJS1"

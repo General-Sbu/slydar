@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { sendWelcomeEmail } from "./email";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 import { 
@@ -94,6 +95,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         email: data.email && data.email !== '' ? data.email : undefined,
       });
+
+      // Send welcome email (non-blocking)
+      if (user.email) {
+        sendWelcomeEmail(user.email, user.firstName || user.username).catch(() => {});
+      }
 
       // Return success without auto-login - user will be redirected to sign in
       res.json({ id: user.id, username: user.username, email: user.email });
@@ -221,6 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Find or create user
       let user = await storage.getUserByEmail(email || '');
       
+      const isNewUser = !user;
       if (!user) {
         console.log("Firebase auth: Creating new user for", email);
         // Create new user from Firebase auth
@@ -229,6 +236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: email || undefined,
           profileImageUrl: picture,
         });
+      }
+
+      // Send welcome email for new users only (non-blocking)
+      if (isNewUser && user.email) {
+        sendWelcomeEmail(user.email, user.firstName || name || user.username).catch(() => {});
       }
 
       // Create session
