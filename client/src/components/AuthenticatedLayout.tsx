@@ -121,7 +121,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               <div className="w-9" />
             </div>
           </header>
-          <main className="flex-1 overflow-auto pb-20 md:pb-0">
+          <main className="flex-1 overflow-auto pb-20 md:pb-0 bg-muted/40">
             {children}
           </main>
         </SidebarInset>
