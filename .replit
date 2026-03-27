@@ -55,3 +55,7 @@ integrations = ["javascript_websocket:1.0.0", "javascript_mem_db:1.0.0", "javasc
 [userenv.shared]
 PAYFAST_SANDBOX = "false"
 RESEND_API_KEY = "re_fRkpgk4A_CwW625qjZYPwHC1ua4imVJS1"
+EMAILJS_SERVICE_ID = "service_i1phyoj"
+EMAILJS_TEMPLATE_ID = "template_cz9iswe"
+EMAILJS_PUBLIC_KEY = "QWV3sdJ4MKIkM-H0p"
+EMAILJS_PRIVATE_KEY = "jjR8lZqHYyZw-Gjeyjubf"

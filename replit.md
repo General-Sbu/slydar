@@ -93,16 +93,22 @@ The checkout page (`/checkout`) integrates with PayFast for payment processing. 
 **Mode:**
 Currently configured for PayFast production mode. Production credentials are stored as environment secrets (`PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`).
 
-### Email Integration (Resend)
-Welcome emails are sent to new users on sign-up using the Resend API.
+### Email Integration (EmailJS)
+Welcome emails are sent to new users on sign-up using the EmailJS Node.js SDK (`@emailjs/nodejs`).
 
-**Configuration:**
-- `RESEND_API_KEY` — API key stored as an environment secret.
+**Configuration (env vars):**
+- `EMAILJS_SERVICE_ID` — EmailJS email service ID
+- `EMAILJS_TEMPLATE_ID` — EmailJS template ID
+- `EMAILJS_PUBLIC_KEY` — EmailJS public key
+- `EMAILJS_PRIVATE_KEY` — EmailJS private key
 - Email service lives in `server/email.ts`.
 - Triggered in `server/routes.ts` after `storage.createUser` in both `/api/auth/register` (local sign-up) and `/api/auth/firebase` (Google/Firebase new user only).
 
-**Sender address:**
-Currently using `onboarding@resend.dev` (Resend's default sandbox domain). Once a custom domain is verified in the Resend dashboard, update `FROM_ADDRESS` in `server/email.ts` to e.g. `Slydar <welcome@slydar.app>`.
+**Template variables** (must be present in the EmailJS template):
+- `{{to_name}}` — recipient's display name
+- `{{to_email}}` — recipient's email address
+- `{{from_name}}` — always "Slydar"
+- `{{reply_to}}` — support@slydar.app
 
 **Behaviour:**
 - Fires only once per user (new registrations, not returning logins).
