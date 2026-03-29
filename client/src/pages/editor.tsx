@@ -296,7 +296,14 @@ export default function Editor() {
     }, 500);
   };
 
+  const MAX_SLIDES = 6;
+  const regularSlides = slides.filter(s => s.order >= 0);
+
   const handleAddSlide = (type: SlideType) => {
+    if (regularSlides.length >= MAX_SLIDES) {
+      showNotification(`Slide limit reached (max ${MAX_SLIDES} slides)`, "error");
+      return;
+    }
     // Helper function to create a default text element
     const createTextElement = (content: string, fontSize: number = 32, y: number = 30, fontWeight: "normal" | "bold" = "normal", textAlign: "left" | "center" | "right" = "center") => ({
       id: crypto.randomUUID(),
@@ -866,9 +873,10 @@ export default function Editor() {
           className="w-full gap-2"
           onClick={() => { setNewSlideModalOpen(true); setSlidesSheetOpen(false); }}
           data-testid="button-new-slide"
+          disabled={regularSlides.length >= MAX_SLIDES}
         >
           <Plus className="h-4 w-4" />
-          New Slide
+          {regularSlides.length >= MAX_SLIDES ? `Slide limit reached (${MAX_SLIDES}/${MAX_SLIDES})` : `New Slide (${regularSlides.length}/${MAX_SLIDES})`}
         </Button>
       </div>
 
@@ -2572,7 +2580,9 @@ export default function Editor() {
           <DialogHeader>
             <DialogTitle>Choose Slide Type</DialogTitle>
             <DialogDescription>
-              Select the type of slide you want to add to your presentation.
+              {regularSlides.length >= MAX_SLIDES
+                ? `You've reached the maximum of ${MAX_SLIDES} slides.`
+                : `Select the type of slide to add. (${regularSlides.length}/${MAX_SLIDES} slides used)`}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
