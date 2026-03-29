@@ -2449,7 +2449,7 @@ The depth level is: ${depth}
 - Advanced: technical depth + tradeoffs
 
 4. Output Requirements
-- 10-20 slides
+- Exactly 6 slides
 - Clean and ready to use
 
 IMPORTANT: You MUST respond with valid JSON only. No markdown, no commentary outside the JSON.
@@ -2514,6 +2514,7 @@ For the "imagePrompt" field:
       }
 
       slidesData.sort((a: any, b: any) => (a.slideNumber || 0) - (b.slideNumber || 0));
+      slidesData = slidesData.slice(0, 6);
 
       res.write(`data: ${JSON.stringify({ type: "status", message: "Creating presentation..." })}\n\n`);
 
